@@ -11,6 +11,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import ReactPlayer from "react-player";
+import Visualizer from "./audioVisualizer/Visualizer";
 import Api from "../Api";
 import { useMain } from "../Context";
 import { getImageColors } from "./color/ColorGenrator";
@@ -25,6 +26,8 @@ function MusicPlayer() {
   const [duration, setDuration] = useState(0);
   const [bgColor, setBgColor] = useState();
   const playerRef = useRef(null);
+  const [audioContext, setAudioContext] = useState(null);
+  const [analyser, setAnalyser] = useState(null);
   const [song, setSong] = useState();
   const { value } = useMain();
   useEffect(() => {
@@ -37,7 +40,7 @@ function MusicPlayer() {
             setBgColor({ bg1: averageColor, bg2: dominantColor });
           }
         );
-        setIsPlaying(true);
+        // setIsPlaying(true);
       } catch (error) {
         console.log(error);
       }
@@ -75,6 +78,23 @@ function MusicPlayer() {
 
   const VolumeIcon =
     muted || volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
+
+    useEffect(() => {
+      // Create the AudioContext and AnalyserNode once when the component mounts
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 256;
+  
+      setAudioContext(audioCtx);
+      setAnalyser(analyserNode);
+  
+      return () => {
+        // Cleanup the AudioContext when the component unmounts
+        if (audioCtx) {
+          audioCtx.close();
+        }
+      };
+    }, []);
   return (
     <>
       <Drawer >
@@ -83,9 +103,12 @@ function MusicPlayer() {
             <img className="rounded-full" src={song?.image[1].url} alt="Song" loading='lazy' />
             }</Button>
         </DrawerTrigger>
-        <DrawerContent className="h-[15dvh]">
-          <div
-            className={` h-full fixed bottom-0 left-0 right-0  text-white p-4`}
+        <DrawerContent className="h-[30dvh]">
+        <Visualizer
+        audioUrl={song?.downloadUrl[4].url}
+      />
+          {/* <div
+            className={`  fixed bottom-0 left-0 right-0  text-white p-4`}
             style={{
               background: `linear-gradient(${bgColor?.bg1} 0%,${bgColor?.bg2} 100%)`,
             }}
@@ -173,7 +196,7 @@ function MusicPlayer() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </DrawerContent>
       </Drawer>
       <ReactPlayer
