@@ -45,12 +45,13 @@ You will need to get these values from your Firebase project settings.
 *   In the **General** tab, under **Your apps**, you will find the Firebase configuration for your web app.
 
 ```
-VITE_API_KEY="your-firebase-api-key"
-VITE_AUTH_DOMAIN="your-firebase-auth-domain"
-VITE_PROJECT_ID="your-firebase-project-id"
-VITE_STORAGE_BUCKET="your-firebase-storage-bucket"
-VITE_MESSAGING_SENDER_ID="your-firebase-messaging-sender-id"
-VITE_APP_ID="your-firebase-app-id"
+VITE_apiKey="your-firebase-api-key"
+VITE_authDomain="your-firebase-auth-domain"
+VITE_projectId="your-firebase-project-id"
+VITE_storageBucket="your-firebase-storage-bucket"
+VITE_messagingSenderId="your-firebase-messaging-sender-id"
+VITE_appId="your-firebase-app-id"
+VITE_measurementId=""
 ```
 
 **Note:** The `VITE_` prefix is important for Vite projects to expose the environment variables to the client-side code.
