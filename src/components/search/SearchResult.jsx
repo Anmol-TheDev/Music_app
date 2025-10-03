@@ -9,9 +9,12 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 
 export default function SearchComponent() {
+
   const { fetchSongs, songs, fetchAlbums, albums, Topresult, setTopresult } =
     useFetch();
-  const { setMusicId, musicId, isPlaying, setIsPlaying } = useStore();
+  const {
+  setMusicId, musicId, isPlaying, setIsPlaying, setQueue // 🔁 ADDED this
+} = useStore();
   const url = useLocation();
   const search = url.search.split("=")[1];
   const navigate = useNavigate();
@@ -20,6 +23,13 @@ export default function SearchComponent() {
     fetchAlbums(search);
     fetchSongs(search, setMusicId);
   }, [url, search]);
+
+  // Assume you use useFetch() to get results
+useEffect(() => {
+  if (songs && songs.length > 0) {
+    setQueue(songs); // ✅ Save globally to Zustand
+  }
+}, [songs]);
 
   function handleSongClick(song) {
     if (song.id !== musicId) {

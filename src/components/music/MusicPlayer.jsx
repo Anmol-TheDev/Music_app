@@ -9,14 +9,22 @@ function MusicPlayer() {
     isPlaying,
     setIsPlaying,
     setCurrentSong,
-    toggleFullScreen,
     setDuration,
     setPlayedSeconds,
+    setLyrics,
     currentSong,
+    volume,
+    toggleFullScreen,
+    nextSongHandler,
+    isLoop,
+    queue,
+    shuffle,
+    setMusicId,
   } = useStore();
 
   const playerRef = useRef(null);
 
+  // Load song details & lyrics
   useEffect(() => {
     async function loadSong() {
       if (!musicId) return;
@@ -30,9 +38,21 @@ function MusicPlayer() {
         }
 
         setCurrentSong(songData);
-        setTimeout(() => setIsPlaying(true), 200);
+
+        // Fetch lyrics
+        try {
+          const lyricsRes = await fetch(
+            `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${songData.id}/lyrics`
+          );
+          const lyricsJson = await lyricsRes.json();
+          setLyrics(lyricsJson?.data?.lyrics || "Lyrics not available.");
+        } catch {
+          setLyrics("Lyrics not available.");
+        }
+
+        setTimeout(() => setIsPlaying(true), 400);
       } catch (err) {
-        console.error("Failed to fetch song:", err);
+        console.error("Failed to fetch song/lyrics:", err);
       }
     }
 
@@ -41,12 +61,12 @@ function MusicPlayer() {
 
   return (
     <>
-      {/* Floating mini spinning player */}
+      {/* Floating mini-player button */}
       {currentSong?.image?.[1]?.url && (
         <button
           onClick={toggleFullScreen}
           className={`fixed bottom-6 right-6 h-16 w-16 rounded-full z-50 shadow-md ${
-          isPlaying ? "animate-slowspin" : ""
+            isPlaying ? "animate-slowspin" : ""
           }`}
         >
           <img
@@ -57,15 +77,26 @@ function MusicPlayer() {
         </button>
       )}
 
+      {/* Audio Player */}
       {currentSong?.downloadUrl?.[4]?.url && (
         <ReactPlayer
           ref={playerRef}
           url={currentSong.downloadUrl[4].url}
           playing={isPlaying}
-          onProgress={({ playedSeconds }) =>
-            setPlayedSeconds(playedSeconds)
-          }
-          onDuration={(d) => setDuration(d)}
+          volume={volume}
+          onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
+          onDuration={setDuration}
+          onEnded={() => {
+            if (isLoop) {
+              playerRef.current.seekTo(0);
+              setIsPlaying(true);
+            } else if (shuffle && queue.length > 0) {
+              const randomIndex = Math.floor(Math.random() * queue.length);
+              setMusicId(queue[randomIndex].id); // ✅ reload via id
+            } else {
+              nextSongHandler();
+            }
+          }}
           width="0"
           height="0"
         />

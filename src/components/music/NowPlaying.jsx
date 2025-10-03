@@ -12,6 +12,8 @@ import {
   VolumeX,
   MoreHorizontal,
 } from "lucide-react";
+
+import React, { useState } from "react";
 import { useStore } from "../../zustand/store";
 
 const formatTime = (t) => {
@@ -33,7 +35,17 @@ export default function NowPlaying() {
     prevSongHandler,
     volume,
     setVolume,
+    queue,
+    musicId,
+    setMusicId,
+    lyrics,
+    shuffle,
+    isLoop,
+    toggleShuffle,
+    toggleLoop,
   } = useStore();
+
+  const [tab, setTab] = useState("lyrics");
 
   const VolumeIcon =
     volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
@@ -42,20 +54,22 @@ export default function NowPlaying() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-between text-white px-4 py-6"
+      className="fixed inset-0 bg-black text-white z-50 flex flex-col justify-between items-center px-4 py-6 md:px-8"
       style={{
         background:
           "linear-gradient(135deg, rgba(10,10,10,1) 0%, rgba(0,0,0,1) 100%)",
       }}
     >
       {/* Header */}
-      <div className="flex justify-between items-center w-full max-w-2xl mb-6">
+      <div className="flex justify-between items-center w-full max-w-3xl mb-4">
         <button onClick={toggleFullScreen}>
           <ChevronDown size={28} />
         </button>
         <div className="text-center flex-1">
-          <p className="text-sm">Now Playing</p>
-          <p className="text-sm text-muted">From {currentSong?.album?.name || "Album"}</p>
+          <p className="text-sm font-light">Now Playing</p>
+          <p className="text-sm text-gray-400">
+            From {currentSong.album?.name || "Unknown Album"}
+          </p>
         </div>
         <MoreHorizontal size={24} />
       </div>
@@ -64,7 +78,7 @@ export default function NowPlaying() {
       <img
         src={currentSong?.image?.[2]?.url}
         alt={currentSong.name}
-        className="rounded-xl shadow-lg w-[280px] md:w-[300px]"
+        className="rounded-xl shadow-lg w-[280px] md:w-[320px] object-cover"
       />
 
       {/* Song Info */}
@@ -72,12 +86,12 @@ export default function NowPlaying() {
         <h1 className="text-2xl font-bold">{currentSong.name}</h1>
         <p className="text-gray-400">{currentSong.artist}</p>
         <p className="text-sm text-gray-500 mt-1">
-          {currentSong.album?.name || "Album"} · {new Date().getFullYear()}
+          {currentSong.album?.name || "Unknown"} · {new Date().getFullYear()}
         </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full max-w-md mt-4">
+      <div className="w-full max-w-lg mt-6">
         <input
           type="range"
           min={0}
@@ -92,9 +106,12 @@ export default function NowPlaying() {
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Playback Controls */}
       <div className="flex items-center justify-center gap-6 mt-6">
-        <button>
+        <button
+          onClick={toggleShuffle}
+          className={shuffle ? "text-blue-400" : ""}
+        >
           <Shuffle />
         </button>
         <button onClick={prevSongHandler}>
@@ -109,12 +126,15 @@ export default function NowPlaying() {
         <button onClick={nextSongHandler}>
           <SkipForward size={28} />
         </button>
-        <button>
+        <button
+          onClick={toggleLoop}
+          className={isLoop ? "text-blue-400" : ""}
+        >
           <Repeat />
         </button>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Volume + Favorite */}
       <div className="flex items-center justify-between w-full max-w-lg mt-4 px-4">
         <button>
           <Heart />
@@ -127,12 +147,65 @@ export default function NowPlaying() {
             max={1}
             step={0.01}
             value={volume}
-            onChange={(e) => setVolume(Number(e.target.value))}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
             className="w-full accent-blue-500"
           />
         </div>
-        <div className="w-6"></div>
+        <div className="w-6" />
       </div>
+
+      {/* Tab Switch */}
+      <div className="flex justify-center mt-4 space-x-10 text-sm text-gray-300">
+        <button
+          onClick={() => setTab("lyrics")}
+          className={`pb-1 ${
+            tab === "lyrics"
+              ? "border-b-2 border-blue-500 text-white"
+              : "text-gray-400"
+          }`}
+        >
+          Lyrics
+        </button>
+        <button
+          onClick={() => setTab("queue")}
+          className={`pb-1 ${
+            tab === "queue"
+              ? "border-b-2 border-blue-500 text-white"
+              : "text-gray-400"
+          }`}
+        >
+          Queue
+        </button>
+      </div>
+
+      {/* Tab Preview */}
+<div className="mt-2 w-full max-w-2xl h-40 px-4 overflow-y-auto text-sm text-gray-400">
+  {tab === "lyrics" ? (
+    lyrics ? (
+      <div
+        className="whitespace-pre-wrap"
+        dangerouslySetInnerHTML={{ __html: lyrics }}
+      />
+    ) : (
+      <p>Lyrics not available.</p>
+    )
+  ) : (
+    <ul>
+      {queue.map((track) => (
+        <li
+          key={track.id}
+          onClick={() => setMusicId(track.id)}
+          className={`py-2 border-b border-gray-700 cursor-pointer hover:text-white ${
+            track.id === musicId ? "text-blue-400 font-semibold" : ""
+          }`}
+        >
+          {track.name} - {track.artist}
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
     </div>
   );
 }

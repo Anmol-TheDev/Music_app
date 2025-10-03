@@ -65,17 +65,23 @@ export const useStore = create((set) => ({
   playedSeconds: 0,
   duration: 0,
   volume: Number(localStorage.getItem("volume")) || 0.5,
+  lyrics: "",
 
-  // Setters
+  // Fullscreen
   isFullScreen: false,
   setIsFullScreen: (value) => set({ isFullScreen: value }),
   toggleFullScreen: () => set((state) => ({ isFullScreen: !state.isFullScreen })),
+
+  // Current Song
   currentSong: null,
-  setCurrentSong: (data) => set({ currentSong: data }),
-  setPlaylist: (prope) =>
-    set((state) => ({ playlist: [...state.playlist, prope] })),
+  setCurrentSong: (data) => set({ currentSong: data, musicId: data.id }),
+
+  // Playlist
+  setPlaylist: (prope) => set((state) => ({ playlist: [...state.playlist, prope] })),
   emptyPlaylist: () => set({ playlist: [] }),
-  setPlayerRef: (ref) => set({ playerRef: ref }), // Add this
+
+  // Player
+  setPlayerRef: (ref) => set({ playerRef: ref }),
   setMusicId: (id) => set({ musicId: id }),
   setIsUser: (prop) => set({ isUser: prop }),
   setDialogOpen: (prop) => set({ dialogOpen: prop }),
@@ -83,32 +89,47 @@ export const useStore = create((set) => ({
   setQueue: (prop) => set({ queue: prop }),
   setPlayedSeconds: (seconds) => set({ playedSeconds: seconds }),
   setDuration: (dur) => set({ duration: dur }),
+  setLyrics: (lyrics) => set({ lyrics }),
+
+  // Seek
   handleSeek: (val) => {
     set({ playedSeconds: Number(val) });
     const video = document.querySelector("video");
     if (video) video.currentTime = Number(val);
   },
+
+  // Volume
   setVolume: (val) => {
     localStorage.setItem("volume", val);
     set({ volume: val });
   },
 
-  // Playback logic
+  // Shuffle & Loop
+  shuffle: false,
+  isLoop: false,
+  toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
+  toggleLoop: () => set((state) => ({ isLoop: !state.isLoop })),
+
+  // Queue Index
+  queueIndex: 0,
+  setQueueIndex: (i) => set({ queueIndex: i }),
+
+  // Playback
   nextSongHandler: () =>
     set((state) => {
       const idx = state.queue.findIndex((s) => s.id === state.musicId);
       if (idx !== -1 && idx + 1 < state.queue.length) {
-        return { musicId: state.queue[idx + 1].id };
+        return { musicId: state.queue[idx + 1].id, currentSong: state.queue[idx + 1] };
       }
-      return {};
+      return state;
     }),
 
   prevSongHandler: () =>
     set((state) => {
       const idx = state.queue.findIndex((s) => s.id === state.musicId);
       if (idx > 0) {
-        return { musicId: state.queue[idx - 1].id };
+        return { musicId: state.queue[idx - 1].id, currentSong: state.queue[idx - 1] };
       }
-      return {};
+      return state;
     }),
 }));
