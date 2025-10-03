@@ -14,19 +14,19 @@ export default function Home() {
   const { setIsUser, setPlaylist } = useStore();
 
   useEffect(() => {
-    const init = async () => {
-      const auth = getAuth(app);
-      const unsubscribe = onAuthStateChanged(
-        auth,
-        (user) => {
-          if (user) setIsUser(true);
-        },
-        (error) => {
-          console.error("Firebase auth error:", error);
-          setIsUser(false);
-        }
-      );
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        if (user) setIsUser(true);
+      },
+      (error) => {
+        console.error("Firebase auth error:", error);
+        setIsUser(false);
+      }
+    );
 
+    const fetchData = async () => {
       try {
         await fetchFireStore(setPlaylist);
       } catch (err) {
@@ -40,11 +40,11 @@ export default function Home() {
       if (!currentSearch) {
         navigate(`/search?searchtxt=${DEFAULT_SEARCH}`, { replace: true });
       }
-
-      return () => unsubscribe();
     };
 
-    init();
+    fetchData();
+
+    return () => unsubscribe();
   }, [navigate, setIsUser, setPlaylist]);
 
   return (
