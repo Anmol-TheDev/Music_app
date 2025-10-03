@@ -1,169 +1,167 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Home, Menu, X, List, User, Baby } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Home, List, User, Baby, Sun, Moon, ChevronDown, ChevronRight } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getAuth, signOut } from "firebase/auth";
+ 
+import { app } from "../../Auth/firebase";
 import { useStore } from "../../zustand/store";
 import { Dialog, DialogContent } from "../ui/dialog";
 import AuthTab from "../../Auth/AuthTab";
-import { signOut, getAuth } from "firebase/auth";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import Playlist from "../playlist/Playlists";
-import { app } from "../../Auth/firebase";
-import { useNavigate } from "react-router-dom";
+import {
+  Sidebar as UISidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarSeparator,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const sidebarRef = useRef(null);
+  const location = useLocation();
   const auth = getAuth(app);
-  const [isOpen, setIsOpen] = useState(false);
-  const [popover, setPopover] = useState(false);
-  
-
+  const [playlistOpen, setPlaylistOpen] = useState(false);
+  const [theme, setTheme] = useState("dark");
   const { isUser, setIsUser, dialogOpen, setDialogOpen } = useStore();
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const isHomeActive = location.pathname === "/" || location.pathname.startsWith("/search");
+  const isPlaylistActive = location.pathname.startsWith("/playlist");
 
-  const handlePlaylist = () => {
-    if (isUser) {
-      setPopover(true);
-    } else {
-      setDialogOpen(true);
-      setIsOpen(false);
-    }
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = stored || (prefersDark ? "dark" : "light");
+    setTheme(initial);
+    if (initial === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   };
 
-  // Close sidebar on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target) &&
-        !event.target.closest('#sidebar-toggle') &&
-        !event.target.closest('[role="dialog"]')
-      ) {
-        setIsOpen(false);
-        setPopover(false);
-      }
-    };
+  const onNavigateHome = () => {
+    navigate(`/search?searchTxt=${localStorage.getItem("search")}`);
+  };
 
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const onTogglePlaylist = () => {
+    if (!isUser) {
+      setDialogOpen(true);
+      return;
+    }
+    setPlaylistOpen((prev) => !prev);
+  };
 
   return (
     <>
-      {/* Auth Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <AuthTab />
         </DialogContent>
       </Dialog>
 
-      {/* Sidebar Toggle Button */}
-      <div
-        id="sidebar-toggle"
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 rounded-full bg-background shadow-lg border border-muted cursor-pointer transition hover:bg-muted"
-        aria-label="Toggle Sidebar"
-      >
-        {isOpen ? <X size={24} /> : <Menu className="w-8 h-8" />}
-      </div>
+      <SidebarProvider>
+        {/* Floating trigger for mobile and desktop collapse/expand */}
+        <div className="fixed top-4 left-4 z-50">
+          <SidebarTrigger className="border" />
+        </div>
 
-      {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full w-56 sm:w-64 z-40 bg-background border-r shadow-2xl transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <nav className="flex flex-col h-full pt-20">
-          <ul className="flex-grow space-y-2 p-4">
-            <li>
-              <Button
-                onClick={() => {
-                  navigate(`/search?searchTxt=${localStorage.getItem("search")}`);
-                  setIsOpen(false);
-                }}
-                variant="ghost"
-                className="w-full justify-start text-lg py-4 hover:bg-accent"
-              >
-                <Home size={28} className="mr-4" /> Home
-              </Button>
-            </li>
-
-            <li>
-              <Popover open={popover} onOpenChange={setPopover}>
-                <PopoverTrigger className="w-full">
-                  <Button
-                    onClick={handlePlaylist}
-                    variant="ghost"
-                    className="w-full justify-start text-lg py-4 hover:bg-accent"
+        <UISidebar side="left" variant="sidebar" collapsible="offcanvas">
+          <SidebarContent className="pt-14">
+            <SidebarGroup>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isHomeActive}
+                    onClick={onNavigateHome}
+                    className="h-10 text-sm"
                   >
-                    <List size={28} className="mr-4" /> Playlist
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="relative w-72 p-4">
-                  <X
-                    className="absolute top-2 right-2 cursor-pointer"
-                    onClick={() => setPopover(false)}
-                  />
-                  <Playlist setPopover={setPopover} />
-                </PopoverContent>
-              </Popover>
-            </li>
+                    <Home className="mr-2 h-4 w-4" /> <span>Home</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
-            <li>
-              <Button variant="ghost" className="w-full justify-start text-lg py-4 hover:bg-accent">
-                <a
-                  href="https://anmol.pro/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center w-full"
-                >
-                  <Baby size={28} className="mr-4" /> About Me
-                </a>
-              </Button>
-            </li>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isPlaylistActive || playlistOpen}
+                    onClick={onTogglePlaylist}
+                    className="h-10 text-sm justify-between"
+                  >
+                    <span className="flex items-center">
+                      <List className="mr-2 h-4 w-4" /> <span>Playlist</span>
+                    </span>
+                    {playlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </SidebarMenuButton>
+                  {playlistOpen && (
+                    <div className="mt-1 pl-3">
+                      <SidebarSeparator />
+                      <div className="mt-2">
+                        <Playlist setPopover={() => setPlaylistOpen(false)} />
+                      </div>
+                    </div>
+                  )}
+                </SidebarMenuItem>
 
-            {!isUser ? (
-              <li>
-                <Button
-                  onClick={() => {
-                    setDialogOpen(true);
-                    setIsOpen(false);
-                  }}
-                  variant="ghost"
-                  className="w-full justify-start text-lg py-4 hover:bg-accent"
-                >
-                  <User size={28} className="mr-4" /> Log In
-                </Button>
-              </li>
-            ) : (
-              <li>
-                <Button
-                  onClick={() => {
-                    signOut(auth);
-                    setIsUser(false);
-                    setPopover(false);
-                    setIsOpen(false);
-                  }}
-                  className="w-full justify-start text-lg py-4 bg-destructive text-white hover:bg-destructive/80"
-                >
-                  <User size={28} className="mr-4" /> Log Out
-                </Button>
-              </li>
-            )}
-          </ul>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild className="h-10 text-sm">
+                    <a
+                      href="https://anmol.pro/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Baby className="mr-2 h-4 w-4" /> <span>About Me</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
-          <div className="p-4 border-t text-sm text-muted-foreground">
-            © 2024 Anmol Singh
-          </div>
-        </nav>
-      </div>
+                {!isUser ? (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => setDialogOpen(true)}
+                      className="h-10 text-sm"
+                    >
+                      <User className="mr-2 h-4 w-4" /> <span>Log In</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ) : (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => {
+                        signOut(auth);
+                        setIsUser(false);
+                        setPlaylistOpen(false);
+                      }}
+                      className="h-10 text-sm text-red-500"
+                    >
+                      <User className="mr-2 h-4 w-4" /> <span>Log Out</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <SidebarFooter>
+            <Button variant="ghost" className="justify-start text-base" onClick={toggleTheme}>
+              {theme === "dark" ? <Sun className="mr-2" /> : <Moon className="mr-2" />}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </Button>
+            <div className="text-xs text-muted-foreground">© 2024 Anmol Singh</div>
+          </SidebarFooter>
+
+          <SidebarRail />
+        </UISidebar>
+      </SidebarProvider>
     </>
   );
 };
