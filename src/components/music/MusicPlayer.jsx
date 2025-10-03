@@ -1,9 +1,11 @@
 import React, { useRef, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume1, Volume2, VolumeX, Shuffle } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume1, Volume2, VolumeX, Shuffle, ListMusic } from "lucide-react";
 import ReactPlayer from "react-player";
 import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import Queue from "./Queue";
 import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
@@ -232,6 +234,16 @@ function MusicPlayer() {
                       background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`,
                     }}
                   />
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <ListMusic className="w-5 h-5" />
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0">
+                      <Queue />
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </div>
             </div>
