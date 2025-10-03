@@ -3,7 +3,7 @@
 @tailwind utilities;
 @layer base {
   :root {
-    --background: 204 50% 8%;  --foreground: 204 5% 90%;  --card: 204 50% 8%;  --card-foreground: 204 5% 90%;  --popover: 204 50% 5%;  --popover-foreground: 204 5% 90%;  --primary: 204 100% 31%;  --primary-foreground: 0 0% 100%;  --secondary: 204 30% 10%;  --secondary-foreground: 0 0% 100%;  --muted: 166 30% 15%;  --muted-foreground: 204 5% 60%;  --accent: 166 30% 15%;  --accent-foreground: 204 5% 90%;  --destructive: 0 100% 30%;  --destructive-foreground: 204 5% 90%;  --border: 204 30% 18%;  --input: 204 30% 18%;  --ring: 204 100% 31%;  --radius: 0.5rem;
+    --background: 204 50% 8%;  --foreground: 204 5% 90%;  --card: 204 50% 8%;  --card-foreground: 204 5% 90%;  --popover: 204 50% 5%;  --popover-foreground: 204 5% 90%;  --primary: 204 100% 31%;  --primary-foreground: 0 0% 100%;  --secondary: 204 30% 10%;  --secondary-foreground: 0 0% 100%;  --muted: 166 30% 15%;  --muted-foreground: 204 5% 60%;  --accent: 166 30% 15%;  --accent-foreground: 204 5% 90%;  --destructive: 0 100% 30%;  --destructive-foreground: 204 5% 90%;  --border: 204 30% 18%;  --input: 204 30% 18%;  --ring: 204 100% 31%;  --radius: 0.5rem;  --sidebar-background: 0 0% 98%;  --sidebar-foreground: 240 5.3% 26.1%;  --sidebar-primary: 240 5.9% 10%;  --sidebar-primary-foreground: 0 0% 98%;  --sidebar-accent: 240 4.8% 95.9%;  --sidebar-accent-foreground: 240 5.9% 10%;  --sidebar-border: 220 13% 91%;  --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -30,7 +30,15 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%
-  }
+  ;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%}
 }
 @layer base {
   * {
