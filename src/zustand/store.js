@@ -69,6 +69,7 @@ export const useStore = create((set, get) => ({
   currentSong: null,
   isPlaying: false,
   queue: [],
+  likedSongs: [],
   currentIndex: 0,
   
   // Audio controls
@@ -108,6 +109,19 @@ export const useStore = create((set, get) => ({
   setCurrentSong: (song) => set({ currentSong: song }),
   setIsPlaying: (prop) => set({ isPlaying: prop }),
   setQueue: (prop) => set({ queue: prop, currentIndex: 0 }),
+  setLikedSongs: (songs) => set({ likedSongs: songs }),
+  addLikedSong: (songId) => 
+    set((state) => ({
+      likedSongs: [...state.likedSongs, songId]
+    })),
+  removeLikedSong: (songId) =>
+    set((state) => ({
+      likedSongs: state.likedSongs.filter(id => id !== songId)
+    })),
+  isLiked: (songId) => {
+    const state = get();
+    return state.likedSongs.includes(songId);
+  },
   
   // Audio control setters with persistence
   setVolume: (volume) => {

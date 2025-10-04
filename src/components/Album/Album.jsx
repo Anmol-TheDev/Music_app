@@ -6,6 +6,7 @@ import { useStore } from "../../zustand/store";
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import Menu from "../Menu";
+import Like from "../ui/Like";
 import { toast } from "sonner";
 
 export default function Album() {
@@ -199,12 +200,13 @@ export default function Album() {
         <div className="container mx-auto px-3 sm:px-4 py-8">
           <div className="space-y-6">
             {/* Desktop Header */}
-            <div className="hidden md:grid grid-cols-[40px_1fr_80px_60px] gap-4 px-4 py-2 text-sm text-muted-foreground border-b border-border/50">
+            <div className="hidden md:grid grid-cols-[40px_1fr_80px_40px_40px] gap-4 px-4 py-2 text-sm text-muted-foreground border-b border-border/50">
               <div className="text-center">#</div>
               <div>Title</div>
               <div className="text-center">
                 <Clock className="w-4 h-4 mx-auto" />
               </div>
+              <div></div>
               <div></div>
             </div>
 
@@ -280,6 +282,11 @@ export default function Album() {
                         </div>
                       </div>
 
+                      {/* Like Button - Mobile */}
+                      <div className="flex-shrink-0 w-8 flex items-center justify-center">
+                        <Like songId={song.id} />
+                      </div>
+
                       {/* Menu Button */}
                       <div className="flex-shrink-0">
                         <button
@@ -294,7 +301,7 @@ export default function Album() {
 
                   {/* Desktop Layout */}
                   <div className="hidden md:block">
-                    <div className="grid grid-cols-[40px_1fr_80px_60px] gap-4 items-center px-4 py-3 group">
+                    <div className="grid grid-cols-[40px_1fr_80px_40px_40px] gap-4 items-center px-4 py-3 group">
                       {/* Track Number / Play Button */}
                       <div className="flex items-center justify-center">
                         <span
@@ -347,6 +354,10 @@ export default function Album() {
                       <div className="text-sm text-muted-foreground font-mono text-center">
                         {Math.floor(song.duration / 60)}:
                         {(song.duration % 60).toString().padStart(2, "0")}
+                      </div>
+
+                      <div className="flex justify-center">
+                        <Like songId={song.id} />
                       </div>
 
                       {/* Menu Button */}

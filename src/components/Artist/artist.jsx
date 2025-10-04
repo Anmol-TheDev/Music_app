@@ -6,6 +6,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useStore } from "../../zustand/store";
 import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
+import Like from "../ui/Like";
 import { toast } from "sonner";
 
 function Artist() {
@@ -250,6 +251,11 @@ function Artist() {
                         </h3>
                       </div>
 
+                      {/* Like Button - Mobile */}
+                      <div className="flex-shrink-0 w-8 flex items-center justify-center">
+                        <Like songId={song.id} />
+                      </div>
+
                       {/* Menu Button - Always visible on mobile for better UX */}
                       <div className="flex-shrink-0">
                         <button
@@ -329,6 +335,10 @@ function Artist() {
                       <div className="text-sm text-muted-foreground font-mono">
                         {Math.floor(song.duration / 60)}:
                         {(song.duration % 60).toString().padStart(2, "0")}
+                      </div>
+
+                      <div className="flex-shrink-0 w-8 flex items-center justify-center">
+                        <Like songId={song.id} />
                       </div>
 
                       {/* Menu Button */}

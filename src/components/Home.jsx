@@ -13,6 +13,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { setIsUser, setPlaylist } = useStore();
 
+  const { setIsUser, setPlaylist, setLikedSongs } = useStore();
   useEffect(() => {
     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(
@@ -46,6 +47,10 @@ export default function Home() {
 
     return () => unsubscribe();
   }, [navigate, setIsUser, setPlaylist]);
+    onAuthStateChanged(auth, (user) => {
+      if (user) setIsUser(true);
+    });
+    fetchFireStore(setPlaylist, setLikedSongs);
 
   return (
     <>

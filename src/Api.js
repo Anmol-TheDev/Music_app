@@ -41,21 +41,39 @@ import {
   deleteDoc,
   updateDoc,
   arrayUnion,
+  arrayRemove,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { app, db } from "./Auth/firebase";
-export const fetchFireStore = (setPlaylist) => {
+export const fetchFireStore = (setPlaylist, setLikedSongs) => {
   let auth = getAuth(app);
   onAuthStateChanged(auth, async (user) => {
     if (user?.uid) {
+      const docRef = collection(db, "users", user?.uid, "playlists");
+      const docSnap = await getDocs(docRef);
+      docSnap.forEach((e) => {
+        setPlaylist({ id: e.id, data: e.data() });
+      });
+
       try {
-        const docRef = collection(db, "users", user?.uid, "playlists");
-        const docSnap = await getDocs(docRef);
-        docSnap.forEach((e) => {
-          setPlaylist({ id: e.id, data: e.data() });
-        });
+        const userDocRef = doc(db, "users", user?.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const likedSongs = userData.likedSongs || [];
+          setLikedSongs(likedSongs);
+        } else {
+          await setDoc(userDocRef, {
+            likedSongs: [],
+            createdAt: new Date().toISOString(),
+          });
+          setLikedSongs([]);
+        }
       } catch (error) {
         toast.error("Failed to fetch playlists.");
         console.error("Firestore fetch error:", error);
+        setLikedSongs([]);
       }
     }
   });
@@ -94,18 +112,77 @@ export async function deletePlaylist(
   const auth = getAuth(app);
   const user = auth?.currentUser;
   if (user?.uid) {
-    try {
-      const docRef = doc(db, "users", user?.uid, "playlists", playlistId);
-      await deleteDoc(docRef);
-      // Only update the UI after successful deletion
-      emptyPlaylist();
-      // pick the next available playlist (first one that's not the deleted playlist)
-      const next = playlists.find((e) => e.id !== playlistId);
-      if (next) setPlaylist(next);
-      toast.success("Playlist deleted successfully!");
-    } catch (error) {
-      toast.error("Failed to delete playlist.");
-      console.error("Firestore delete error:", error);
+    const docRef = doc(db, "users", user?.uid, "playlists", playlistId);
+    deleteDoc(docRef);
+    emptyPlaylist()
+  }
+  playlists.forEach((e)=>{
+    if(e.id!==playlistId){
+        setPlaylist(e)
     }
+  })
+}
+
+export function addToLikedSongs(songId) {
+  const auth = getAuth(app);
+  const user = auth?.currentUser;
+  
+  if (!user) {
+    return;
+  }
+  
+  if (user?.uid) {
+    const userDocRef = doc(db, "users", user?.uid);
+    setDoc(userDocRef, {
+      likedSongs: arrayUnion(songId),
+    }, { merge: true }).catch((error) => {
+      console.error("Error adding to liked songs:", error);
+    });
+  }
+}
+
+export function removeFromLikedSongs(songId) {
+  const auth = getAuth(app);
+  const user = auth?.currentUser;
+  
+  if (!user) {
+    return;
+  }
+  
+  if (user?.uid) {
+    const userDocRef = doc(db, "users", user?.uid);
+    setDoc(userDocRef, {
+      likedSongs: arrayRemove(songId),
+    }, { merge: true }).catch((error) => {
+      console.error("Error removing from liked songs:", error);
+    });
+  }
+}
+
+export async function fetchLikedSongs() {
+  const auth = getAuth(app);
+  const user = auth?.currentUser;
+  if (user?.uid) {
+    try {
+      const userDocRef = doc(db, "users", user?.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        return userDoc.data().likedSongs || [];
+      }
+    } catch (error) {
+      console.error("Error fetching liked songs:", error);
+    }
+  }
+  return [];
+}
+
+export async function fetchSongsByIds(songIds) {
+  try {
+    const idsString = songIds.join(',');
+    const response = await Api(`/api/songs?ids=${idsString}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching songs by IDs:", error);
+    return { success: false, data: [] };
   }
 }

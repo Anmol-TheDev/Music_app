@@ -7,6 +7,7 @@ import { useNavigate, createSearchParams, useLocation } from "react-router-dom";
 import RandomArtists from "../Artist/artists";
 import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
+import Like from "../ui/Like";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, albums, Topresult, setTopresult } =
@@ -188,7 +189,7 @@ export default function SearchComponent() {
                             {Math.floor(song.duration / 60)}:
                             {(song.duration % 60).toString().padStart(2, "0")}
                           </span>
-
+                          <Like songId={song.id} />
                           {isPlaying && song.id === musicId ? (
                             <Pause
                               className="w-4 h-4 sm:w-5 sm:h-5"

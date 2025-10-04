@@ -18,8 +18,7 @@ export default function Playlist({ setPopover }) {
   const user = getAuth(app)?.currentUser;
   const [isDialog, setIsDialog] = useState(false);
   const input = useRef(null);
-  const { playlist, setPlaylist, emptyPlaylist } = useStore();
-
+  const { playlist, setPlaylist, emptyPlaylist, setLikedSongs } = useStore();
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -32,10 +31,10 @@ export default function Playlist({ setPopover }) {
       const collectionRef = collection(db, "users", user?.uid, "playlists");
       await addDoc(collectionRef, {
         name: input.current.value,
-        songs: [],
+        songs: arrayUnion(),
       });
       emptyPlaylist();
-      fetchFireStore(setPlaylist);
+      fetchFireStore(setPlaylist, setLikedSongs);
       toast.success("Playlist created successfully!");
     } catch (error) {
       toast.error("Failed to create playlist.");
