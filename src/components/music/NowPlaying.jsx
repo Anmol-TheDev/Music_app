@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronDown,
   Play,
@@ -45,11 +45,42 @@ export default function NowPlaying() {
   } = useStore();
 
   const [tab, setTab] = useState("lyrics");
+  const queueRef = useRef([]);
+  const containerRef = useRef();
+
+  // Scroll into view when song changes
+  useEffect(() => {
+    const activeIndex = queue.findIndex((track) => track.id === musicId);
+    if (queueRef.current[activeIndex]) {
+      queueRef.current[activeIndex].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [musicId, queue]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsPlaying((prev) => !prev);
+      } else if (e.code === "ArrowLeft") prevSongHandler();
+      else if (e.code === "ArrowRight") nextSongHandler();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [setIsPlaying, prevSongHandler, nextSongHandler]);
 
   if (!currentSong) return null;
 
-  const VolumeIcon =
-    volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
+  const VolumeIcon = volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
+
+  const albumImage =
+    currentSong?.image?.[2]?.url ||
+    currentSong?.image?.[1]?.url ||
+    currentSong?.image?.[0]?.url ||
+    "/fallback.jpg";
 
   return (
     <div className="fixed inset-0 bg-black text-white z-50 flex flex-col md:flex-row md:items-start px-0 py-6">
@@ -69,16 +100,19 @@ export default function NowPlaying() {
         </div>
 
         <img
-          src={currentSong?.image?.[2]?.url}
+          src={albumImage}
           alt={currentSong.name}
           className="rounded-xl shadow-lg w-[280px] md:w-[320px] object-cover"
         />
 
         <div className="text-center mt-6">
-          <h1 className="text-2xl font-bold">{currentSong.name}</h1>
+          <h1 className="text-2xl font-bold truncate px-4 text-center">
+            {currentSong.name}
+          </h1>
           <p className="text-gray-400">{currentSong.artist}</p>
         </div>
 
+        {/* Seek Bar */}
         <div className="w-full mt-6 px-4">
           <input
             type="range"
@@ -94,6 +128,7 @@ export default function NowPlaying() {
           </div>
         </div>
 
+        {/* Controls */}
         <div className="flex items-center justify-center gap-8 mt-8">
           <button onClick={toggleShuffle} className={shuffle ? "text-blue-400" : ""}>
             <Shuffle size={32} />
@@ -115,6 +150,7 @@ export default function NowPlaying() {
           </button>
         </div>
 
+        {/* Volume */}
         <div className="flex items-center justify-between w-full mt-6 px-6">
           <button>
             <Heart size={22} />
@@ -135,39 +171,47 @@ export default function NowPlaying() {
         </div>
       </div>
 
-      {/* RIGHT SIDE - Lyrics & Queue */}
+      {/* RIGHT SIDE */}
       <div className="flex flex-col w-full md:w-1/5 mt-6 md:mt-0">
         <div className="flex justify-center md:justify-start space-x-8 text-sm text-gray-300 px-2">
           <button
             onClick={() => setTab("lyrics")}
-            className={`pb-1 ${tab === "lyrics" ? "border-b-2 border-blue-500 text-white" : "text-gray-400"}`}
+            className={`pb-1 ${
+              tab === "lyrics" ? "border-b-2 border-blue-500 text-white" : "text-gray-400"
+            }`}
           >
             Lyrics
           </button>
           <button
             onClick={() => setTab("queue")}
-            className={`pb-1 ${tab === "queue" ? "border-b-2 border-blue-500 text-white" : "text-gray-400"}`}
+            className={`pb-1 ${
+              tab === "queue" ? "border-b-2 border-blue-500 text-white" : "text-gray-400"
+            }`}
           >
             Queue
           </button>
         </div>
 
-        <div className="mt-4 w-full h-[80vh] overflow-y-auto px-2 text-sm text-gray-400">
+        <div
+          ref={containerRef}
+          className="mt-4 w-full h-[80vh] overflow-y-auto px-2 text-sm text-gray-300 scroll-smooth"
+        >
           {tab === "lyrics" ? (
             <pre className="whitespace-pre-wrap leading-relaxed text-gray-200">
-              {lyrics || "Lyrics not available."}
+              {lyrics?.trim() || "Lyrics not available."}
             </pre>
           ) : (
             <ul>
-              {queue.map((track) => (
+              {queue.map((track, index) => (
                 <li
                   key={track.id}
+                  ref={(el) => (queueRef.current[index] = el)}
                   onClick={() => setMusicId(track.id)}
                   className={`py-2 border-b border-gray-700 cursor-pointer hover:text-white ${
                     track.id === musicId ? "text-blue-400 font-semibold" : ""
                   }`}
                 >
-                  {track.name} - {track.artist}
+                  {track.name} – {track.artist}
                 </li>
               ))}
             </ul>

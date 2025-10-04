@@ -1,10 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --background: 204 50% 8%;  --foreground: 204 5% 90%;  --card: 204 50% 8%;  --card-foreground: 204 5% 90%;  --popover: 204 50% 5%;  --popover-foreground: 204 5% 90%;  --primary: 204 100% 31%;  --primary-foreground: 0 0% 100%;  --secondary: 204 30% 10%;  --secondary-foreground: 0 0% 100%;  --muted: 166 30% 15%;  --muted-foreground: 204 5% 60%;  --accent: 166 30% 15%;  --accent-foreground: 204 5% 90%;  --destructive: 0 100% 30%;  --destructive-foreground: 204 5% 90%;  --border: 204 30% 18%;  --input: 204 30% 18%;  --ring: 204 100% 31%;  --radius: 0.5rem;
+    --background: 204 50% 8%;
+    --foreground: 204 5% 90%;
+    --card: 204 50% 8%;
+    --card-foreground: 204 5% 90%;
+    --popover: 204 50% 5%;
+    --popover-foreground: 204 5% 90%;
+    --primary: 204 100% 31%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 204 30% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 166 30% 15%;
+    --muted-foreground: 204 5% 60%;
+    --accent: 166 30% 15%;
+    --accent-foreground: 204 5% 90%;
+    --destructive: 0 100% 30%;
+    --destructive-foreground: 204 5% 90%;
+    --border: 204 30% 18%;
+    --input: 204 30% 18%;
+    --ring: 204 100% 31%;
+    --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -29,26 +50,29 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
-}
-@layer base {
+
   * {
     @apply border-border;
     scrollbar-width: thin;
-  scrollbar-color: #888 #1e1e1e;
-  scroll-behavior: smooth;
+    scrollbar-color: #888 #1e1e1e;
+    scroll-behavior: smooth;
   }
+
   body {
     @apply bg-background text-foreground;
-    scrollbar-face-color: #888;
-    scrollbar-track-color: #1e1e1e;
-    scrollbar-arrow-color: #888;
-    scrollbar-shadow-color: #1e1e1e;
     max-height: 100dvh;
     overflow: hidden;
   }
 }
+
+@layer utilities {
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+}
+
 ::-webkit-scrollbar {
   width: 12px;
 }
@@ -65,11 +89,9 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
 .float_debouncer {
   position: absolute;
-  /* bottom: 0rem; */
   left: 0rem;
-  /* top: 3rem; */
   z-index: 1000;
-  
 }

@@ -29,8 +29,12 @@ export default function MusicPlayer() {
 
       try {
         const res = await Api(`/api/songs/${musicId}`);
-        const songData = res.data.data[0];
-        if (!songData?.downloadUrl?.[4]?.url) return;
+        const songData = res.data.data?.[0];
+
+        if (!songData?.downloadUrl?.[4]?.url) {
+          console.warn("❌ No downloadable URL for musicId:", musicId);
+          return;
+        }
 
         setCurrentSong(songData);
         setTimeout(() => setIsPlaying(true), 200);
@@ -42,14 +46,26 @@ export default function MusicPlayer() {
     loadSong();
   }, [musicId]);
 
+  const handleSongEnd = () => {
+    if (isLoop && playerRef.current) {
+      playerRef.current.seekTo(0);
+      setIsPlaying(true);
+    } else if (shuffle && queue.length > 0) {
+      const randomIndex = Math.floor(Math.random() * queue.length);
+      setMusicId(queue[randomIndex].id);
+    } else {
+      nextSongHandler();
+    }
+  };
+
   return (
     <>
-      {/* Mini player button */}
+      {/* Mini player floating button */}
       {currentSong?.image?.[1]?.url && (
         <button
           onClick={toggleFullScreen}
           className={`fixed bottom-6 right-6 h-16 w-16 rounded-full z-50 shadow-md ${
-            isPlaying ? "animate-spin-slow" : ""
+            isPlaying ? "animate-slowspin" : ""
           }`}
         >
           <img
@@ -60,7 +76,7 @@ export default function MusicPlayer() {
         </button>
       )}
 
-      {/* Audio player */}
+      {/* Audio invisible player */}
       {currentSong?.downloadUrl?.[4]?.url && (
         <ReactPlayer
           ref={playerRef}
@@ -68,16 +84,8 @@ export default function MusicPlayer() {
           playing={isPlaying}
           volume={volume}
           onProgress={({ playedSeconds }) => setPlayedSeconds(playedSeconds)}
-          onDuration={setDuration}
-          onEnded={() => {
-            if (isLoop) {
-              playerRef.current.seekTo(0);
-              setIsPlaying(true);
-            } else if (shuffle && queue.length > 0) {
-              const randomIndex = Math.floor(Math.random() * queue.length);
-              setMusicId(queue[randomIndex].id);
-            } else nextSongHandler();
-          }}
+          onDuration={(d) => setDuration(d)}
+          onEnded={handleSongEnd}
           width={0}
           height={0}
         />

@@ -32,7 +32,7 @@ export const useFetch = create((set) => ({
         set({ songs: false });
       }
     } catch (error) {
-      console.error(error);
+      console.error("❌ fetchSongs error:", error);
     }
   },
 
@@ -41,7 +41,7 @@ export const useFetch = create((set) => ({
       const res = await Api(`/api/search/albums?query=${search}`);
       set({ albums: res.data.data.results || false });
     } catch (error) {
-      console.error(error);
+      console.error("❌ fetchAlbums error:", error);
     }
   },
 
@@ -50,12 +50,13 @@ export const useFetch = create((set) => ({
       const res = await Api(`/api/search/artists?query=${search || "top artists"}`);
       set({ artists: res.data.data.results || false });
     } catch (error) {
-      console.error(error);
+      console.error("❌ fetchArtists error:", error);
     }
   },
 }));
 
 export const useStore = create((set, get) => ({
+  // Global State
   playlist: [],
   musicId: null,
   isPlaying: false,
@@ -64,56 +65,16 @@ export const useStore = create((set, get) => ({
   dialogOpen: false,
   playedSeconds: 0,
   duration: 0,
-  volume: Number(localStorage.getItem("volume")) || 0.5,
-  lyrics: "",
   currentSong: null,
-
-  // Fullscreen
+  lyrics: "",
   isFullScreen: false,
+  volume: Number(localStorage.getItem("volume") ?? 0.5), // ✅ survive mute
+
+  // Fullscreen Controls
   setIsFullScreen: (value) => set({ isFullScreen: value }),
   toggleFullScreen: () => set((state) => ({ isFullScreen: !state.isFullScreen })),
 
-  // Playlist
-  setPlaylist: (prope) => set((state) => ({ playlist: [...state.playlist, prope] })),
-  emptyPlaylist: () => set({ playlist: [] }),
-
-  // Main song logic
-  setMusicId: async (id) => {
-    set({ musicId: id });
-
-    try {
-      const res = await Api(`/api/songs/${id}`);
-      const songData = res.data.data[0];
-      if (!songData) return;
-
-      set({ currentSong: songData });
-
-      // SAFELY extract the lyrics ID from the perma_url
-      let songLyricsId = songData.id;
-
-      // Try to extract from song.perma_url if needed
-      if (!songLyricsId || typeof songLyricsId !== "string") {
-        const extracted = songData.perma_url?.split("/")?.pop()?.replace(".html", "");
-        if (extracted) songLyricsId = extracted;
-      }
-
-      console.log("🎵 Lyrics ID used:", songLyricsId);
-
-      const lyricsRes = await fetch(`https://saavn.dev/songs/${songLyricsId}/lyrics`);
-      const lyricsJson = await lyricsRes.json();
-      console.log("📝 Lyrics API response:", lyricsJson);
-
-      const lyricText =
-        lyricsJson?.data?.lyrics?.replace(/<[^>]+>/g, "").trim() ||
-        "Lyrics not available.";
-      set({ lyrics: lyricText });
-    } catch (err) {
-      console.error("❌ Failed to fetch song/lyrics", err);
-      set({ lyrics: "Lyrics not available." });
-    }
-  },
-
-  // Controls
+  // Playback Controls
   setCurrentSong: (data) => set({ currentSong: data }),
   setIsUser: (prop) => set({ isUser: prop }),
   setDialogOpen: (prop) => set({ dialogOpen: prop }),
@@ -123,6 +84,45 @@ export const useStore = create((set, get) => ({
   setDuration: (dur) => set({ duration: dur }),
   setLyrics: (lyrics) => set({ lyrics }),
   setPlayerRef: (ref) => set({ playerRef: ref }),
+
+  // Song Logic
+  setPlaylist: (prope) => set((state) => ({ playlist: [...state.playlist, prope] })),
+  emptyPlaylist: () => set({ playlist: [] }),
+
+  // Async: Set Music ID → Fetch Audio + Lyrics
+  setMusicId: async (id) => {
+    set({ musicId: id });
+
+    try {
+      const res = await Api(`/api/songs/${id}`);
+      const songData = res.data.data?.[0];
+
+      if (!songData || !songData.downloadUrl?.[4]?.url) {
+        console.warn("⚠️ Invalid song data:", songData);
+        return;
+      }
+
+      set({ currentSong: songData });
+
+      // Extract lyrics ID
+      let lyricsId =
+        songData.perma_url?.split("/").pop()?.replace(".html", "") || songData.id;
+
+      console.log("🎵 Fetching lyrics for:", lyricsId);
+
+      const lyricsRes = await fetch(`https://saavn.dev/songs/${lyricsId}/lyrics`);
+      const lyricsJson = await lyricsRes.json();
+      console.log("📝 Lyrics response:", lyricsJson);
+
+      const lyricText =
+        lyricsJson?.data?.lyrics?.replace(/<[^>]+>/g, "").trim() ||
+        "Lyrics not available.";
+      set({ lyrics: lyricText });
+    } catch (err) {
+      console.error("❌ Failed to fetch song or lyrics", err);
+      set({ lyrics: "Lyrics not available due to error." });
+    }
+  },
 
   // Seek
   handleSeek: (val) => {
@@ -137,29 +137,44 @@ export const useStore = create((set, get) => ({
     set({ volume: val });
   },
 
-  // Shuffle & Loop
+  // Shuffle & Loop Modes
   shuffle: false,
   isLoop: false,
   toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
   toggleLoop: () => set((state) => ({ isLoop: !state.isLoop })),
 
-  // Navigation
+  // Index-based Queue
   queueIndex: 0,
   setQueueIndex: (i) => set({ queueIndex: i }),
 
-  // Skip controls
+  // Playback Navigation
   nextSongHandler: () => {
-    const state = get();
-    const idx = state.queue.findIndex((s) => s.id === state.musicId);
-    if (idx !== -1 && idx + 1 < state.queue.length) {
-      get().setMusicId(state.queue[idx + 1].id);
+    const { queue, musicId, shuffle } = get();
+    const currentIndex = queue.findIndex((song) => song.id === musicId);
+
+    if (shuffle && queue.length > 1) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * queue.length);
+      } while (randomIndex === currentIndex);
+      get().setMusicId(queue[randomIndex].id);
+    } else if (currentIndex !== -1 && currentIndex + 1 < queue.length) {
+      get().setMusicId(queue[currentIndex + 1].id);
     }
   },
+
   prevSongHandler: () => {
-    const state = get();
-    const idx = state.queue.findIndex((s) => s.id === state.musicId);
-    if (idx > 0) {
-      get().setMusicId(state.queue[idx - 1].id);
+    const { queue, musicId, shuffle } = get();
+    const currentIndex = queue.findIndex((song) => song.id === musicId);
+
+    if (shuffle && queue.length > 1) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * queue.length);
+      } while (randomIndex === currentIndex);
+      get().setMusicId(queue[randomIndex].id);
+    } else if (currentIndex > 0) {
+      get().setMusicId(queue[currentIndex - 1].id);
     }
   },
 }));
