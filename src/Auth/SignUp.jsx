@@ -12,8 +12,11 @@ import { auth } from "./firebase";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { AiFillGoogleCircle, AiFillGithub } from "react-icons/ai";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useStore } from "../zustand/store";
+import { toast } from "sonner";
 
 const validatePassword = (password) => {
   const requirements = {
@@ -38,7 +41,12 @@ function SignUp() {
   const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
   const [passwordValidation, setPasswordValidation] = useState(null);
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [loadingGithub, setLoadingGithub] = useState(false);
+  
+  // Combined loading state for disabling all inputs
+  const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
 
   useEffect(() => {
     getRedirectResult(auth)
@@ -75,8 +83,8 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
+    setLoadingEmail(true);
+    setErrors({});
     const newErrors = {};
     if (!email.current.value.trim()) newErrors.email = "Email is required";
     const validation = validatePassword(passwordValue);
@@ -85,59 +93,128 @@ function SignUp() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setIsSubmitting(false);
+      setLoadingEmail(false);
+      toast.error("Please fix the errors in the form");
       return;
     }
 
     try {
       await createUserWithEmailAndPassword(auth, email.current.value.trim(), passwordValue);
+      toast.success("Account created successfully! Welcome!");
       setDialogOpen(false);
       setIsUser(true);
       navigate("/");
     } catch (error) {
-      setErrors({ submit: error.message || "Failed to create account" });
+      console.error('Sign up error:', error);
+      let errorMessage = "Failed to create account";
+      let isFieldError = false;
+      
+      // Provide user-friendly error messages
+      if (error.code === 'auth/configuration-not-found') {
+        errorMessage = "Authentication service is not properly configured. Please contact support.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email is already registered. Try logging in instead.";
+        newErrors.email = errorMessage;
+        isFieldError = true;
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = "Invalid email address format.";
+        newErrors.email = errorMessage;
+        isFieldError = true;
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = "Password is too weak. Please use a stronger password.";
+        newErrors.password = errorMessage;
+        isFieldError = true;
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = "Email/password sign-up is not enabled. Please contact support.";
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "Network error. Please check your internet connection.";
+      } else if (error.message) {
+        errorMessage = error.message.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim();
+      }
+      
+      // Only show in Alert banner if it's not a field-specific error
+      if (isFieldError) {
+        setErrors({ ...newErrors });
+      } else {
+        setErrors({ submit: errorMessage });
+      }
+      toast.error(errorMessage);
+    } finally {
+      setLoadingEmail(false);
     }
-
-    setIsSubmitting(false);
   };
 
   const handleGoogleLogin = async () => {
-    setIsSubmitting(true);
+    setLoadingGoogle(true);
+    setErrors({});
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      toast.success("Successfully signed in with Google!");
       setDialogOpen(false);
       setIsUser(true);
       navigate("/");
     } catch (error) {
+      console.error('Google login error:', error);
       if (error.code === "auth/popup-blocked") {
-        alert("Popup blocked! Redirecting instead...");
-        await signInWithRedirect(auth, provider);
-      } else {
-        alert(error.message);
+        toast.info("Popup blocked! Redirecting to Google sign-in...");
+        try {
+          await signInWithRedirect(auth, provider);
+        } catch (redirectError) {
+          toast.error("Failed to redirect to Google sign-in");
+        }
+      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+        toast.info("Sign-in cancelled");
+      } else if (error.code === "auth/configuration-not-found") {
+        setErrors({ submit: "Google sign-in is not properly configured. Please contact support." });
+        toast.error("Google sign-in configuration error");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrors({ submit: "Network error. Please check your internet connection." });
+        toast.error("Network error");
+      } else if (error.code !== "auth/popup-closed-by-user") {
+        const errorMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim() || "Failed to sign in with Google";
+        setErrors({ submit: errorMsg });
+        toast.error(errorMsg);
       }
     } finally {
-      setIsSubmitting(false);
+      setLoadingGoogle(false);
     }
   };
 
   const handleGithubLogin = async () => {
-    setIsSubmitting(true);
+    setLoadingGithub(true);
+    setErrors({});
     const provider = new GithubAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      toast.success("Successfully signed in with GitHub!");
       setDialogOpen(false);
       setIsUser(true);
       navigate("/");
     } catch (error) {
+      console.error('GitHub login error:', error);
       if (error.code === "auth/popup-blocked") {
-        alert("Popup blocked! Redirecting instead...");
-        await signInWithRedirect(auth, provider);
-      } else {
-        alert(error.message);
+        toast.info("Popup blocked! Redirecting to GitHub sign-in...");
+        try {
+          await signInWithRedirect(auth, provider);
+        } catch (redirectError) {
+          toast.error("Failed to redirect to GitHub sign-in");
+        }
+      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+        toast.info("Sign-in cancelled");
+      } else if (error.code === "auth/configuration-not-found") {
+        setErrors({ submit: "GitHub sign-in is not properly configured. Please contact support." });
+        toast.error("GitHub sign-in configuration error");
+      } else if (error.code === "auth/network-request-failed") {
+        setErrors({ submit: "Network error. Please check your internet connection." });
+        toast.error("Network error");
+      } else if (error.code !== "auth/popup-closed-by-user") {
+        const errorMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim() || "Failed to sign in with GitHub";
+        setErrors({ submit: errorMsg });
+        toast.error(errorMsg);
       }
     } finally {
-      setIsSubmitting(false);
+      setLoadingGithub(false);
     }
   };
 
@@ -145,77 +222,132 @@ function SignUp() {
     <div className="flex flex-col gap-2 items-center">
       <h1 className="font-semibold text-xl mt-3">Create a New Account</h1>
 
+      {errors.submit && (
+        <Alert variant="destructive" className="w-full">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.submit}</AlertDescription>
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
         <div className="w-full">
-          <Label>Email</Label>
-          <Input type="email" ref={email} className={errors.email ? "border-red-500" : ""} />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          <Label htmlFor="email">Email</Label>
+          <Input 
+            id="email"
+            type="email" 
+            ref={email} 
+            className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
+            placeholder="your@email.com"
+            disabled={isAnyLoading}
+            onChange={() => errors.email && setErrors(prev => ({ ...prev, email: "" }))}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.email}
+            </p>
+          )}
         </div>
 
         <div className="w-full">
-          <Label>Password</Label>
+          <Label htmlFor="password">Password</Label>
           <Input
+            id="password"
             type="password"
             value={passwordValue}
             onChange={handlePasswordChange}
-            className={errors.password ? "border-red-500" : ""}
+            className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
             placeholder="Enter a strong password"
+            disabled={isAnyLoading}
           />
           {passwordValue && passwordValidation && (
-            <div className="mt-2 text-xs space-y-1">
-              <div className={passwordValidation.requirements.minLength ? "text-green-600" : "text-red-500"}>
-                {passwordValidation.requirements.minLength ? "✓" : "✗"} Minimum 7 characters
+            <div className="mt-2 text-xs space-y-1 bg-muted/50 p-2 rounded-md">
+              <p className="font-medium text-muted-foreground mb-1">Password requirements:</p>
+              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.minLength ? "text-green-600" : "text-muted-foreground"}` }>
+                {passwordValidation.requirements.minLength ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                Minimum 7 characters
               </div>
-              <div className={passwordValidation.requirements.hasLetter ? "text-green-600" : "text-red-500"}>
-                {passwordValidation.requirements.hasLetter ? "✓" : "✗"} At least one letter
+              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasLetter ? "text-green-600" : "text-muted-foreground"}`}>
+                {passwordValidation.requirements.hasLetter ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                At least one letter
               </div>
-              <div className={passwordValidation.requirements.hasNumbers ? "text-green-600" : "text-red-500"}>
-                {passwordValidation.requirements.hasNumbers ? "✓" : "✗"} At least one number
+              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasNumbers ? "text-green-600" : "text-muted-foreground"}`}>
+                {passwordValidation.requirements.hasNumbers ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                At least one number
               </div>
-              <div className={passwordValidation.requirements.hasSpecialChar ? "text-green-600" : "text-red-500"}>
-                {passwordValidation.requirements.hasSpecialChar ? "✓" : "✗"} At least one special character (!@#$%^&*)
+              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasSpecialChar ? "text-green-600" : "text-muted-foreground"}`}>
+                {passwordValidation.requirements.hasSpecialChar ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                Special character (!@#$%^&*)
               </div>
             </div>
           )}
-          {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.password}
+            </p>
+          )}
         </div>
 
         <div className="w-full">
-          <Label>Confirm Password</Label>
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
           <Input
+            id="confirmPassword"
             type="password"
             value={confirmPasswordValue}
             onChange={handleConfirmPasswordChange}
-            className={errors.confirmPassword ? "border-red-500" : ""}
+            className={errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
             placeholder="Confirm your password"
+            disabled={isAnyLoading}
           />
           {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
               {errors.confirmPassword}
             </p>
           )}
         </div>
 
-        {errors.submit && (
-          <p className="text-red-500 text-sm text-center">{errors.submit}</p>
-        )}
-
         <Button
           type="submit"
-          disabled={isSubmitting || !email.current?.value || (passwordValue && (!passwordValidation || !passwordValidation.isValid))}
-          className="w-full"
+          disabled={isAnyLoading || !email.current?.value || (passwordValue && (!passwordValidation || !passwordValidation.isValid))}
+          className="w-full mt-2"
         >
-          {isSubmitting ? "Creating Account..." : "Create Account"}
+          {loadingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loadingEmail ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
 
-      <div className="flex gap-4 mt-4">
-        <button onClick={handleGoogleLogin} title="Sign up with Google" disabled={isSubmitting}>
-          <AiFillGoogleCircle size={36} />
-        </button>
-        <button onClick={handleGithubLogin} title="Sign up with GitHub" disabled={isSubmitting}>
-          <AiFillGithub size={36} />
-        </button>
+      <div className="relative w-full">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 w-full">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGoogleLogin}
+          disabled={isAnyLoading}
+          className="w-full"
+        >
+          {loadingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGoogleCircle size={20} />}
+          <span className="ml-2">{loadingGoogle ? "Signing up..." : "Google"}</span>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGithubLogin}
+          disabled={isAnyLoading}
+          className="w-full"
+        >
+          {loadingGithub ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGithub size={20} />}
+          <span className="ml-2">{loadingGithub ? "Signing up..." : "GitHub"}</span>
+        </Button>
       </div>
     </div>
   );
