@@ -30,7 +30,13 @@ const shouldRetry = (error) => {
   return status >= 500 || status === 429;
 };
 
-const retryRequest = (error, retryCount = 0) => {
+const retryRequest = (error) => {
+  if (!error.config) {
+    return Promise.reject(error);
+  }
+
+  const retryCount = error.config.__retryCount || 0;
+
   if (retryCount >= MAX_RETRIES || !shouldRetry(error)) {
     // Show error toast after retries exhausted or not retryable
     if (error.response) {
@@ -50,20 +56,22 @@ const retryRequest = (error, retryCount = 0) => {
     return Promise.reject(error);
   }
 
+  error.config.__retryCount = retryCount + 1;
+
   const delay = BASE_DELAY * Math.pow(2, retryCount); // Exponential backoff
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve(Api.request(error.config));
     }, delay);
   }).catch((retryError) => {
-    return retryRequest(retryError, retryCount + 1);
+    return retryRequest(retryError);
   });
 };
 
 Api.interceptors.response.use(
   (response) => response,
   (error) => {
-    return retryRequest(error, 0);
+    return retryRequest(error);
   }
 );
 
