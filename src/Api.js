@@ -105,8 +105,7 @@ export function pushInDb(playlistId, musicId) {
 export async function deletePlaylist(
   playlistId,
   setPlaylist,
-  emptyPlaylist,
-  setLikedSongs
+  emptyPlaylist
 ) {
   const auth = getAuth(app);
   const user = auth?.currentUser;
@@ -116,9 +115,18 @@ export async function deletePlaylist(
       await deleteDoc(docRef);
       toast.success("Playlist deleted successfully!");
 
-      // Refetch all data using fetchFireStore
+      // Only refetch playlists; liked songs are unaffected by playlist deletion
       emptyPlaylist(); // Clear existing playlists before refetching
-      fetchFireStore(setPlaylist, setLikedSongs);
+      const playlistsCollectionRef = collection(
+        db,
+        "users",
+        user.uid,
+        "playlists"
+      );
+      const playlistsSnap = await getDocs(playlistsCollectionRef);
+      playlistsSnap.forEach((e) => {
+        setPlaylist({ id: e.id, data: e.data() });
+      });
     } catch (error) {
       toast.error("Failed to delete playlist.");
       console.error("Firestore delete error:", error);

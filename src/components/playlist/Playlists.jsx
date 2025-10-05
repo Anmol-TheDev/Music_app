@@ -91,7 +91,7 @@ export default function Playlist({ setPopover }) {
             <Trash2
               size={18}
               onClick={() =>
-                deletePlaylist(list.id, setPlaylist, emptyPlaylist, setLikedSongs)
+                deletePlaylist(list.id, setPlaylist, emptyPlaylist)
               }
               className="cursor-pointer"
             />
