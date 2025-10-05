@@ -10,6 +10,20 @@ const MAX_RETRIES = 3;
 const BASE_DELAY = 1000; // 1 second
 
 const shouldRetry = (error) => {
+  // Guard against missing config or method
+  if (!error.config || !error.config.method) {
+    return false;
+  }
+
+  const method = error.config.method.toLowerCase();
+  const idempotentMethods = ['get', 'head', 'options', 'put', 'delete'];
+  const isIdempotent = idempotentMethods.includes(method);
+  const retryUnsafe = error.config.retryUnsafe === true;
+
+  if (!isIdempotent && !retryUnsafe) {
+    return false;
+  }
+
   // Retry on network errors, 5xx errors, and rate limits (429)
   if (!error.response) return true; // Network error
   const status = error.response.status;
