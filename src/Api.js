@@ -5,28 +5,51 @@ const Api = axios.create({
   baseURL: "https://saavn.dev",
 });
 
-Api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+// Retry configuration
+const MAX_RETRIES = 3;
+const BASE_DELAY = 1000; // 1 second
+
+const shouldRetry = (error) => {
+  // Retry on network errors, 5xx errors, and rate limits (429)
+  if (!error.response) return true; // Network error
+  const status = error.response.status;
+  return status >= 500 || status === 429;
+};
+
+const retryRequest = (error, retryCount = 0) => {
+  if (retryCount >= MAX_RETRIES || !shouldRetry(error)) {
+    // Show error toast after retries exhausted or not retryable
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       toast.error(
         `Error: ${error.response.status} - ${error.response.statusText}`
       );
       console.error("API Error:", error.response.data);
     } else if (error.request) {
-      // The request was made but no response was received
       toast.error(
         "Error: No response from server. Please check your internet connection."
       );
       console.error("API Error: No response received", error.request);
     } else {
-      // Something happened in setting up the request that triggered an Error
       toast.error("Error: Something went wrong with the request.");
       console.error("API Error:", error.message);
     }
     return Promise.reject(error);
+  }
+
+  const delay = BASE_DELAY * Math.pow(2, retryCount); // Exponential backoff
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(Api.request(error.config));
+    }, delay);
+  }).catch((retryError) => {
+    return retryRequest(retryError, retryCount + 1);
+  });
+};
+
+Api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    return retryRequest(error, 0);
   }
 );
 
