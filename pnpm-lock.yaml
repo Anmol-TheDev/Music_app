@@ -68,6 +68,9 @@ importers:
       npm-check-updates:
         specifier: ^17.1.12
         version: 17.1.18
+      prop-types:
+        specifier: ^15.8.1
+        version: 15.8.1
       react:
         specifier: ^19.0.0
         version: 19.2.0
