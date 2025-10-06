@@ -1,5 +1,4 @@
 import { Suspense, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import MusicPlayer from "./music/MusicPlayer";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./search/Sidebar";
@@ -11,7 +10,6 @@ import InputBar from "./search/InputBar";
 import { fetchFireStore } from "../Api";
 
 export default function Home() {
-  const navigate = useNavigate();
   const { setIsUser, setPlaylist, setLikedSongs } = useStore();
   useEffect(() => {
     // Firebase Auth
@@ -21,18 +19,13 @@ export default function Home() {
     });
     fetchFireStore(setPlaylist, setLikedSongs);
 
-    // Default search
+    // Initialize default search in localStorage if not present
     const DEFAULT_SEARCH = "top hits";
-    const searchText = localStorage.getItem("search")
-    if(!searchText) {
-      localStorage.setItem("search", DEFAULT_SEARCH)
+    const searchText = localStorage.getItem("search");
+    if (!searchText) {
+      localStorage.setItem("search", DEFAULT_SEARCH);
     }
-    const pathName = `/search?searchTxt=${localStorage.getItem("search")}`;
-    const currentSearch = new URLSearchParams(window.location.search).get("searchTxt");
-    if (!currentSearch) {
-      navigate(pathName);
-    }
-}, []);
+  }, [setIsUser, setPlaylist, setLikedSongs]);
   return (
     <>
       <div className="flex items-start">

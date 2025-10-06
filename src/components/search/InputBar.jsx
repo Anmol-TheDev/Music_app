@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
-import {
-  createSearchParams,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { createSearchParams, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Api from "../../Api";
 
 export default function InputBar() {
@@ -41,26 +36,41 @@ export default function InputBar() {
   };
 
   useEffect(() => {
-    const search = localStorage.getItem("search");
-    if (search) {
-      setSearchInput(search);
-    }
+    // Don't load from localStorage on mount - let URL drive the state
     searchBarRef.current.addEventListener("focus", () => {
       setIsSearchBarFocused(true);
     });
     // searchBarRef.current.addEventListener("blur", () => {
     // });
     document.addEventListener("click", (e) => {
-      if (
-        e.target.classList.contains("song-sugg") ||
-        e.target.classList.contains("inputBar")
-      ) {
+      if (e.target.classList.contains("song-sugg") || e.target.classList.contains("inputBar")) {
         return;
       } else {
         setIsSearchBarFocused(false);
       }
     });
   }, []);
+
+  // Clear search input when navigating away from search page
+  useEffect(() => {
+    if (CurrPath.pathname === "/") {
+      setSearchInput("");
+      setSuggestions([]);
+    } else if (CurrPath.pathname === "/search") {
+      // Only populate from URL search params if present
+      const urlParams = new URLSearchParams(CurrPath.search);
+      const searchFromUrl = urlParams.get("searchTxt");
+      if (searchFromUrl) {
+        setSearchInput(decodeURIComponent(searchFromUrl));
+      } else {
+        setSearchInput("");
+      }
+    } else {
+      // Clear search input on any other page
+      setSearchInput("");
+      setSuggestions([]);
+    }
+  }, [CurrPath.pathname, CurrPath.search]);
 
   useEffect(() => {
     const fetchSearch = async () => {
@@ -85,7 +95,7 @@ export default function InputBar() {
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [searchInput,isSearchBarFocused]);
+  }, [searchInput, isSearchBarFocused]);
 
   return (
     <form
@@ -106,7 +116,7 @@ export default function InputBar() {
           {searchInput && isSearchBarFocused ? (
             loading == true ? (
               <div className="bg-popover p-2 rounded-lg float_debouncer flex justify-center lg:w-[36rem] mt-2  shadow-lg w-full">
-                <div class="w-10 h-10 border-4 border-t-foreground  rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-4 border-t-foreground  rounded-full animate-spin"></div>
               </div>
             ) : (
               <div className="bg-popover p-2 rounded-lg float_debouncer lg:w-[36rem] mt-2 w-full shadow-lg">

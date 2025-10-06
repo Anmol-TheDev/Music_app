@@ -6,6 +6,7 @@ import Album from "./components/Album/Album";
 import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
+import LandingPage from "./components/LandingPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -14,6 +15,10 @@ function App() {
       element: <Home />,
       errorElement: <ErrorPage />,
       children: [
+        {
+          index: true,
+          element: <LandingPage />,
+        },
         {
           path: "/artist",
           element: <Artist />,
