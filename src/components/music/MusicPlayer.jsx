@@ -1,14 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume1,
-  Volume2,
-  VolumeX,
-  Shuffle,
-} from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume1, Volume2, VolumeX, Shuffle } from "lucide-react";
 import ReactPlayer from "react-player";
 import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
@@ -16,15 +7,14 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer"
 import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
-import NowPlaying from "../NowPlaying/NowPlaying";
 
 function MusicPlayer() {
   const playerRef = useRef(null);
   const [bgColor, setBgColor] = React.useState();
   const [musicPlayerDrawer, setMusicPlayerDrawer] = React.useState(false);
-  const [showNowPlaying, setShowNowPlaying] = React.useState(false);
   const [song, setSong] = React.useState();
-
+  
+  // Get state from Zustand stores
   const { songs } = useFetch();
   const {
     musicId,
@@ -42,9 +32,10 @@ function MusicPlayer() {
     setDuration,
     setShuffle,
     playNext,
-    playPrevious,
+    playPrevious
   } = useStore();
 
+  // Keyboard shortcuts
   useKeyboardShortcuts({
     togglePlayPause: () => setIsPlaying(!isPlaying),
     nextTrack: () => playNext(),
@@ -61,6 +52,7 @@ function MusicPlayer() {
     toggleShuffle: () => setShuffle(!shuffle),
   });
 
+  // Fetch song when musicId changes
   useEffect(() => {
     async function fetchSong() {
       if (!musicId) return;
@@ -81,12 +73,14 @@ function MusicPlayer() {
     fetchSong();
   }, [musicId, setIsPlaying]);
 
+  // Set queue when songs change
   useEffect(() => {
     if (songs) {
       setQueue(songs);
     }
   }, [songs, setQueue]);
 
+  // Handlers
   const handlePlayPause = () => setIsPlaying(!isPlaying);
 
   const handleVolumeChange = (e) => {
@@ -128,38 +122,36 @@ function MusicPlayer() {
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
 
   return (
-    <>
+    song &&
+    ( <> 
       <Drawer open={musicPlayerDrawer} onOpenChange={setMusicPlayerDrawer}>
-        {musicId && (
-          <DrawerTrigger asChild>
-            <Button
-              onClick={() => setShowNowPlaying(true)}
-              variant="outline"
-              aria-label="Open player"
-              style={{ animationDuration: "5s" }}
-              className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition ${
-                isPlaying && (song?.image?.[1]?.url ? "animate-spin" : "")
-              }`}
-            >
-              {song?.image?.[1]?.url ? (
-                <img
-                  className="h-full w-full object-cover"
-                  src={song?.image?.[1]?.url}
-                  alt=""
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/image.png";
-                  }}
-                />
-              ) : (
-                <div className="h-full w-full grid place-items-center bg-black/30 text-white">
-                  <Play className="h-6 w-6" />
-                </div>
-              )}
-            </Button>
-          </DrawerTrigger>
-        )}
+        <DrawerTrigger asChild>
+          <Button
+            variant="outline"
+            aria-label="Open player"
+            style={{ animationDuration: "5s"}}
+            className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition ${
+              isPlaying && (song?.image?.[1]?.url ? "animate-spin" : "")
+            }`}
+          >
+            {song?.image?.[1]?.url ? (
+              <img
+                className="h-full w-full object-cover"
+                src={song?.image?.[1]?.url}
+                alt=""
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/image.png";
+                }}
+              />
+            ) : (
+              <div className="h-full w-full grid place-items-center bg-black/30 text-white">
+                <Play className="h-6 w-6" />
+              </div>
+            )}
+          </Button>
+        </DrawerTrigger>
         <DrawerContent className="h-[15dvh]">
           <DrawerTitle hidden />
           <div
@@ -186,26 +178,18 @@ function MusicPlayer() {
                     </div>
                   )}
                   <div>
-                    <h3 className="text-sm font-semibold bg-gray-200/20 px-2 rounded-md">
-                      {song?.name}
-                    </h3>
+                    <h3 className="text-sm font-semibold bg-gray-200/20 px-2 rounded-md">{song?.name}</h3>
                     <p className="text-xs text-gray-400">{song?.artist}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setShuffle(!shuffle)}
-                    className={`${shuffle ? "text-secondary" : "text-white"}`}
-                  >
+                  <button onClick={() => setShuffle(!shuffle)} className={`${shuffle ? "text-secondary" : "text-white"}`}>
                     <Shuffle className="w-5 h-5" />
                   </button>
                   <button className="focus:outline-none" onClick={playPrevious}>
                     <SkipBack className="w-5 h-5" />
                   </button>
-                  <button
-                    onClick={handlePlayPause}
-                    className="focus:outline-none bg-white text-black rounded-full p-2"
-                  >
+                  <button onClick={handlePlayPause} className="focus:outline-none bg-white text-black rounded-full p-2">
                     {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
                   </button>
                   <button className="focus:outline-none" onClick={playNext}>
@@ -256,24 +240,21 @@ function MusicPlayer() {
         </DrawerContent>
       </Drawer>
 
-      {/* Now Playing Full Screen */}
-      <NowPlaying isOpen={showNowPlaying} onClose={() => setShowNowPlaying(false)} />
-
       <ReactPlayer
         ref={playerRef}
-        key={musicId}
+        key={musicId} // Force re-render on song change to prevent multiple audio instances
         url={song?.downloadUrl?.[4]?.url || ""}
         playing={isPlaying}
         volume={muted ? 0 : volume}
         onProgress={handleProgress}
         onDuration={handleDuration}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => setIsPlaying(true)}  
         onPause={() => setIsPlaying(false)}
-        onEnded={playNext}
+        onEnded={playNext} // Use centralized next function
         width="0"
         height="0"
       />
-    </>
+    </>)
   );
 }
 
