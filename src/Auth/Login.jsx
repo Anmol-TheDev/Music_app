@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from "react";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -13,6 +12,7 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { PasswordToggle } from "../components/ui/password-toggle";
 import { useStore } from "../zustand/store";
 import { useNavigate } from "react-router-dom";
 import { AiFillGoogleCircle, AiFillGithub } from "react-icons/ai";
@@ -24,11 +24,11 @@ function Login() {
   const password = useRef();
   const { setIsUser, setDialogOpen } = useStore();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
 
   // Combined loading state for disabling all buttons
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
@@ -356,21 +356,21 @@ function Login() {
               required
               placeholder="Enter your password"
               disabled={isAnyLoading}
-              className={
-                errors.password ? "border-red-500 focus-visible:ring-red-500 pr-10" : "pr-10"
-              }
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               onChange={() => errors.password && setErrors((prev) => ({ ...prev, password: "" }))}
             />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary rounded"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              tabIndex={0}
-            >
-              {showPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
-            </button>
+            <PasswordToggle
+              showPassword={showPassword}
+              onToggle={() => setShowPassword(!showPassword)}
+              disabled={isAnyLoading}
+            />
           </div>
+          {errors.password && (
+            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.password}
+            </p>
+          )}
         </div>
 
         <Button type="submit" disabled={isAnyLoading} className="w-full mt-2">
