@@ -13,8 +13,8 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { PasswordToggle } from "../components/ui/password-toggle";
 import { AiFillGoogleCircle, AiFillGithub } from "react-icons/ai";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useStore } from "../zustand/store";
 import { toast } from "sonner";
@@ -42,11 +42,11 @@ function SignUp() {
   const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
   const [passwordValidation, setPasswordValidation] = useState(null);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Combined loading state for disabling all inputs
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
@@ -274,22 +274,16 @@ function SignUp() {
               type={showPassword ? "text" : "password"}
               value={passwordValue}
               onChange={handlePasswordChange}
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               placeholder="Enter a strong password"
               disabled={isAnyLoading}
-              className={`${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""} pr-10`}
             />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary rounded"
-              onClick={() => setShowPassword((prev) => !prev)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              tabIndex={0}
-            >
-              {showPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
-            </button>
+            <PasswordToggle
+              showPassword={showPassword}
+              onToggle={() => setShowPassword(!showPassword)}
+              disabled={isAnyLoading}
+            />
           </div>
-
-          {/* Password requirements */}
           {passwordValue && passwordValidation && (
             <div className="mt-2 text-xs space-y-1 bg-muted/50 p-2 rounded-md">
               <p className="font-medium text-muted-foreground mb-1">Password requirements:</p>
@@ -353,22 +347,22 @@ function SignUp() {
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPasswordValue}
               onChange={handleConfirmPasswordChange}
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               placeholder="Confirm your password"
               disabled={isAnyLoading}
-              className={
-                errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500 pr-10" : "pr-10"
-              }
             />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary rounded"
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-              tabIndex={0}
-            >
-              {showConfirmPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
-            </button>
+            <PasswordToggle
+              showPassword={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isAnyLoading}
+            />
           </div>
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {errors.confirmPassword}
+            </p>
+          )}
         </div>
 
         <Button
