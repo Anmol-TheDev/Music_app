@@ -11,7 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
-  Search,
+  Compass,
 } from "lucide-react";
 import { useStore } from "../../zustand/store";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -84,8 +84,8 @@ const Sidebar = () => {
     },
     {
       id: "search",
-      label: "Search",
-      icon: Search,
+      label: "Explore",
+      icon: Compass,
       path: `/search?searchTxt=${encodeURIComponent(storedSearch)}`,
     },
     {
@@ -93,7 +93,6 @@ const Sidebar = () => {
       label: "Liked Songs",
       icon: Heart,
       path: "/liked",
-      requiresAuth: true, // It's good practice to require auth for liked songs
       badge: isUser && likedSongs.length > 0 ? likedSongs.length : null,
     },
     {
@@ -325,8 +324,6 @@ const Sidebar = () => {
                   setIsUser(false);
                   setPopover(false);
                   setIsOpen(false);
-                  // Clear visitor flag so landing page shows again after logout
-                  localStorage.removeItem("hasVisited");
                   navigate("/"); // Redirect to home on logout
                 }}
                 variant="destructive"

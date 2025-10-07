@@ -6,7 +6,7 @@ import Album from "./components/Album/Album";
 import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
-import HomeRedirect from "./components/HomeRedirect";
+import LandingPage from "./components/LandingPage";
 import Profile from "./components/Profile/Profile"; // 1. Import the new component
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
       children: [
         {
           index: true,
-          element: <HomeRedirect />,
+          element: <LandingPage />,
         },
         {
           path: "/artist",
