@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
-import {
-  createSearchParams,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { createSearchParams, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Api from "../../Api";
 
 export default function InputBar() {
@@ -51,10 +46,7 @@ export default function InputBar() {
     // searchBarRef.current.addEventListener("blur", () => {
     // });
     document.addEventListener("click", (e) => {
-      if (
-        e.target.classList.contains("song-sugg") ||
-        e.target.classList.contains("inputBar")
-      ) {
+      if (e.target.classList.contains("song-sugg") || e.target.classList.contains("inputBar")) {
         return;
       } else {
         setIsSearchBarFocused(false);
@@ -85,7 +77,7 @@ export default function InputBar() {
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [searchInput,isSearchBarFocused]);
+  }, [searchInput, isSearchBarFocused]);
 
   return (
     <form
@@ -106,7 +98,7 @@ export default function InputBar() {
           {searchInput && isSearchBarFocused ? (
             loading == true ? (
               <div className="bg-popover p-2 rounded-lg float_debouncer flex justify-center lg:w-[36rem] mt-2  shadow-lg w-full">
-                <div class="w-10 h-10 border-4 border-t-foreground  rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-4 border-t-foreground  rounded-full animate-spin"></div>
               </div>
             ) : (
               <div className="bg-popover p-2 rounded-lg float_debouncer lg:w-[36rem] mt-2 w-full shadow-lg">
