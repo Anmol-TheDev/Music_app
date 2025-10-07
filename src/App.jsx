@@ -6,7 +6,8 @@ import Album from "./components/Album/Album";
 import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
-import LandingPage from "./components/LandingPage";
+import HomeRedirect from "./components/HomeRedirect";
+import Profile from "./components/Profile/Profile"; // 1. Import the new component
 
 function App() {
   const router = createBrowserRouter([
@@ -17,7 +18,7 @@ function App() {
       children: [
         {
           index: true,
-          element: <LandingPage />,
+          element: <HomeRedirect />,
         },
         {
           path: "/artist",
@@ -38,6 +39,11 @@ function App() {
         {
           path: "/liked",
           element: <LikedSongs />,
+        },
+        // 2. Add the new profile route
+        {
+          path: "/profile",
+          element: <Profile />,
         },
       ],
     },

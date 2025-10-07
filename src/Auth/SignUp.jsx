@@ -1,18 +1,19 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithPopup, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  GoogleAuthProvider, 
-  GithubAuthProvider 
+  GoogleAuthProvider,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { PasswordToggle } from "../components/ui/password-toggle";
 import { AiFillGoogleCircle, AiFillGithub } from "react-icons/ai";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useStore } from "../zustand/store";
@@ -41,10 +42,12 @@ function SignUp() {
   const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
   const [passwordValidation, setPasswordValidation] = useState(null);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
-  
+
   // Combined loading state for disabling all inputs
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
 
@@ -70,14 +73,14 @@ function SignUp() {
     const value = e.target.value;
     setPasswordValue(value);
     password.current.value = value;
-    if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
   };
 
   const handleConfirmPasswordChange = (e) => {
     const value = e.target.value;
     setConfirmPasswordValue(value);
     confPassword.current.value = value;
-    if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: "" }));
+    if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -88,7 +91,8 @@ function SignUp() {
     if (!email.current.value.trim()) newErrors.email = "Email is required";
     const validation = validatePassword(passwordValue);
     if (!validation.isValid) newErrors.password = "Password does not meet all requirements";
-    if (passwordValue !== confirmPasswordValue) newErrors.confirmPassword = "Passwords do not match";
+    if (passwordValue !== confirmPasswordValue)
+      newErrors.confirmPassword = "Passwords do not match";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -101,35 +105,38 @@ function SignUp() {
       await createUserWithEmailAndPassword(auth, email.current.value.trim(), passwordValue);
       toast.success("Account created successfully! Welcome!");
       setDialogOpen(false);
-      setIsUser(true);      
+      setIsUser(true);
     } catch (error) {
-      console.error('Sign up error:', error);
+      console.error("Sign up error:", error);
       let errorMessage = "Failed to create account";
       let isFieldError = false;
-      
+
       // Provide user-friendly error messages
-      if (error.code === 'auth/configuration-not-found') {
+      if (error.code === "auth/configuration-not-found") {
         errorMessage = "Authentication service is not properly configured. Please contact support.";
-      } else if (error.code === 'auth/email-already-in-use') {
+      } else if (error.code === "auth/email-already-in-use") {
         errorMessage = "This email is already registered. Try logging in instead.";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error.code === "auth/invalid-email") {
         errorMessage = "Invalid email address format.";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error.code === "auth/weak-password") {
         errorMessage = "Password is too weak. Please use a stronger password.";
         newErrors.password = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/operation-not-allowed') {
+      } else if (error.code === "auth/operation-not-allowed") {
         errorMessage = "Email/password sign-up is not enabled. Please contact support.";
-      } else if (error.code === 'auth/network-request-failed') {
+      } else if (error.code === "auth/network-request-failed") {
         errorMessage = "Network error. Please check your internet connection.";
       } else if (error.message) {
-        errorMessage = error.message.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim();
+        errorMessage = error.message
+          .replace("Firebase: ", "")
+          .replace(/\(auth\/[^)]+\)/, "")
+          .trim();
       }
-      
+
       // Only show in Alert banner if it's not a field-specific error
       if (isFieldError) {
         setErrors({ ...newErrors });
@@ -152,15 +159,18 @@ function SignUp() {
       setDialogOpen(false);
       setIsUser(true);
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error("Google login error:", error);
       if (error.code === "auth/popup-blocked") {
         toast.info("Popup blocked! Redirecting to Google sign-in...");
         try {
           await signInWithRedirect(auth, provider);
-        } catch (redirectError) {
+        } catch {
           toast.error("Failed to redirect to Google sign-in");
         }
-      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+      } else if (
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/configuration-not-found") {
         setErrors({ submit: "Google sign-in is not properly configured. Please contact support." });
@@ -169,7 +179,11 @@ function SignUp() {
         setErrors({ submit: "Network error. Please check your internet connection." });
         toast.error("Network error");
       } else if (error.code !== "auth/popup-closed-by-user") {
-        const errorMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim() || "Failed to sign in with Google";
+        const errorMsg =
+          error.message
+            ?.replace("Firebase: ", "")
+            .replace(/\(auth\/[^)]+\)/, "")
+            .trim() || "Failed to sign in with Google";
         setErrors({ submit: errorMsg });
         toast.error(errorMsg);
       }
@@ -188,15 +202,18 @@ function SignUp() {
       setDialogOpen(false);
       setIsUser(true);
     } catch (error) {
-      console.error('GitHub login error:', error);
+      console.error("GitHub login error:", error);
       if (error.code === "auth/popup-blocked") {
         toast.info("Popup blocked! Redirecting to GitHub sign-in...");
         try {
           await signInWithRedirect(auth, provider);
-        } catch (redirectError) {
+        } catch {
           toast.error("Failed to redirect to GitHub sign-in");
         }
-      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+      } else if (
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/configuration-not-found") {
         setErrors({ submit: "GitHub sign-in is not properly configured. Please contact support." });
@@ -205,7 +222,11 @@ function SignUp() {
         setErrors({ submit: "Network error. Please check your internet connection." });
         toast.error("Network error");
       } else if (error.code !== "auth/popup-closed-by-user") {
-        const errorMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim() || "Failed to sign in with GitHub";
+        const errorMsg =
+          error.message
+            ?.replace("Firebase: ", "")
+            .replace(/\(auth\/[^)]+\)/, "")
+            .trim() || "Failed to sign in with GitHub";
         setErrors({ submit: errorMsg });
         toast.error(errorMsg);
       }
@@ -228,14 +249,14 @@ function SignUp() {
       <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
         <div className="w-full">
           <Label htmlFor="email">Email</Label>
-          <Input 
+          <Input
             id="email"
-            type="email" 
-            ref={email} 
+            type="email"
+            ref={email}
             className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
             placeholder="your@email.com"
             disabled={isAnyLoading}
-            onChange={() => errors.email && setErrors(prev => ({ ...prev, email: "" }))}
+            onChange={() => errors.email && setErrors((prev) => ({ ...prev, email: "" }))}
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -247,36 +268,69 @@ function SignUp() {
 
         <div className="w-full">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={passwordValue}
-            onChange={handlePasswordChange}
-            className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
-            placeholder="Enter a strong password"
-            disabled={isAnyLoading}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={passwordValue}
+              onChange={handlePasswordChange}
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              placeholder="Enter a strong password"
+              disabled={isAnyLoading}
+            />
+            <PasswordToggle
+              showPassword={showPassword}
+              onToggle={() => setShowPassword(!showPassword)}
+              disabled={isAnyLoading}
+            />
+          </div>
           {passwordValue && passwordValidation && (
             <div className="mt-2 text-xs space-y-1 bg-muted/50 p-2 rounded-md">
               <p className="font-medium text-muted-foreground mb-1">Password requirements:</p>
-              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.minLength ? "text-green-600" : "text-muted-foreground"}` }>
-                {passwordValidation.requirements.minLength ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+              <div
+                className={`flex items-center gap-1.5 ${passwordValidation.requirements.minLength ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {passwordValidation.requirements.minLength ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <div className="h-3 w-3 rounded-full border border-current" />
+                )}
                 Minimum 7 characters
               </div>
-              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasLetter ? "text-green-600" : "text-muted-foreground"}`}>
-                {passwordValidation.requirements.hasLetter ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+              <div
+                className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasLetter ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {passwordValidation.requirements.hasLetter ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <div className="h-3 w-3 rounded-full border border-current" />
+                )}
                 At least one letter
               </div>
-              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasNumbers ? "text-green-600" : "text-muted-foreground"}`}>
-                {passwordValidation.requirements.hasNumbers ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+              <div
+                className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasNumbers ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {passwordValidation.requirements.hasNumbers ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <div className="h-3 w-3 rounded-full border border-current" />
+                )}
                 At least one number
               </div>
-              <div className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasSpecialChar ? "text-green-600" : "text-muted-foreground"}`}>
-                {passwordValidation.requirements.hasSpecialChar ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+              <div
+                className={`flex items-center gap-1.5 ${passwordValidation.requirements.hasSpecialChar ? "text-green-600" : "text-muted-foreground"}`}
+              >
+                {passwordValidation.requirements.hasSpecialChar ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <div className="h-3 w-3 rounded-full border border-current" />
+                )}
                 Special character (!@#$%^&*)
               </div>
             </div>
           )}
+
+          {/* Error message */}
           {errors.password && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -287,15 +341,22 @@ function SignUp() {
 
         <div className="w-full">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={confirmPasswordValue}
-            onChange={handleConfirmPasswordChange}
-            className={errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
-            placeholder="Confirm your password"
-            disabled={isAnyLoading}
-          />
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPasswordValue}
+              onChange={handleConfirmPasswordChange}
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              placeholder="Confirm your password"
+              disabled={isAnyLoading}
+            />
+            <PasswordToggle
+              showPassword={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={isAnyLoading}
+            />
+          </div>
           {errors.confirmPassword && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -306,7 +367,9 @@ function SignUp() {
 
         <Button
           type="submit"
-          disabled={isAnyLoading || !email.current?.value || (passwordValue && (!passwordValidation || !passwordValidation.isValid))}
+          disabled={
+            isAnyLoading || (passwordValue && (!passwordValidation || !passwordValidation.isValid))
+          }
           className="w-full mt-2"
         >
           {loadingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -331,7 +394,11 @@ function SignUp() {
           disabled={isAnyLoading}
           className="w-full"
         >
-          {loadingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGoogleCircle size={20} />}
+          {loadingGoogle ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <AiFillGoogleCircle size={20} />
+          )}
           <span className="ml-2">{loadingGoogle ? "Signing up..." : "Google"}</span>
         </Button>
         <Button
@@ -341,7 +408,11 @@ function SignUp() {
           disabled={isAnyLoading}
           className="w-full"
         >
-          {loadingGithub ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGithub size={20} />}
+          {loadingGithub ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <AiFillGithub size={20} />
+          )}
           <span className="ml-2">{loadingGithub ? "Signing up..." : "GitHub"}</span>
         </Button>
       </div>

@@ -20,13 +20,14 @@ import { signOut, getAuth } from "firebase/auth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Playlist from "../playlist/Playlists";
 import { app } from "../../Auth/firebase";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import { ThemeToggle } from "../ThemeToggle";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const sidebarRef = useRef(null);
   const auth = getAuth(app);
   const [isOpen, setIsOpen] = useState(false);
@@ -52,13 +53,8 @@ const Sidebar = () => {
     if (itemId === "search") {
       return location.pathname === "/search" || location.search.includes("searchTxt");
     }
-    if (itemId === "liked") {
-      return location.pathname === "/liked";
-    }
-    if (itemId === "playlist") {
-      return location.pathname === "/playlist";
-    }
-    return false;
+    // Updated to check for other paths
+    return location.pathname === `/${itemId}`;
   };
 
   useEffect(() => {
@@ -97,6 +93,7 @@ const Sidebar = () => {
       label: "Liked Songs",
       icon: Heart,
       path: "/liked",
+      requiresAuth: true, // It's good practice to require auth for liked songs
       badge: isUser && likedSongs.length > 0 ? likedSongs.length : null,
     },
     {
@@ -106,6 +103,15 @@ const Sidebar = () => {
       expandable: true,
       requiresAuth: true,
     },
+    // ---- START: Added Profile Item ----
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      path: "/profile",
+      requiresAuth: true,
+    },
+    // ---- END: Added Profile Item ----
     {
       id: "about",
       label: "About Me",
@@ -319,6 +325,7 @@ const Sidebar = () => {
                   setIsUser(false);
                   setPopover(false);
                   setIsOpen(false);
+                  navigate("/"); // Redirect to home on logout
                 }}
                 variant="destructive"
                 className={cn(

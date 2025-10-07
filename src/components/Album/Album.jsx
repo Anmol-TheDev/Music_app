@@ -126,22 +126,24 @@ export default function Album() {
     }
   }
 
-  function formatArtist(song) {
+  function formatArtist(song, check = false) {
     const all = song.artists.primary;
+    const x = check ? all.length : isMobile ? 1 : 3;
+
     const artists = all
-      .slice(0, 3)
+      .slice(0, x)
       .map(
         (artist) =>
           `<a href="/artist?Id=${artist.id}" class="hover:underline">${artist.name.trim()}</a>`
       )
       .join(", ");
 
-    return all.length > 3 ? `${artists}, & more` : artists;
+    return all.length > x ? `${artists} & more` : artists;
   }
 
   function getDescription() {
     const year = albumData.year;
-    const artists = formatArtist(albumData);
+    const artists = formatArtist(albumData, true);
 
     const description = `${year} · ${artists}`;
     return description;
@@ -313,15 +315,16 @@ export default function Album() {
                   </h1>
                 </div>
 
-                {/* Album Description */}
                 {albumData.description && (
-                  <p
-                    className="text-sm sm:text-base leading-relaxed max-w-2xl drop-shadow-md opacity-80"
+                  <div
+                    className="text-sm sm:text-base leading-relaxed max-w-2xl drop-shadow-md opacity-80 break-words whitespace-pre-wrap overflow-hidden text-ellipsis"
                     style={{
                       color:
                         textColor === "dark"
                           ? "hsl(var(--contrast-foreground-dark))"
                           : "hsl(var(--contrast-foreground-light))",
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
                     }}
                     dangerouslySetInnerHTML={{ __html: getDescription() }}
                   />
@@ -391,18 +394,19 @@ export default function Album() {
         </div>
 
         {/* Songs Section */}
-        <div className="container mx-auto px-3 sm:px-4 py-8">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="space-y-6">
-            {/* Desktop Header */}
-            <div className="hidden md:grid grid-cols-[40px_1fr_80px_40px_40px] gap-4 px-4 py-2 text-sm text-muted-foreground border-b border-border/50">
-              <div className="text-center">#</div>
-              <div>Title</div>
-              <div className="text-center">
-                <Clock className="w-4 h-4 mx-auto" />
+            {!isMobile && (
+              <div className="md:grid grid-cols-[40px_1fr_80px_40px_40px] gap-4 px-4 py-2 text-sm text-muted-foreground border-b border-border/50">
+                <div className="text-center">#</div>
+                <div>Title</div>
+                <div className="text-center">
+                  <Clock className="w-4 h-4 mx-auto" />
+                </div>
+                <div></div>
+                <div></div>
               </div>
-              <div></div>
-              <div></div>
-            </div>
+            )}
 
             {/* Songs List */}
             <div className="space-y-1">
@@ -415,7 +419,10 @@ export default function Album() {
                 >
                   {/* Mobile Layout */}
                   <div className="md:hidden">
-                    <div className="flex items-center gap-3 p-3 min-h-[60px]">
+                    <div
+                      className="flex items-center gap-3 p-3 min-h-[60px] cursor-pointer"
+                      onClick={() => handleSongClick(song)}
+                    >
                       {/* Track Number / Play Button */}
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                         <span
@@ -425,7 +432,7 @@ export default function Album() {
                         >
                           {index + 1}
                         </span>
-                        <button
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSongClick(song);
@@ -445,7 +452,7 @@ export default function Album() {
                           ) : (
                             <Play className="w-8 h-5 text-primary cursor-pointer hover:scale-125 transition-transform" />
                           )}
-                        </button>
+                        </div>
                       </div>
 
                       {/* Song Info - Mobile */}
@@ -472,12 +479,14 @@ export default function Album() {
 
                       {/* Like Button - Mobile */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                        <Like songId={song.id} />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Like songId={song.id} />
+                        </div>
                       </div>
 
                       {/* Menu Button */}
                       <div className="flex-shrink-0">
-                        <button
+                        <div
                           onClick={(e) => e.stopPropagation()}
                           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
                         >
@@ -485,7 +494,7 @@ export default function Album() {
                             song={song}
                             onOpenChange={(open) => setOpenMenuId(open ? song.id : null)}
                           />
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>

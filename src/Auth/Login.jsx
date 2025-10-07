@@ -1,17 +1,18 @@
 import { useRef, useState, useEffect } from "react";
-import { 
-  signInWithEmailAndPassword, 
-  signInWithPopup, 
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  GoogleAuthProvider, 
-  GithubAuthProvider 
+  GoogleAuthProvider,
+  GithubAuthProvider,
 } from "firebase/auth";
 import { auth } from "./firebase";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { PasswordToggle } from "../components/ui/password-toggle";
 import { useStore } from "../zustand/store";
 import { useNavigate } from "react-router-dom";
 import { AiFillGoogleCircle, AiFillGithub } from "react-icons/ai";
@@ -23,11 +24,12 @@ function Login() {
   const password = useRef();
   const { setIsUser, setDialogOpen } = useStore();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
   const [errors, setErrors] = useState({});
-  
+
   // Combined loading state for disabling all buttons
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
 
@@ -42,9 +44,13 @@ function Login() {
         }
       })
       .catch((error) => {
-        console.error('Redirect result error:', error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-          const errorMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim() || "Login failed";
+        console.error("Redirect result error:", error);
+        if (error.code !== "auth/popup-closed-by-user") {
+          const errorMsg =
+            error.message
+              ?.replace("Firebase: ", "")
+              .replace(/\(auth\/[^)]+\)/, "")
+              .trim() || "Login failed";
           setErrors({ submit: errorMsg });
           toast.error(errorMsg);
         }
@@ -58,77 +64,87 @@ function Login() {
     const newErrors = {};
 
     try {
-      await signInWithEmailAndPassword(
-        auth,
-        email.current.value,
-        password.current.value
-      );
+      await signInWithEmailAndPassword(auth, email.current.value, password.current.value);
       toast.success("Successfully logged in!");
       setDialogOpen(false);
       setIsUser(true);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       let errorMessage = "Unable to log in. Please try again.";
       let toastMessage = errorMessage;
       let isFieldError = false;
-      
+
       // Enhanced error messages with detailed user guidance
-      if (error.code === 'auth/configuration-not-found') {
-        errorMessage = "🔧 Authentication service unavailable. Our team has been notified. Please try again later.";
+      if (error.code === "auth/configuration-not-found") {
+        errorMessage =
+          "🔧 Authentication service unavailable. Our team has been notified. Please try again later.";
         toastMessage = "Service temporarily unavailable";
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error.code === "auth/invalid-email") {
         errorMessage = "Please enter a valid email address (e.g., name@example.com)";
         toastMessage = "Invalid email format";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/user-not-found') {
+      } else if (error.code === "auth/user-not-found") {
         errorMessage = "We couldn't find an account with this email. Would you like to create one?";
         toastMessage = "Account not found - Sign up instead?";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "The password you entered is incorrect. Please try again or reset your password.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage =
+          "The password you entered is incorrect. Please try again or reset your password.";
         toastMessage = "Incorrect password";
         newErrors.password = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "🔒 Too many unsuccessful login attempts. For security, please wait a few minutes before trying again, or reset your password.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage =
+          "🔒 Too many unsuccessful login attempts. For security, please wait a few minutes before trying again, or reset your password.";
         toastMessage = "Account temporarily locked";
-      } else if (error.code === 'auth/user-disabled') {
-        errorMessage = "🚫 This account has been disabled. Please contact support at support@example.com for assistance.";
+      } else if (error.code === "auth/user-disabled") {
+        errorMessage =
+          "🚫 This account has been disabled. Please contact support at support@example.com for assistance.";
         toastMessage = "Account disabled";
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMessage = "📡 Network connection issue. Please check your internet connection and try again.";
+      } else if (error.code === "auth/network-request-failed") {
+        errorMessage =
+          "📡 Network connection issue. Please check your internet connection and try again.";
         toastMessage = "Connection error";
-      } else if (error.code === 'auth/invalid-credential') {
-        errorMessage = "The email or password you entered is incorrect. Please check and try again.";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage =
+          "The email or password you entered is incorrect. Please check and try again.";
         toastMessage = "Invalid credentials";
-      } else if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = "An account already exists with this email using a different sign-in method. Try signing in with Google or GitHub.";
+      } else if (error.code === "auth/account-exists-with-different-credential") {
+        errorMessage =
+          "An account already exists with this email using a different sign-in method. Try signing in with Google or GitHub.";
         toastMessage = "Use different sign-in method";
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.";
+      } else if (error.code === "auth/popup-blocked") {
+        errorMessage =
+          "Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.";
         toastMessage = "Pop-up blocked";
-      } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
-        errorMessage = "This sign-in method is not supported in your current browser. Please try a different browser.";
+      } else if (error.code === "auth/operation-not-supported-in-this-environment") {
+        errorMessage =
+          "This sign-in method is not supported in your current browser. Please try a different browser.";
         toastMessage = "Browser not supported";
-      } else if (error.code === 'auth/timeout') {
+      } else if (error.code === "auth/timeout") {
         errorMessage = "⏱️ The request timed out. Please check your connection and try again.";
         toastMessage = "Request timeout";
-      } else if (error.code === 'auth/missing-email') {
+      } else if (error.code === "auth/missing-email") {
         errorMessage = "Please enter your email address to continue.";
         toastMessage = "Email required";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === 'auth/internal-error') {
-        errorMessage = "An unexpected error occurred. Please try again or contact support if the issue persists.";
+      } else if (error.code === "auth/internal-error") {
+        errorMessage =
+          "An unexpected error occurred. Please try again or contact support if the issue persists.";
         toastMessage = "Unexpected error";
       } else if (error.message) {
-        const cleanMessage = error.message.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim();
-        errorMessage = cleanMessage || "Unable to log in. Please verify your credentials and try again.";
+        const cleanMessage = error.message
+          .replace("Firebase: ", "")
+          .replace(/\(auth\/[^)]+\)/, "")
+          .trim();
+        errorMessage =
+          cleanMessage || "Unable to log in. Please verify your credentials and try again.";
         toastMessage = "Login failed";
       }
-      
+
       // Only show in Alert banner if it's not a field-specific error
       if (isFieldError) {
         setErrors({ ...newErrors });
@@ -151,32 +167,39 @@ function Login() {
       setDialogOpen(false);
       setIsUser(true);
     } catch (error) {
-      console.error('Google login error:', error);
+      console.error("Google login error:", error);
       let errorMessage = "Unable to sign in with Google. Please try again.";
       let toastMessage = "Google sign-in failed";
-      
+
       if (error.code === "auth/popup-blocked") {
-        errorMessage = "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to Google sign-in.";
+        errorMessage =
+          "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to Google sign-in.";
         toastMessage = "Pop-up blocked - Redirecting...";
         setErrors({ submit: errorMessage });
         toast.info(toastMessage);
         try {
           await signInWithRedirect(auth, provider);
-        } catch (redirectError) {
-          errorMessage = "Unable to redirect to Google sign-in. Please check your browser settings.";
+        } catch {
+          errorMessage =
+            "Unable to redirect to Google sign-in. Please check your browser settings.";
           setErrors({ submit: errorMessage });
           toast.error("Redirect failed");
         }
-      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+      } else if (
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
         // User intentionally closed popup - don't show as error
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/account-exists-with-different-credential") {
-        errorMessage = "An account with this email already exists. Try signing in with your email/password or a different provider.";
+        errorMessage =
+          "An account with this email already exists. Try signing in with your email/password or a different provider.";
         toastMessage = "Account exists with different method";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/configuration-not-found") {
-        errorMessage = "🔧 Google sign-in is not configured. Please contact support or try another sign-in method.";
+        errorMessage =
+          "🔧 Google sign-in is not configured. Please contact support or try another sign-in method.";
         toastMessage = "Google sign-in unavailable";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
@@ -186,18 +209,24 @@ function Login() {
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/unauthorized-domain") {
-        errorMessage = "This domain is not authorized for Google sign-in. Please contact the site administrator.";
+        errorMessage =
+          "This domain is not authorized for Google sign-in. Please contact the site administrator.";
         toastMessage = "Domain not authorized";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/operation-not-allowed") {
-        errorMessage = "Google sign-in is currently disabled. Please try email/password login or contact support.";
+        errorMessage =
+          "Google sign-in is currently disabled. Please try email/password login or contact support.";
         toastMessage = "Google sign-in disabled";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code !== "auth/popup-closed-by-user") {
-        const cleanMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim();
-        errorMessage = cleanMsg || "Unable to complete Google sign-in. Please try again or use email/password.";
+        const cleanMsg = error.message
+          ?.replace("Firebase: ", "")
+          .replace(/\(auth\/[^)]+\)/, "")
+          .trim();
+        errorMessage =
+          cleanMsg || "Unable to complete Google sign-in. Please try again or use email/password.";
         toastMessage = "Google sign-in failed";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
@@ -217,32 +246,39 @@ function Login() {
       setDialogOpen(false);
       setIsUser(true);
     } catch (error) {
-      console.error('GitHub login error:', error);
+      console.error("GitHub login error:", error);
       let errorMessage = "Unable to sign in with GitHub. Please try again.";
       let toastMessage = "GitHub sign-in failed";
-      
+
       if (error.code === "auth/popup-blocked") {
-        errorMessage = "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to GitHub sign-in.";
+        errorMessage =
+          "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to GitHub sign-in.";
         toastMessage = "Pop-up blocked - Redirecting...";
         setErrors({ submit: errorMessage });
         toast.info(toastMessage);
         try {
           await signInWithRedirect(auth, provider);
-        } catch (redirectError) {
-          errorMessage = "Unable to redirect to GitHub sign-in. Please check your browser settings.";
+        } catch {
+          errorMessage =
+            "Unable to redirect to GitHub sign-in. Please check your browser settings.";
           setErrors({ submit: errorMessage });
           toast.error("Redirect failed");
         }
-      } else if (error.code === "auth/cancelled-popup-request" || error.code === "auth/popup-closed-by-user") {
+      } else if (
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-closed-by-user"
+      ) {
         // User intentionally closed popup - don't show as error
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/account-exists-with-different-credential") {
-        errorMessage = "An account with this email already exists. Try signing in with your email/password or Google.";
+        errorMessage =
+          "An account with this email already exists. Try signing in with your email/password or Google.";
         toastMessage = "Account exists with different method";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/configuration-not-found") {
-        errorMessage = "🔧 GitHub sign-in is not configured. Please contact support or try another sign-in method.";
+        errorMessage =
+          "🔧 GitHub sign-in is not configured. Please contact support or try another sign-in method.";
         toastMessage = "GitHub sign-in unavailable";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
@@ -252,18 +288,24 @@ function Login() {
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/unauthorized-domain") {
-        errorMessage = "This domain is not authorized for GitHub sign-in. Please contact the site administrator.";
+        errorMessage =
+          "This domain is not authorized for GitHub sign-in. Please contact the site administrator.";
         toastMessage = "Domain not authorized";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code === "auth/operation-not-allowed") {
-        errorMessage = "GitHub sign-in is currently disabled. Please try email/password login or contact support.";
+        errorMessage =
+          "GitHub sign-in is currently disabled. Please try email/password login or contact support.";
         toastMessage = "GitHub sign-in disabled";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
       } else if (error.code !== "auth/popup-closed-by-user") {
-        const cleanMsg = error.message?.replace('Firebase: ', '').replace(/\(auth\/[^)]+\)/, '').trim();
-        errorMessage = cleanMsg || "Unable to complete GitHub sign-in. Please try again or use email/password.";
+        const cleanMsg = error.message
+          ?.replace("Firebase: ", "")
+          .replace(/\(auth\/[^)]+\)/, "")
+          .trim();
+        errorMessage =
+          cleanMsg || "Unable to complete GitHub sign-in. Please try again or use email/password.";
         toastMessage = "GitHub sign-in failed";
         setErrors({ submit: errorMessage });
         toast.error(toastMessage);
@@ -287,15 +329,15 @@ function Login() {
       <form onSubmit={handleEmailLogin} className="flex flex-col items-center gap-4 w-full">
         <div className="w-full">
           <Label htmlFor="login-email">Email</Label>
-          <Input 
+          <Input
             id="login-email"
-            type="email" 
-            ref={email} 
-            required 
+            type="email"
+            ref={email}
+            required
             placeholder="your@email.com"
             disabled={isAnyLoading}
             className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
-            onChange={() => errors.email && setErrors(prev => ({ ...prev, email: "" }))}
+            onChange={() => errors.email && setErrors((prev) => ({ ...prev, email: "" }))}
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -306,16 +348,23 @@ function Login() {
         </div>
         <div className="w-full">
           <Label htmlFor="login-password">Password</Label>
-          <Input 
-            id="login-password"
-            type="password" 
-            ref={password} 
-            required 
-            placeholder="Enter your password"
-            disabled={isAnyLoading}
-            className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
-            onChange={() => errors.password && setErrors(prev => ({ ...prev, password: "" }))}
-          />
+          <div className="relative">
+            <Input
+              id="login-password"
+              type={showPassword ? "text" : "password"}
+              ref={password}
+              required
+              placeholder="Enter your password"
+              disabled={isAnyLoading}
+              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              onChange={() => errors.password && setErrors((prev) => ({ ...prev, password: "" }))}
+            />
+            <PasswordToggle
+              showPassword={showPassword}
+              onToggle={() => setShowPassword(!showPassword)}
+              disabled={isAnyLoading}
+            />
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />
@@ -323,6 +372,7 @@ function Login() {
             </p>
           )}
         </div>
+
         <Button type="submit" disabled={isAnyLoading} className="w-full mt-2">
           {loadingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {loadingEmail ? "Logging in..." : "Login"}
@@ -346,7 +396,11 @@ function Login() {
           disabled={isAnyLoading}
           className="w-full"
         >
-          {loadingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGoogleCircle size={20} />}
+          {loadingGoogle ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <AiFillGoogleCircle size={20} />
+          )}
           <span className="ml-2">{loadingGoogle ? "Signing in..." : "Google"}</span>
         </Button>
         <Button
@@ -356,7 +410,11 @@ function Login() {
           disabled={isAnyLoading}
           className="w-full"
         >
-          {loadingGithub ? <Loader2 className="h-4 w-4 animate-spin" /> : <AiFillGithub size={20} />}
+          {loadingGithub ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <AiFillGithub size={20} />
+          )}
           <span className="ml-2">{loadingGithub ? "Signing in..." : "GitHub"}</span>
         </Button>
       </div>
