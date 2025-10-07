@@ -24,7 +24,6 @@ function Artist() {
         setIsLoading(true);
         const res = await Api(`/api/artists/${artistId}`);
         setData(res.data.data);
-        console.log(res.data);
         setQueue(res.data.data.topSongs);
 
         // Generate colors from the artist image
