@@ -266,24 +266,27 @@ function SignUp() {
           )}
         </div>
 
-        <div className="relative w-full">
+        <div className="w-full">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"} // <-- toggle type
-            value={passwordValue}
-            onChange={handlePasswordChange}
-            className={`${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""} pr-10`} // add padding for icon
-            placeholder="Enter a strong password"
-            disabled={isAnyLoading}
-          />
-
-          {/* Eye icon */}
-          <div
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
-            onClick={() => setShowPassword((prev) => !prev)}
-          >
-            {showPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={passwordValue}
+              onChange={handlePasswordChange}
+              placeholder="Enter a strong password"
+              disabled={isAnyLoading}
+              className={`${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""} pr-10`}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary rounded"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={0}
+            >
+              {showPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
+            </button>
           </div>
 
           {/* Password requirements */}
@@ -342,39 +345,36 @@ function SignUp() {
           )}
         </div>
 
-        <div className="relative w-full">
+        <div className="w-full">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            value={confirmPasswordValue}
-            onChange={handleConfirmPasswordChange}
-            className={
-              errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500 pr-10" : "pr-10"
-            }
-            placeholder="Confirm your password"
-            disabled={isAnyLoading}
-          />
-          <div
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600"
-            onClick={() => setShowConfirmPassword((prev) => !prev)}
-          >
-            {showConfirmPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPasswordValue}
+              onChange={handleConfirmPasswordChange}
+              placeholder="Confirm your password"
+              disabled={isAnyLoading}
+              className={
+                errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500 pr-10" : "pr-10"
+              }
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary rounded"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              tabIndex={0}
+            >
+              {showConfirmPassword ? <AiFillEyeInvisible size={18} /> : <AiFillEye size={18} />}
+            </button>
           </div>
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {errors.confirmPassword}
-            </p>
-          )}
         </div>
 
         <Button
           type="submit"
           disabled={
-            isAnyLoading ||
-            !email.current?.value ||
-            (passwordValue && (!passwordValidation || !passwordValidation.isValid))
+            isAnyLoading || (passwordValue && (!passwordValidation || !passwordValidation.isValid))
           }
           className="w-full mt-2"
         >
