@@ -325,6 +325,8 @@ const Sidebar = () => {
                   setIsUser(false);
                   setPopover(false);
                   setIsOpen(false);
+                  // Clear visitor flag so landing page shows again after logout
+                  localStorage.removeItem("hasVisited");
                   navigate("/"); // Redirect to home on logout
                 }}
                 variant="destructive"
