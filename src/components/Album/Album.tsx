@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Play, Plus, Clock, Pause, Share2, Shuffle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import Api from "../../Api";
@@ -20,7 +20,7 @@ import {
 } from "../ui/drawer";
 
 export default function Album() {
-  const [albumData, setAlbumData] = useState(null);
+  const [albumData, setAlbumData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
@@ -39,27 +39,20 @@ export default function Album() {
   } = useStore();
   const searchParams = new URLSearchParams(url.search);
   const albumId = searchParams.get("Id");
-  const [songs, setSongs] = useState(null);
-  const [bgColor, setBgColor] = useState();
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [songs, setSongs] = useState<any[] | null>(null);
+  const [bgColor, setBgColor] = useState<any>();
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
-  // Function to calculate luminance and determine text color
-  const getTextColor = (rgbColor) => {
-    // Extract RGB values from rgb(r, g, b) string
-    const match = rgbColor.match(/rgb$$(\d+),\s*(\d+),\s*(\d+)$$/);
+  const getTextColor = (rgbColor: string) => {
+    const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (!match) return "white";
-
     const r = Number.parseInt(match[1]);
     const g = Number.parseInt(match[2]);
     const b = Number.parseInt(match[3]);
-
-    // Calculate relative luminance (WCAG formula)
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    // If luminance > 0.6, use dark text, otherwise use white text
     return luminance > 0.6 ? "dark" : "white";
   };
 
@@ -71,15 +64,14 @@ export default function Album() {
         setAlbumData(res.data.data);
         setSongs(res.data.data.songs);
         setQueue(res.data.data.songs);
-        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
+        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }: any) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
-          // Determine text color based on background brightness
           setTextColor(getTextColor(dominantColor));
         });
       } catch (error) {
         toast.error("Failed to load album data.");
         console.error("Album API fetch error:", error);
-        setAlbumData(null); // Ensure albumData is null on error to trigger "Album not found" UI
+        setAlbumData(null);
       } finally {
         setIsLoading(false);
       }
@@ -87,66 +79,56 @@ export default function Album() {
     fetching();
   }, [albumId, setQueue]);
 
-  function handleSongClick(song) {
+  function handleSongClick(song: any) {
     if (song.id !== musicId) {
       setMusicId(song.id);
-      setAlbumId(albumId);
+      setAlbumId(albumId as any);
     } else {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
+      setIsPlaying(!isPlaying);
     }
   }
 
   function handlePlayAll() {
     if (currentAlbumId == albumId) {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
+      setIsPlaying(!isPlaying);
     } else {
-      if (songs?.length > 0) {
+      if (songs?.length) {
         setQueue(songs);
         setMusicId(songs[0].id);
         setIsPlaying(true);
-        setAlbumId(albumId);
+        setAlbumId(albumId as any);
       }
     }
   }
 
   function handleShuffle() {
-    if (songs?.length > 0) {
+    if (songs?.length) {
       const randomIndex = Math.floor(Math.random() * songs.length);
       setMusicId(songs[randomIndex].id);
-      setAlbumId(albumId);
+      setAlbumId(albumId as any);
       setIsPlaying(true);
     }
   }
 
-  function formatArtist(song, check = false) {
+  function formatArtist(song: any, check = false) {
     const all = song.artists.primary;
+    const mql = window.matchMedia("(max-width: 768px)");
+    const isMobile = mql.matches;
     const x = check ? all.length : isMobile ? 1 : 3;
-
     const artists = all
       .slice(0, x)
       .map(
-        (artist) =>
+        (artist: any) =>
           `<a href="/artist?Id=${artist.id}" class="hover:underline">${artist.name.trim()}</a>`
       )
       .join(", ");
-
     return all.length > x ? `${artists} & more` : artists;
   }
 
   function getDescription() {
     const year = albumData.year;
     const artists = formatArtist(albumData, true);
-
-    const description = `${year} · ${artists}`;
-    return description;
+    return `${year} · ${artists}`;
   }
 
   const handleCopyLink = async () => {
@@ -172,18 +154,16 @@ export default function Album() {
     }
   };
 
-  // Calculate total duration
   const totalDuration = songs?.reduce((acc, song) => acc + song.duration, 0) || 0;
   const totalMinutes = Math.floor(totalDuration / 60);
   const totalHours = Math.floor(totalMinutes / 60);
   const displayMinutes = totalMinutes % 60;
 
-  async function handleAddAllToPlaylist(playlistId) {
+  async function handleAddAllToPlaylist(playlistId: string) {
     try {
-      const ids = (songs || []).map((s) => s.id).filter(Boolean);
+      const ids = (songs || []).map((s: any) => s.id).filter(Boolean);
       if (!ids.length) return;
       pushManyToDb(playlistId, ids);
-      // Refresh local store so UI stays in sync
       fetchFireStore(setPlaylist, setLikedSongs);
       setIsAddToPlaylistOpen(false);
     } catch (e) {
@@ -192,9 +172,9 @@ export default function Album() {
     }
   }
 
-  async function handleCreatePlaylist(e) {
+  async function handleCreatePlaylist(e: React.FormEvent) {
     e.preventDefault();
-    const ids = (songs || []).map((s) => s.id).filter(Boolean);
+    const ids = (songs || []).map((s: any) => s.id).filter(Boolean);
     const playlistName = newPlaylistName?.trim() || albumData?.name || "New Playlist";
     const res = await createPlaylistWithSongs(playlistName, ids);
     if (res?.ok) {
@@ -248,7 +228,6 @@ export default function Album() {
   return (
     <ScrollArea className="h-[100dvh]">
       <div className="min-h-screen pb-32">
-        {/* Hero Section */}
         <div
           className="relative w-full pb-8"
           style={{
@@ -257,21 +236,15 @@ export default function Album() {
               : "linear-gradient(180deg, hsl(var(--muted)) 0%, transparent 100%)",
           }}
         >
-          {/* Dark/Light overlay tuned for contrast */}
           <div
-            className={`absolute inset-0 bg-gradient-to-b to-transparent ${
-              textColor === "dark" ? "from-white/70 via-white/60" : "from-black/50 via-black/40"
-            }`}
+            className={`absolute inset-0 bg-gradient-to-b to-transparent ${textColor === "dark" ? "from-white/70 via-white/60" : "from-black/50 via-black/40"}`}
           ></div>
 
           <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start">
-              {/* Album Cover */}
               <div className="relative mx-auto lg:mx-0 flex-shrink-0 hover:scale-105 transition-transform">
                 <div
-                  className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-2xl transition-opacity duration-300 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  }`}
+                  className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-2xl transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                 >
                   <img
                     src={albumData.image[2].url || "/placeholder.svg"}
@@ -286,30 +259,15 @@ export default function Album() {
                 )}
               </div>
 
-              {/* Album Info */}
               <div className="flex-1 text-center lg:text-left space-y-4 lg:space-y-6">
                 <div className="space-y-2">
                   <p
-                    className={`text-sm font-medium uppercase tracking-wider drop-shadow-md ${
-                      textColor === "dark" ? "opacity-90" : "opacity-90"
-                    }`}
-                    style={{
-                      color:
-                        textColor === "dark"
-                          ? "hsl(var(--contrast-foreground-dark))"
-                          : "hsl(var(--contrast-foreground-light))",
-                    }}
+                    className={`text-sm font-medium uppercase tracking-wider drop-shadow-md ${textColor === "dark" ? "opacity-90" : "opacity-90"}`}
                   >
                     Album
                   </p>
                   <h1
                     className={`text-3xl sm:text-4xl lg:text-6xl font-bold leading-tight break-words drop-shadow-lg`}
-                    style={{
-                      color:
-                        textColor === "dark"
-                          ? "hsl(var(--contrast-foreground-dark))"
-                          : "hsl(var(--contrast-foreground-light))",
-                    }}
                   >
                     {albumData.name}
                   </h1>
@@ -318,28 +276,11 @@ export default function Album() {
                 {albumData.description && (
                   <div
                     className="text-sm sm:text-base leading-relaxed max-w-2xl drop-shadow-md opacity-80 break-words whitespace-pre-wrap overflow-hidden text-ellipsis"
-                    style={{
-                      color:
-                        textColor === "dark"
-                          ? "hsl(var(--contrast-foreground-dark))"
-                          : "hsl(var(--contrast-foreground-light))",
-                      wordWrap: "break-word",
-                      overflowWrap: "break-word",
-                    }}
                     dangerouslySetInnerHTML={{ __html: getDescription() }}
                   />
                 )}
 
-                {/* Album Stats */}
-                <div
-                  className="flex flex-wrap items-center gap-2 text-sm justify-center lg:justify-start drop-shadow-md opacity-80"
-                  style={{
-                    color:
-                      textColor === "dark"
-                        ? "hsl(var(--contrast-foreground-dark))"
-                        : "hsl(var(--contrast-foreground-light))",
-                  }}
-                >
+                <div className="flex flex-wrap items-center gap-2 text-sm justify-center lg:justify-start drop-shadow-md opacity-80">
                   <span>{songs?.length || 0} songs</span>
                   <span>•</span>
                   <span>
@@ -347,7 +288,6 @@ export default function Album() {
                   </span>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 justify-center lg:justify-start pt-2">
                   <button
                     onClick={handlePlayAll}
@@ -369,21 +309,13 @@ export default function Album() {
                   </button>
                   <button
                     onClick={() => setIsAddToPlaylistOpen(true)}
-                    className={`flex items-center gap-2 backdrop-blur-sm px-4 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px] shadow-md ${
-                      textColor === "dark"
-                        ? "bg-background/20 hover:bg-background/30 text-foreground border border-border/50"
-                        : "bg-white/20 hover:bg-white/30 text-white border border-white/30"
-                    }`}
+                    className={`flex items-center gap-2 backdrop-blur-sm px-4 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px] shadow-md ${textColor === "dark" ? "bg-background/20 hover:bg-background/30 text-foreground border border-border/50" : "bg-white/20 hover:bg-white/30 text-white border border-white/30"}`}
                   >
                     <Plus className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleCopyLink}
-                    className={`flex items-center gap-2 backdrop-blur-sm px-4 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px] shadow-md ${
-                      textColor === "dark"
-                        ? "bg-background/20 hover:bg-background/30 text-foreground border border-border/50"
-                        : "bg-white/20 hover:bg-white/30 text-white border border-white/30"
-                    }`}
+                    className={`flex items-center gap-2 backdrop-blur-sm px-4 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px] shadow-md ${textColor === "dark" ? "bg-background/20 hover:bg-background/30 text-foreground border border-border/50" : "bg-white/20 hover:bg-white/30 text-white border border-white/30"}`}
                   >
                     <Share2 className="w-5 h-5" />
                   </button>
@@ -393,7 +325,6 @@ export default function Album() {
           </div>
         </div>
 
-        {/* Songs Section */}
         <div className="container mx-auto px-3 sm:px-4">
           <div className="space-y-6">
             {!isMobile && (
@@ -408,27 +339,20 @@ export default function Album() {
               </div>
             )}
 
-            {/* Songs List */}
             <div className="space-y-1">
-              {songs?.map((song, index) => (
+              {songs?.map((song: any, index: number) => (
                 <div
                   key={song.id || index}
-                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${
-                    song.id === musicId || openMenuId === song.id ? "bg-muted/50" : ""
-                  }`}
+                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${song.id === musicId || openMenuId === song.id ? "bg-muted/50" : ""}`}
                 >
-                  {/* Mobile Layout */}
                   <div className="md:hidden">
                     <div
                       className="flex items-center gap-3 p-3 min-h-[60px] cursor-pointer"
                       onClick={() => handleSongClick(song)}
                     >
-                      {/* Track Number / Play Button */}
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                         <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${
-                            song.id === musicId ? "hidden" : ""
-                          }`}
+                          className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
                         >
                           {index + 1}
                         </span>
@@ -437,9 +361,7 @@ export default function Album() {
                             e.stopPropagation();
                             handleSongClick(song);
                           }}
-                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
-                            song.id === musicId ? "block" : "hidden group-hover:block"
-                          }`}
+                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
@@ -455,12 +377,9 @@ export default function Album() {
                         </div>
                       </div>
 
-                      {/* Song Info - Mobile */}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
-                          className={`font-medium text-sm leading-5 ${
-                            song.id === musicId ? "text-primary" : "text-foreground"
-                          }`}
+                          className={`font-medium text-sm leading-5 ${song.id === musicId ? "text-primary" : "text-foreground"}`}
                           style={{
                             display: "-webkit-box",
                             WebkitLineClamp: 1,
@@ -477,14 +396,12 @@ export default function Album() {
                         />
                       </div>
 
-                      {/* Like Button - Mobile */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
                         <div onClick={(e) => e.stopPropagation()}>
                           <Like songId={song.id} />
                         </div>
                       </div>
 
-                      {/* Menu Button */}
                       <div className="flex-shrink-0">
                         <div
                           onClick={(e) => e.stopPropagation()}
@@ -499,15 +416,11 @@ export default function Album() {
                     </div>
                   </div>
 
-                  {/* Desktop Layout */}
                   <div className="hidden md:block">
                     <div className="grid grid-cols-[40px_1fr_80px_40px_40px] gap-4 items-center px-4 py-3 group">
-                      {/* Track Number / Play Button */}
                       <div className="flex items-center justify-center">
                         <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${
-                            song.id === musicId ? "hidden" : ""
-                          }`}
+                          className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
                         >
                           {index + 1}
                         </span>
@@ -516,9 +429,7 @@ export default function Album() {
                             e.stopPropagation();
                             handleSongClick(song);
                           }}
-                          className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${
-                            song.id === musicId ? "block" : "hidden group-hover:block"
-                          }`}
+                          className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
@@ -534,7 +445,6 @@ export default function Album() {
                         </button>
                       </div>
 
-                      {/* Song Title */}
                       <div className="min-w-0">
                         <h3
                           className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
@@ -548,7 +458,6 @@ export default function Album() {
                         />
                       </div>
 
-                      {/* Duration */}
                       <div className="text-sm text-muted-foreground font-mono text-center">
                         {Math.floor(song.duration / 60)}:
                         {(song.duration % 60).toString().padStart(2, "0")}
@@ -558,7 +467,6 @@ export default function Album() {
                         <Like songId={song.id} />
                       </div>
 
-                      {/* Menu Button */}
                       <div className="flex justify-center">
                         <button
                           onClick={(e) => e.stopPropagation()}
@@ -593,10 +501,8 @@ export default function Album() {
               </DrawerDescription>
             </DrawerHeader>
 
-            {/* Top section: header + create new playlist */}
             <div className="flex flex-col h-[100dvh] bg-black/60 backdrop-blur-xl text-white rounded-t-3xl">
               <div className="px-4 pt-4 pb-3 flex-shrink-0">
-                {/* Header summary */}
                 <div className="flex items-center gap-3 mb-4">
                   {albumData?.image?.[1]?.url ? (
                     <img
@@ -604,8 +510,8 @@ export default function Album() {
                       src={albumData?.image?.[1]?.url || "/placeholder.svg"}
                       alt={`${albumData?.name || "Album"} cover`}
                       onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/image.png";
+                        (e.currentTarget as HTMLImageElement).onerror = null;
+                        (e.currentTarget as HTMLImageElement).src = "/image.png";
                       }}
                     />
                   ) : (
@@ -621,7 +527,6 @@ export default function Album() {
                   </div>
                 </div>
 
-                {/* Create new playlist */}
                 {!isCreatingPlaylist ? (
                   <button
                     className="w-full rounded-md bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-3 transition-colors"
@@ -640,7 +545,7 @@ export default function Album() {
                     <input
                       className="w-full rounded-md bg-black/20 border border-white/20 px-3 py-2 outline-none placeholder-white/50"
                       value={newPlaylistName}
-                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      onChange={(e) => setNewPlaylistName((e.target as HTMLInputElement).value)}
                       placeholder={albumData.name}
                       autoFocus
                     />
@@ -663,7 +568,6 @@ export default function Album() {
                 )}
               </div>
 
-              {/* Scrollable playlist list */}
               <div className="flex-1 overflow-y-auto px-4">
                 <p className="text-xs uppercase tracking-wider text-white/60 mb-2">
                   Your playlists
@@ -671,7 +575,7 @@ export default function Album() {
                 <div className="rounded-md border border-white/15 bg-white/5">
                   {Array.isArray(playlist) && playlist.length > 0 ? (
                     <ul className="divide-y divide-white/10">
-                      {playlist.map((pl) => (
+                      {playlist.map((pl: any) => (
                         <li key={pl.id}>
                           <button
                             onClick={() => {
@@ -691,7 +595,6 @@ export default function Album() {
                 </div>
               </div>
 
-              {/* Bottom close button */}
               <div className="sticky bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/10">
                 <DrawerClose asChild>
                   <button
@@ -713,7 +616,6 @@ export default function Album() {
               Choose a playlist to add all songs or create a new playlist.
             </DialogDescription>
 
-            {/* Header summary */}
             <div className="flex items-center gap-3">
               {albumData?.image?.[1]?.url ? (
                 <img
@@ -722,8 +624,8 @@ export default function Album() {
                   alt={`${albumData?.name} cover`}
                   loading="lazy"
                   onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/image.png";
+                    (e.currentTarget as HTMLImageElement).onerror = null;
+                    (e.currentTarget as HTMLImageElement).src = "/image.png";
                   }}
                 />
               ) : (
@@ -739,13 +641,12 @@ export default function Album() {
               </div>
             </div>
 
-            {/* Existing playlists */}
             <div className="mt-4">
               <p className="text-xs uppercase tracking-wider text-white/60 mb-2">Your playlists</p>
               <div className="max-h-56 overflow-y-auto rounded-md border border-white/15 bg-white/5">
                 {Array.isArray(playlist) && playlist.length > 0 ? (
                   <ul className="divide-y divide-white/10">
-                    {playlist.map((pl) => (
+                    {playlist.map((pl: any) => (
                       <li key={pl.id}>
                         <button
                           onClick={() => handleAddAllToPlaylist(pl.id)}
@@ -763,7 +664,6 @@ export default function Album() {
               </div>
             </div>
 
-            {/* Create new playlist */}
             <div className="mt-4">
               {!isCreatingPlaylist ? (
                 <button
@@ -777,7 +677,7 @@ export default function Album() {
                   <input
                     className="w-full rounded-md bg-black/20 border border-white/20 px-3 py-2 outline-none placeholder-white/50 text-white"
                     value={newPlaylistName}
-                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    onChange={(e) => setNewPlaylistName((e.target as HTMLInputElement).value)}
                     placeholder={albumData.name}
                     autoFocus
                   />

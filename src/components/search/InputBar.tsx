@@ -6,52 +6,43 @@ import Api from "../../Api";
 
 export default function InputBar() {
   const [searchInput, setSearchInput] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const searchBarRef = useRef(null);
+  const [suggestions, setSuggestions] = useState<{ id: string; name: string }[]>([]);
+  const searchBarRef = useRef<HTMLInputElement | null>(null);
   const [, setSearchQuery] = useSearchParams();
   const [isSearchBarFocused, setIsSearchBarFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const CurrPath = useLocation();
   const router = useNavigate();
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     searchSong(searchInput);
   }
-  const searchSong = (query) => {
+  const searchSong = (query: string) => {
     setSearchQuery({ query });
     localStorage.setItem("search", query);
-
     const path = {
       pathname: "/search",
-      search: createSearchParams({
-        searchtxt: query,
-      }).toString(),
-    };
+      search: createSearchParams({ searchtxt: query }).toString(),
+    } as any;
     if (CurrPath.pathname !== "/search") router(path);
     setIsSearchBarFocused(false);
-    if (query !== searchInput) {
-      setSearchInput(query);
-    }
+    if (query !== searchInput) setSearchInput(query);
   };
 
   useEffect(() => {
     const search = localStorage.getItem("search");
-    if (search) {
-      setSearchInput(search);
-    }
-    searchBarRef.current.addEventListener("focus", () => {
+    if (search) setSearchInput(search);
+    searchBarRef.current?.addEventListener("focus", () => {
       setIsSearchBarFocused(true);
     });
-    // searchBarRef.current.addEventListener("blur", () => {
-    // });
-    document.addEventListener("click", (e) => {
-      if (e.target.classList.contains("song-sugg") || e.target.classList.contains("inputBar")) {
-        return;
-      } else {
-        setIsSearchBarFocused(false);
-      }
-    });
+    const onDocClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("song-sugg") || target.classList.contains("inputBar")) return;
+      setIsSearchBarFocused(false);
+    };
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
   }, []);
 
   useEffect(() => {
@@ -59,23 +50,17 @@ export default function InputBar() {
       setLoading(true);
       if (searchInput && isSearchBarFocused) {
         const res = await Api(`/api/search/songs?query=${searchInput}&limit=4`);
-        const data = res.data.data.results.map((res) => {
-          return {
-            id: res["id"],
-            name: res["name"],
-          };
-        });
-
+        const data = (res as any).data.data.results.map((res: any) => ({
+          id: res["id"],
+          name: res["name"],
+        }));
         setSuggestions(data);
         setLoading(false);
       } else {
         setSuggestions([]);
       }
     };
-    const timeout = setTimeout(() => {
-      fetchSearch();
-    }, 400);
-
+    const timeout = setTimeout(fetchSearch, 400);
     return () => clearTimeout(timeout);
   }, [searchInput, isSearchBarFocused]);
 

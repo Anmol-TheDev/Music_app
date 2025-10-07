@@ -9,11 +9,11 @@ A modern music application built with React, Vite, and Tailwind CSS. This projec
 
 ## Features
 
-* **Browse and play music:** Search for your favorite songs, artists, and albums.
-* **Create and manage playlists:** Organize your music into custom playlists.
-* **User authentication:** Sign up and log in to save your playlists and preferences.
-* **Responsive design:** Enjoy a seamless experience on both desktop and mobile devices.
-* **Keyword Shortcuts:** Shortcuts to next, previous,pause,stop,shuffle,mute .
+- **Browse and play music:** Search for your favorite songs, artists, and albums.
+- **Create and manage playlists:** Organize your music into custom playlists.
+- **User authentication:** Sign up and log in to save your playlists and preferences.
+- **Responsive design:** Enjoy a seamless experience on both desktop and mobile devices.
+- **Keyword Shortcuts:** Shortcuts to next, previous,pause,stop,shuffle,mute .
 
 ## Getting Started
 
@@ -21,8 +21,8 @@ To get a local copy up and running, follow these simple steps.
 
 ### Prerequisites
 
-* Node.js (v14 or later)
-* pnpm
+- Node.js (v14 or later)
+- pnpm
 
 ### Installation
 
@@ -48,6 +48,37 @@ To get a local copy up and running, follow these simple steps.
    ```sh
    pnpm run dev
    ```
+
+## TypeScript Migration
+
+This project has been migrated to TypeScript with Vite.
+
+- File naming: use `.ts` for non-React modules, `.tsx` for React components.
+- Path alias: import via `@/` for anything under `src`.
+- Strict mode: enabled; add explicit types for props, hooks, and utilities.
+
+### Adding New Components
+
+Create components with `.tsx` and define props via interfaces:
+
+```tsx
+type MyComponentProps = { title: string; count?: number };
+export function MyComponent({ title, count = 0 }: MyComponentProps) {
+  return (
+    <h2>
+      {title} ({count})
+    </h2>
+  );
+}
+```
+
+### Linting & Formatting
+
+ESLint is configured for TypeScript using `@typescript-eslint` and React hooks rules. Prettier formats `ts/tsx` via lint-staged.
+
+### Build Tooling
+
+Vite is configured to resolve `@` to `src`. TypeScript config lives in `tsconfig.json` and `tsconfig.app.json`.
 
 ## Contributing
 

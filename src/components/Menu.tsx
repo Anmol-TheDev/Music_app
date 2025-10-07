@@ -26,7 +26,26 @@ import {
   DrawerDescription,
   DrawerClose,
 } from "./ui/drawer";
-import PropTypes from "prop-types";
+
+type Artist = { id?: string; name?: string; perma_url?: string };
+type SongImage = { url?: string };
+type Song = {
+  id?: string;
+  name?: string;
+  url?: string;
+  perma_url?: string;
+  permaUrl?: string;
+  permalink?: string;
+  image?: SongImage[];
+  album?: { id?: string };
+  albumId?: string;
+  artists?: { primary?: { name?: string }[]; all?: Artist[] };
+};
+
+type MenuProps = {
+  song?: Song;
+  onOpenChange?: (open: boolean) => void;
+};
 
 const MOBILE_BREAKPOINT = 768;
 function useIsMobile() {
@@ -34,7 +53,6 @@ function useIsMobile() {
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
     const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    // initialize + listen
     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
@@ -42,31 +60,28 @@ function useIsMobile() {
   return isMobile;
 }
 
-export default function Menu({ song, onOpenChange }) {
+export default function Menu({ song, onOpenChange }: MenuProps) {
   const { playlist, isUser, addToQueue, addToQueueNext } = useStore();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const handleOpenChange = useCallback(
-    (next) => {
+    (next: boolean) => {
       setOpen(next);
       onOpenChange?.(next);
     },
     [onOpenChange]
   );
 
-  // Check if user is authenticated
   const auth = getAuth(app);
   const user = auth?.currentUser;
-  const isAuthenticated = user && isUser;
+  const isAuthenticated = Boolean(user && isUser);
 
   const getShareUrl = () => {
     try {
-      // Prefer external link if shape provides it
       const external = song?.perma_url || song?.permaUrl || song?.url || song?.permalink;
       if (external) return external;
 
-      // Otherwise, share current app URL with a song param
       const url = new URL(window.location.href);
       url.searchParams.set("song", song?.id || "");
       return url.toString();
@@ -75,7 +90,7 @@ export default function Menu({ song, onOpenChange }) {
     }
   };
 
-  const handleCopyLink = async (e) => {
+  const handleCopyLink = async (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     const link = getShareUrl();
     try {
@@ -99,27 +114,27 @@ export default function Menu({ song, onOpenChange }) {
     }
   };
 
-  const handleAddToQueue = (e) => {
+  const handleAddToQueue = (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     if (addToQueue) {
-      addToQueue(song);
+      addToQueue(song as any);
       toast.success("Added to queue!");
     } else {
       toast.info("Queue feature coming soon!");
     }
   };
 
-  const handleAddToNext = (e) => {
+  const handleAddToNext = (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     if (addToQueueNext) {
-      addToQueueNext(song);
+      addToQueueNext(song as any);
       toast.success("Playing Next!");
     } else {
       toast.info("Queue feature coming soon!");
     }
   };
 
-  const handleGoToAlbum = (e) => {
+  const handleGoToAlbum = (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     if (song?.album?.id || song?.albumId) {
       const albumId = song.album?.id || song.albumId;
@@ -160,9 +175,7 @@ export default function Menu({ song, onOpenChange }) {
                 </DrawerDescription>
               </DrawerHeader>
 
-              {/* Visible glass panel */}
               <div className="flex min-h-[100dvh] flex-col bg-black/60 backdrop-blur-xl text-white rounded-t-3xl">
-                {/* Header */}
                 <div className="flex items-center gap-4 px-4 pt-6 pb-8">
                   {song?.image?.[1]?.url ? (
                     <img
@@ -171,8 +184,8 @@ export default function Menu({ song, onOpenChange }) {
                       alt={song?.name || "Song artwork"}
                       loading="lazy"
                       onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/image.png";
+                        (e.currentTarget as HTMLImageElement).onerror = null;
+                        (e.currentTarget as HTMLImageElement).src = "/image.png";
                       }}
                     />
                   ) : (
@@ -222,13 +235,13 @@ export default function Menu({ song, onOpenChange }) {
                     {isAuthenticated ? (
                       <div className="flex flex-col">
                         {playlist?.length ? (
-                          playlist.map((list) => (
+                          playlist.map((list: any) => (
                             <button
                               key={list.id}
                               className="w-full flex items-center gap-3 px-3 h-12 rounded-md hover:bg-accent/60 text-left"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                pushInDb(list.id, song.id);
+                                pushInDb(list.id, (song as any).id);
                                 toast.success(`Added to ${list.data.name}`);
                                 handleOpenChange(false);
                               }}
@@ -265,17 +278,21 @@ export default function Menu({ song, onOpenChange }) {
                         .slice(0, 3)
                         .map((artist) => (
                           <button
-                            key={artist.id || artist.perma_url || artist.name}
+                            key={
+                              (artist as any).id ||
+                              (artist as any).perma_url ||
+                              (artist as any).name
+                            }
                             className="w-full flex items-center gap-3 px-3 h-12 rounded-md hover:bg-accent/60 text-left"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/artist?Id=${artist.id}`);
+                              navigate(`/artist?Id=${(artist as any).id}`);
                               handleOpenChange(false);
                             }}
-                            title={`Go to ${artist.name}`}
+                            title={`Go to ${(artist as any).name}`}
                           >
                             <User className="w-5 h-5 text-muted-foreground" />
-                            <span className="text-sm">Go to {artist.name}</span>
+                            <span className="text-sm">Go to {(artist as any).name}</span>
                           </button>
                         ))}
 
@@ -318,7 +335,6 @@ export default function Menu({ song, onOpenChange }) {
                   </div>
                 </div>
 
-                {/* Bottom close button */}
                 <div className="sticky bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/10">
                   <DrawerClose asChild>
                     <button
@@ -349,7 +365,6 @@ export default function Menu({ song, onOpenChange }) {
               align="start"
               sideOffset={6}
             >
-              {/* Playback group */}
               <MenubarLabel className="px-2 py-1 text-xs text-muted-foreground">
                 Playback
               </MenubarLabel>
@@ -357,7 +372,7 @@ export default function Menu({ song, onOpenChange }) {
                 className="gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddToNext(e);
+                  handleAddToNext(e as any);
                 }}
                 title="Queue this to play next"
               >
@@ -368,7 +383,7 @@ export default function Menu({ song, onOpenChange }) {
                 className="gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddToQueue(e);
+                  handleAddToQueue(e as any);
                 }}
                 title="Add to queue"
               >
@@ -378,7 +393,6 @@ export default function Menu({ song, onOpenChange }) {
 
               <MenubarSeparator className="my-1" />
 
-              {/* Library group */}
               <MenubarLabel className="px-2 py-1 text-xs text-muted-foreground">
                 Library
               </MenubarLabel>
@@ -390,13 +404,13 @@ export default function Menu({ song, onOpenChange }) {
                   </MenubarSubTrigger>
                   <MenubarSubContent className="w-56">
                     {playlist?.length ? (
-                      playlist.map((list) => (
+                      playlist.map((list: any) => (
                         <MenubarItem
                           key={list.id}
                           className="p-2 rounded-md w-full hover:bg-accent/50"
                           onClick={(e) => {
                             e.stopPropagation();
-                            pushInDb(list.id, song.id);
+                            pushInDb(list.id, (song as any).id);
                             toast.success(`Added to ${list.data.name}`);
                           }}
                           title={`Add to ${list.data.name}`}
@@ -418,7 +432,6 @@ export default function Menu({ song, onOpenChange }) {
 
               <MenubarSeparator className="my-1" />
 
-              {/* Navigation group */}
               <MenubarLabel className="px-2 py-1 text-xs text-muted-foreground">
                 Navigation
               </MenubarLabel>
@@ -438,15 +451,17 @@ export default function Menu({ song, onOpenChange }) {
                     .slice(0, 3)
                     .map((artist) => (
                       <MenubarItem
-                        key={artist.id || artist.perma_url || artist.name}
+                        key={
+                          (artist as any).id || (artist as any).perma_url || (artist as any).name
+                        }
                         className="p-2 rounded-md w-full hover:bg-accent/50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/artist?Id=${artist.id}`);
+                          navigate(`/artist?Id=${(artist as any).id}`);
                         }}
-                        title={`Go to ${artist.name}`}
+                        title={`Go to ${(artist as any).name}`}
                       >
-                        {artist.name}
+                        {(artist as any).name}
                       </MenubarItem>
                     ))}
 
@@ -461,7 +476,7 @@ export default function Menu({ song, onOpenChange }) {
                   className="gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleGoToAlbum(e);
+                    handleGoToAlbum(e as any);
                   }}
                   title="Go to album"
                 >
@@ -472,9 +487,8 @@ export default function Menu({ song, onOpenChange }) {
 
               <MenubarSeparator className="my-1" />
 
-              {/* Share group */}
               <MenubarLabel className="px-2 py-1 text-xs text-muted-foreground">Share</MenubarLabel>
-              <MenubarItem className="gap-2" onClick={handleCopyLink} title="Copy link">
+              <MenubarItem className="gap-2" onClick={() => handleCopyLink()} title="Copy link">
                 <Copy className="h-4 w-4 text-muted-foreground" />
                 Copy link
               </MenubarItem>
@@ -485,38 +499,3 @@ export default function Menu({ song, onOpenChange }) {
     </>
   );
 }
-
-Menu.propTypes = {
-  song: PropTypes.shape({
-    id: PropTypes.string,
-    name: PropTypes.string,
-    url: PropTypes.string,
-    perma_url: PropTypes.string,
-    permaUrl: PropTypes.string,
-    permalink: PropTypes.string,
-    image: PropTypes.arrayOf(
-      PropTypes.shape({
-        url: PropTypes.string,
-      })
-    ),
-    album: PropTypes.shape({
-      id: PropTypes.string,
-    }),
-    albumId: PropTypes.string,
-    artists: PropTypes.shape({
-      primary: PropTypes.arrayOf(
-        PropTypes.shape({
-          name: PropTypes.string,
-        })
-      ),
-      all: PropTypes.arrayOf(
-        PropTypes.shape({
-          id: PropTypes.string,
-          name: PropTypes.string,
-          perma_url: PropTypes.string,
-        })
-      ),
-    }),
-  }),
-  onOpenChange: PropTypes.func,
-};

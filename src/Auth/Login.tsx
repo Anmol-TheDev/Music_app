@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -20,20 +20,18 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 function Login() {
-  const email = useRef();
-  const password = useRef();
+  const email = useRef<HTMLInputElement | null>(null);
+  const password = useRef<HTMLInputElement | null>(null);
   const { setIsUser, setDialogOpen } = useStore();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loadingEmail, setLoadingEmail] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingGithub, setLoadingGithub] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Combined loading state for disabling all buttons
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
 
-  // Handle redirect result after Google/GitHub login
   useEffect(() => {
     getRedirectResult(auth)
       .then((result) => {
@@ -43,7 +41,7 @@ function Login() {
           setIsUser(true);
         }
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         console.error("Redirect result error:", error);
         if (error.code !== "auth/popup-closed-by-user") {
           const errorMsg =
@@ -57,24 +55,21 @@ function Login() {
       });
   }, [navigate, setDialogOpen, setIsUser]);
 
-  const handleEmailLogin = async (e) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingEmail(true);
     setErrors({});
-    const newErrors = {};
-
+    const newErrors: Record<string, string> = {};
     try {
-      await signInWithEmailAndPassword(auth, email.current.value, password.current.value);
+      await signInWithEmailAndPassword(auth, email.current!.value, password.current!.value);
       toast.success("Successfully logged in!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       let errorMessage = "Unable to log in. Please try again.";
       let toastMessage = errorMessage;
       let isFieldError = false;
-
-      // Enhanced error messages with detailed user guidance
       if (error.code === "auth/configuration-not-found") {
         errorMessage =
           "🔧 Authentication service unavailable. Our team has been notified. Please try again later.";
@@ -144,8 +139,6 @@ function Login() {
           cleanMessage || "Unable to log in. Please verify your credentials and try again.";
         toastMessage = "Login failed";
       }
-
-      // Only show in Alert banner if it's not a field-specific error
       if (isFieldError) {
         setErrors({ ...newErrors });
       } else {
@@ -166,11 +159,10 @@ function Login() {
       toast.success("Successfully logged in with Google!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Google login error:", error);
       let errorMessage = "Unable to sign in with Google. Please try again.";
       let toastMessage = "Google sign-in failed";
-
       if (error.code === "auth/popup-blocked") {
         errorMessage =
           "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to Google sign-in.";
@@ -189,7 +181,6 @@ function Login() {
         error.code === "auth/cancelled-popup-request" ||
         error.code === "auth/popup-closed-by-user"
       ) {
-        // User intentionally closed popup - don't show as error
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/account-exists-with-different-credential") {
         errorMessage =
@@ -245,11 +236,10 @@ function Login() {
       toast.success("Successfully logged in with GitHub!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("GitHub login error:", error);
       let errorMessage = "Unable to sign in with GitHub. Please try again.";
       let toastMessage = "GitHub sign-in failed";
-
       if (error.code === "auth/popup-blocked") {
         errorMessage =
           "🚫 Pop-up blocked! Please allow pop-ups for this site or we'll redirect you to GitHub sign-in.";
@@ -268,7 +258,6 @@ function Login() {
         error.code === "auth/cancelled-popup-request" ||
         error.code === "auth/popup-closed-by-user"
       ) {
-        // User intentionally closed popup - don't show as error
         toast.info("Sign-in cancelled");
       } else if (error.code === "auth/account-exists-with-different-credential") {
         errorMessage =
@@ -318,14 +307,12 @@ function Login() {
   return (
     <div className="flex flex-col gap-2 items-center">
       <h1 className="font-semibold text-xl mt-3">Login to Continue</h1>
-
       {errors.submit && (
         <Alert variant="destructive" className="w-full">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{errors.submit}</AlertDescription>
         </Alert>
       )}
-
       <form onSubmit={handleEmailLogin} className="flex flex-col items-center gap-4 w-full">
         <div className="w-full">
           <Label htmlFor="login-email">Email</Label>
@@ -337,7 +324,9 @@ function Login() {
             placeholder="your@email.com"
             disabled={isAnyLoading}
             className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
-            onChange={() => errors.email && setErrors((prev) => ({ ...prev, email: "" }))}
+            onChange={() =>
+              errors.email && setErrors((prev: Record<string, string>) => ({ ...prev, email: "" }))
+            }
           />
           {errors.email && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
@@ -357,7 +346,10 @@ function Login() {
               placeholder="Enter your password"
               disabled={isAnyLoading}
               className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-              onChange={() => errors.password && setErrors((prev) => ({ ...prev, password: "" }))}
+              onChange={() =>
+                errors.password &&
+                setErrors((prev: Record<string, string>) => ({ ...prev, password: "" }))
+              }
             />
             <PasswordToggle
               showPassword={showPassword}
@@ -372,13 +364,11 @@ function Login() {
             </p>
           )}
         </div>
-
         <Button type="submit" disabled={isAnyLoading} className="w-full mt-2">
           {loadingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {loadingEmail ? "Logging in..." : "Login"}
         </Button>
       </form>
-
       <div className="relative w-full">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
@@ -387,7 +377,6 @@ function Login() {
           <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-3 w-full">
         <Button
           type="button"

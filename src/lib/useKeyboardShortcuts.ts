@@ -1,38 +1,48 @@
 import { useEffect } from "react";
 
-export default function useKeyboardShortcuts(actions) {
+type Shortcuts = {
+  togglePlayPause: () => void;
+  nextTrack: () => void;
+  prevTrack: () => void;
+  increaseVolume: () => void;
+  decreaseVolume: () => void;
+  toggleMute: () => void;
+  toggleShuffle: () => void;
+};
+
+export default function useKeyboardShortcuts(actions: Shortcuts) {
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (!event.ctrlKey) return;
       switch (event.code) {
-        case "ArrowRight": // Next track
+        case "ArrowRight":
           event.preventDefault();
           actions.nextTrack();
           break;
-        case "ArrowLeft": // Previous track
+        case "ArrowLeft":
           event.preventDefault();
           actions.prevTrack();
           break;
-        case "ArrowUp": // Volume up
+        case "ArrowUp":
           event.preventDefault();
           actions.increaseVolume();
           break;
-        case "ArrowDown": // Volume down
+        case "ArrowDown":
           event.preventDefault();
           actions.decreaseVolume();
           break;
         default:
           if (event.ctrlKey) {
             switch (event.code) {
-              case "Space": // Ctrl + Space → Play/Pause
+              case "Space":
                 event.preventDefault();
                 actions.togglePlayPause();
                 break;
-              case "KeyM": // Ctrl + M → Mute toggle
+              case "KeyM":
                 event.preventDefault();
-actions.toggleMute();
+                actions.toggleMute();
                 break;
-              case "KeyH": // Ctrl + H → Shuffle toggle
+              case "KeyH":
                 event.preventDefault();
                 actions.toggleShuffle();
                 break;

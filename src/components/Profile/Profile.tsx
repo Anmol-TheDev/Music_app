@@ -12,12 +12,10 @@ import { User, Heart, ListMusic } from "lucide-react";
 
 export default function Profile() {
   const { isUser, likedSongs, playlist } = useStore();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-
-  const displayNameRef = useRef(null);
-
+  const displayNameRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const auth = getAuth();
 
@@ -33,20 +31,17 @@ export default function Profile() {
     return () => unsubscribe();
   }, [isUser, navigate, auth]);
 
-  const handleProfileUpdate = async (e) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newDisplayName = displayNameRef.current.value.trim();
-
+    const newDisplayName = (displayNameRef.current?.value || "").trim();
     if (user.displayName !== newDisplayName && newDisplayName) {
       try {
-        await updateProfile(auth.currentUser, { displayName: newDisplayName });
+        await updateProfile(auth.currentUser!, { displayName: newDisplayName });
         setUser({ ...auth.currentUser });
         toast.success("Profile updated successfully!");
         setIsEditing(false);
-      } catch (error) {
-        toast.error("Failed to update profile", {
-          description: error.message,
-        });
+      } catch (error: any) {
+        toast.error("Failed to update profile", { description: error.message });
       }
     } else {
       setIsEditing(false);
@@ -141,9 +136,7 @@ export default function Profile() {
                     <p className="text-muted-foreground">Liked Songs</p>
                   </div>
                 </div>
-                {/* ---- END: Updated "Liked Songs" section ---- */}
 
-                {/* ---- START: Updated "Playlists" section ---- */}
                 <div
                   className="flex items-center gap-4 p-3 rounded-lg"
                   title="View your playlists in the sidebar"
@@ -156,7 +149,6 @@ export default function Profile() {
                     <p className="text-muted-foreground">Playlists</p>
                   </div>
                 </div>
-                {/* ---- END: Updated "Playlists" section ---- */}
               </CardContent>
             </Card>
           </div>

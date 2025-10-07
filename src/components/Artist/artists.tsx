@@ -1,42 +1,36 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
 
-function RandomArtists({ search }) {
+function RandomArtists({ search }: { search: string }) {
   const navigate = useNavigate();
   const { artists, fetchArtists } = useFetch();
 
   useEffect(() => {
     fetchArtists(search);
-  }, [search, fetchArtists]); // ✅ Added fetchArtists dependency
+  }, [search, fetchArtists]);
 
-  function handleClick(Id) {
+  function handleClick(Id: string) {
     const path = {
       pathname: "/artist",
       search: createSearchParams({ Id }).toString(),
-    };
+    } as any;
     navigate(path);
   }
 
   function useIsMobile() {
     const [isMobile, setIsMobile] = useState(false);
-
     useEffect(() => {
       const mql = window.matchMedia("(max-width: 768px)");
       const onChange = () => setIsMobile(mql.matches);
-
       onChange();
-
       if (mql.addEventListener) mql.addEventListener("change", onChange);
       else mql.addListener(onChange);
-
       return () => {
         if (mql.removeEventListener) mql.removeEventListener("change", onChange);
         else mql.removeListener(onChange);
       };
     }, []);
-
     return isMobile;
   }
 
@@ -46,13 +40,11 @@ function RandomArtists({ search }) {
     <>
       {artists && (
         <div
-          className={`mt-6 w-[95vw] sm:w-full sm:mt-8 border p-4 rounded-xl shadow-lg ${
-            isMobile ? "mb-24" : ""
-          }`}
+          className={`mt-6 w-[95vw] sm:w-full sm:mt-8 border p-4 rounded-xl shadow-lg ${isMobile ? "mb-24" : ""}`}
         >
           <h2 className="text-2xl font-bold mb-4">Artists</h2>
           <div className="flex space-x-4 overflow-x-scroll">
-            {artists?.map((artist, i) => (
+            {artists?.map((artist: any, i: number) => (
               <div
                 key={i}
                 className="bg-secondary rounded-2xl p-3 sm:p-4 flex flex-col items-center flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
@@ -81,9 +73,5 @@ function RandomArtists({ search }) {
     </>
   );
 }
-
-RandomArtists.propTypes = {
-  search: PropTypes.string.isRequired,
-};
 
 export default RandomArtists;

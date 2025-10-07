@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "../ui/button";
 import {
   Home,
-  Menu,
+  Menu as MenuIcon,
   X,
   List,
   User,
@@ -27,11 +27,10 @@ import { ThemeToggle } from "../ThemeToggle";
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const sidebarRef = useRef(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
   const auth = getAuth(app);
   const [isOpen, setIsOpen] = useState(false);
   const [popover, setPopover] = useState(false);
-
   const { isUser, setIsUser, dialogOpen, setDialogOpen, playlist, likedSongs } = useStore();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -45,7 +44,7 @@ const Sidebar = () => {
     }
   };
 
-  const isActive = (itemId) => {
+  const isActive = (itemId: string) => {
     if (itemId === "home") {
       return (
         location.pathname === "/" ||
@@ -53,17 +52,17 @@ const Sidebar = () => {
         location.search.includes("searchTxt")
       );
     }
-    // Updated to check for other paths
     return location.pathname === `/${itemId}`;
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
       if (
         sidebarRef.current &&
-        !sidebarRef.current.contains(event.target) &&
-        !event.target.closest("#sidebar-toggle") &&
-        !event.target.closest('[role="dialog"]')
+        !sidebarRef.current.contains(target) &&
+        !target.closest("#sidebar-toggle") &&
+        !target.closest('[role="dialog"]')
       ) {
         setIsOpen(false);
         setPopover(false);
@@ -92,31 +91,18 @@ const Sidebar = () => {
       label: "Liked Songs",
       icon: Heart,
       path: "/liked",
-      requiresAuth: true, // It's good practice to require auth for liked songs
+      requiresAuth: true as const,
       badge: isUser && likedSongs.length > 0 ? likedSongs.length : null,
     },
     {
       id: "playlist",
       label: "Playlist",
       icon: List,
-      expandable: true,
-      requiresAuth: true,
+      expandable: true as const,
+      requiresAuth: true as const,
     },
-    // ---- START: Added Profile Item ----
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
-      path: "/profile",
-      requiresAuth: true,
-    },
-    // ---- END: Added Profile Item ----
-    {
-      id: "about",
-      label: "About Me",
-      icon: Baby,
-      external: "https://anmol.pro/",
-    },
+    { id: "profile", label: "Profile", icon: User, path: "/profile", requiresAuth: true as const },
+    { id: "about", label: "About Me", icon: Baby, external: "https://anmol.pro/" },
   ];
 
   return (
@@ -138,7 +124,7 @@ const Sidebar = () => {
           )}
           aria-label="Toggle Sidebar"
         >
-          <Menu size={24} className="transition-transform duration-200" />
+          <MenuIcon size={24} className="transition-transform duration-200" />
         </div>
       )}
 
@@ -178,7 +164,7 @@ const Sidebar = () => {
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
             {menuItems.map((item) => {
-              if (item.requiresAuth && !isUser) {
+              if ((item as any).requiresAuth && !isUser) {
                 return (
                   <li key={item.id}>
                     <Button
@@ -201,7 +187,7 @@ const Sidebar = () => {
                 );
               }
 
-              if (item.expandable) {
+              if ((item as any).expandable) {
                 return (
                   <li key={item.id}>
                     <Popover open={popover} onOpenChange={setPopover}>
@@ -235,14 +221,14 @@ const Sidebar = () => {
                           className="absolute top-2 right-2 cursor-pointer hover:bg-accent rounded-sm p-1 transition-colors"
                           onClick={() => setPopover(false)}
                         />
-                        <Playlist setPopover={setPopover} />
+                        <Playlist setPopover={setPopover as any} />
                       </PopoverContent>
                     </Popover>
                   </li>
                 );
               }
 
-              if (item.external) {
+              if ((item as any).external) {
                 return (
                   <li key={item.id}>
                     <Button
@@ -253,7 +239,7 @@ const Sidebar = () => {
                         "hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                       )}
                     >
-                      <a href={item.external} target="_blank" rel="noopener noreferrer">
+                      <a href={(item as any).external} target="_blank" rel="noopener noreferrer">
                         <item.icon size={20} className="flex-shrink-0" />
                         <span>{item.label}</span>
                       </a>
@@ -275,9 +261,9 @@ const Sidebar = () => {
                     )}
                   >
                     <Link
-                      to={item.path}
+                      to={(item as any).path}
                       onClick={() => {
-                        item.onClick?.();
+                        (item as any).onClick?.();
                         setIsOpen(false);
                       }}
                     >
@@ -286,9 +272,9 @@ const Sidebar = () => {
                       )}
                       <item.icon size={20} className="flex-shrink-0" />
                       <span className="flex-1 text-left">{item.label}</span>
-                      {item.badge && (
+                      {(item as any).badge && (
                         <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
-                          {item.badge}
+                          {(item as any).badge}
                         </span>
                       )}
                     </Link>
@@ -324,7 +310,7 @@ const Sidebar = () => {
                   setIsUser(false);
                   setPopover(false);
                   setIsOpen(false);
-                  navigate("/"); // Redirect to home on logout
+                  navigate("/");
                 }}
                 variant="destructive"
                 className={cn(
@@ -337,10 +323,8 @@ const Sidebar = () => {
               </Button>
             )}
           </div>
-
           <ThemeToggle />
         </div>
-
         <div className="px-4 py-3 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">© 2025 Anmol Singh</p>
         </div>

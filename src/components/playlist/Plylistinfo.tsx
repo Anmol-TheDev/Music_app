@@ -7,15 +7,15 @@ import { useLocation } from "react-router-dom";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
-import { Play, Heart, Clock, Pause } from "lucide-react";
+import { Play, Clock, Pause } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Plylistinfo() {
   const url = useLocation();
-  const playlistId = url?.search.split("=")[1];
+  const playlistId = (url?.search || "").split("=")[1];
   const user = getAuth(app).currentUser;
-  const [playlistData, setPlaylistData] = useState([]);
-  const [playlistName, setPlaylistName] = useState();
+  const [playlistData, setPlaylistData] = useState<any[]>([]);
+  const [playlistName, setPlaylistName] = useState<string | undefined>();
   const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
   let count = playlistData.slice(0, 3).length;
 
@@ -23,14 +23,14 @@ export default function Plylistinfo() {
     setPlaylistData([]);
     async function getFireStore() {
       try {
-        const docRef = doc(db, "users", user?.uid, "playlists", playlistId);
+        const docRef = doc(db, "users", user?.uid as string, "playlists", playlistId);
         const data = await getDoc(docRef);
         if (data.exists()) {
-          setPlaylistName(data.data().name);
-          for (const element of data.data().songs) {
+          setPlaylistName((data.data() as any).name);
+          for (const element of (data.data() as any).songs as string[]) {
             try {
               const res = await Api(`/api/songs/${element}`);
-              setPlaylistData((prevData) => [...prevData, res.data.data[0]]);
+              setPlaylistData((prevData) => [...prevData, (res as any).data.data[0]]);
             } catch (apiError) {
               toast.error(`Failed to fetch song: ${element}`);
               console.error(`Error fetching song ${element}:`, apiError);
@@ -51,7 +51,7 @@ export default function Plylistinfo() {
     setQueue(playlistData);
   }, [playlistData]);
 
-  function handleSongClick(song) {
+  function handleSongClick(song: any) {
     if (song.id !== musicId) {
       setMusicId(song.id);
     } else {
@@ -72,15 +72,7 @@ export default function Plylistinfo() {
                         key={i}
                         src={item.image[2].url}
                         alt={`song ${i + 1}`}
-                        className={`object-cover ${
-                          count === 1 ? "w-full h-full" : ""
-                        }${count === 2 ? "w-1/2 h-full" : ""}${
-                          count === 3
-                            ? i === 0
-                              ? "w-full h-1/2"
-                              : "w-1/2 h-1/2"
-                            : ""
-                        }${count === 4 ? "w-1/2 h-1/2" : ""}`}
+                        className={`object-cover ${count === 1 ? "w-full h-full" : ""}${count === 2 ? "w-1/2 h-full" : ""}${count === 3 ? (i === 0 ? "w-full h-1/2" : "w-1/2 h-1/2") : ""}${count === 4 ? "w-1/2 h-1/2" : ""}`}
                       />
                     ))}
                   </div>
@@ -88,15 +80,10 @@ export default function Plylistinfo() {
 
                 <div className="flex-1">
                   <p className="text-sm text-gray-400 mb-2">PLAYLIST</p>
-                  <h1 className="text-3xl font-bold mb-4 truncate w-24">
-                    {playlistName}
-                  </h1>
+                  <h1 className="text-3xl font-bold mb-4 truncate w-24">{playlistName}</h1>
                   <div className="flex items-center gap-4">
                     <button className="bg-primary text-primary-foreground rounded-full p-3 hover:opacity-90">
                       <Play size={24} fill="currentColor" />
-                    </button>
-                    <button className="text-gray-400 hover:text-primary">
-                      <Heart size={24} />
                     </button>
                   </div>
                 </div>
@@ -131,9 +118,7 @@ export default function Plylistinfo() {
                       />
                       <div className="flex flex-col">
                         <span className="font-medium">{song.name}</span>
-                        <span className="text-sm text-gray-400">
-                          {song.artist}
-                        </span>
+                        <span className="text-sm text-gray-400">{song.artist}</span>
                       </div>
                     </div>
                     <div className="flex gap-4 items-center">

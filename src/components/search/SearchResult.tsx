@@ -13,14 +13,14 @@ export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
   const { setMusicId, musicId, isPlaying, setIsPlaying, currentSong } = useStore();
   const url = useLocation();
-  const search = url.search.split("=")[1];
+  const search = (url.search || "").split("=")[1];
 
   useEffect(() => {
     fetchAlbums(search);
     fetchSongs(search, setMusicId);
   }, [url, search]);
 
-  function handleSongClick(song) {
+  function handleSongClick(song: any) {
     if (song.id !== musicId) {
       setMusicId(song.id);
     } else {
@@ -28,13 +28,10 @@ export default function SearchComponent() {
     }
   }
 
-  const formatViews = (views) => {
-    if (views == null) return;
-    if (views >= 1000000) {
-      return `${(views / 1000000).toFixed(1)}M`;
-    } else if (views >= 1000) {
-      return `${(views / 1000).toFixed(1)}K`;
-    }
+  const formatViews = (views?: number) => {
+    if (views == null) return "";
+    if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M`;
+    if (views >= 1_000) return `${(views / 1_000).toFixed(1)}K`;
     return views.toString();
   };
 
@@ -123,7 +120,8 @@ export default function SearchComponent() {
                 </div>
               </div>
             ) : (
-              songs && (
+              songs &&
+              Topresult && (
                 <div className="w-[90vw] sm:w-full md:w-1/3 lg:w-1/3">
                   <h2 className={`text-xl sm:text-2xl font-bold mb-4 ${isMobile ? "mt-4" : ""}`}>
                     Top Result
@@ -132,7 +130,7 @@ export default function SearchComponent() {
                     <Card>
                       <CardContent className="p-4 sm:p-6 shadow-lg">
                         <img
-                          src={Topresult?.image[2].url}
+                          src={Topresult?.image?.[2]?.url}
                           alt={Topresult?.name}
                           loading="lazy"
                           className="object-contain w-full  mx-auto mb-4 rounded border-red-500 brder-2"
@@ -149,7 +147,7 @@ export default function SearchComponent() {
                             </div>
                             <div className="flex items-center space-x-1">
                               <Eye size={16} />
-                              <span>{formatViews(Topresult.playCount)} views</span>
+                              <span>{formatViews(Topresult?.playCount)}</span>
                             </div>
                           </div>
                         </div>
@@ -158,7 +156,7 @@ export default function SearchComponent() {
                     <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                       <button
                         onClick={() => {
-                          musicId != Topresult?.id ? setMusicId(Topresult?.id) : setIsPlaying(true);
+                          musicId != Topresult?.id ? setMusicId(Topresult!.id) : setIsPlaying(true);
                         }}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
@@ -174,12 +172,10 @@ export default function SearchComponent() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-4">Songs</h2>
                 <ScrollArea className="h-[40vh]   sm:h-[50vh]">
                   <ul className="space-y-2 ">
-                    {songs.map((song, index) => (
+                    {songs.map((song: any, index: number) => (
                       <li
                         key={index}
-                        className={` ${
-                          song.id === musicId ? "bg-secondary" : "bg-background"
-                        } flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:bg-secondary hover:scale-[1.03] duration-200 `}
+                        className={`${song.id === musicId ? "bg-secondary" : "bg-background"} flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:bg-secondary hover:scale-[1.03] duration-200 `}
                       >
                         <div className="flex items-center space-x-2 sm:space-x-4">
                           <span className="w-4 sm:w-6 text-center text-sm sm:text-base">
@@ -215,7 +211,6 @@ export default function SearchComponent() {
                               onClick={() => handleSongClick(song)}
                             />
                           )}
-
                           <Menu song={song} />
                         </div>
                       </li>
