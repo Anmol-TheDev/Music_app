@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../../zustand/store";
 import { ScrollArea } from "../ui/scroll-area";
 import { Play, Pause } from "lucide-react";
@@ -8,12 +8,11 @@ import Menu from "../Menu";
 
 export default function LikedSongs() {
   const { likedSongs, setMusicId, musicId, isPlaying, setIsPlaying, isUser } = useStore();
-  const [likedSongsData, setLikedSongsData] = useState([]);
+  const [likedSongsData, setLikedSongsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const abortController = new AbortController();
-    
     const fetchLikedSongsData = async () => {
       if (likedSongs.length === 0) {
         if (!abortController.signal.aborted) {
@@ -24,16 +23,13 @@ export default function LikedSongs() {
       }
 
       try {
-      if (!abortController.signal.aborted) {
-        setLikedSongsData([]);
-        setIsLoading(false);
-      }
-        // Join song IDs with comma for API request
-        const songIds = likedSongs.join(',');
+        if (!abortController.signal.aborted) {
+          setLikedSongsData([]);
+          setIsLoading(false);
+        }
+        const songIds = likedSongs.join(",");
         const response = await Api(`/api/songs?ids=${songIds}`);
-        
-        // Check if component is still mounted before updating state
-        if (!abortController.signal.aborted && response.data.success) {
+        if (!abortController.signal.aborted && (response as any).data.success) {
           setLikedSongsData(response.data.data);
         }
       } catch (error) {
@@ -48,14 +44,12 @@ export default function LikedSongs() {
     };
 
     fetchLikedSongsData();
-    
-    // Cleanup function to abort request if component unmounts or dependencies change
     return () => {
       abortController.abort();
     };
   }, [likedSongs]);
 
-  function handleSongClick(song) {
+  function handleSongClick(song: any) {
     if (song.id !== musicId) {
       setMusicId(song.id);
       setIsPlaying(true);
@@ -110,18 +104,13 @@ export default function LikedSongs() {
               {likedSongsData.map((song, index) => (
                 <div
                   key={song.id || index}
-                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${
-                    song.id === musicId ? "bg-muted" : ""
-                  }`}
+                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${song.id === musicId ? "bg-muted" : ""}`}
                   onClick={() => handleSongClick(song)}
                 >
                   <div className="flex items-center gap-4 p-4">
-                    {/* Track Number / Play Button */}
                     <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                       <span
-                        className={`text-sm text-muted-foreground group-hover:hidden ${
-                          song.id === musicId ? "hidden" : ""
-                        }`}
+                        className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
                       >
                         {index + 1}
                       </span>
@@ -130,9 +119,7 @@ export default function LikedSongs() {
                           e.stopPropagation();
                           handleSongClick(song);
                         }}
-                        className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
-                          song.id === musicId ? "block" : "hidden group-hover:block"
-                        }`}
+                        className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
                       >
                         {isPlaying && song.id === musicId ? (
                           <Pause
@@ -148,7 +135,6 @@ export default function LikedSongs() {
                       </button>
                     </div>
 
-                    {/* Song Image */}
                     <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                       <img
                         src={song.image?.[1]?.url || song.image?.[0]?.url}
@@ -158,12 +144,9 @@ export default function LikedSongs() {
                       />
                     </div>
 
-                    {/* Song Info */}
                     <div className="flex-1 min-w-0">
                       <h3
-                        className={`font-medium truncate ${
-                          song.id === musicId ? "text-primary" : "text-foreground"
-                        }`}
+                        className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
                       >
                         {song.name}
                       </h3>
@@ -172,18 +155,15 @@ export default function LikedSongs() {
                       </p>
                     </div>
 
-                    {/* Duration */}
                     <div className="text-sm text-muted-foreground font-mono">
                       {Math.floor(song.duration / 60)}:
                       {(song.duration % 60).toString().padStart(2, "0")}
                     </div>
 
-                    {/* Like Button */}
                     <div className="flex-shrink-0">
                       <Like songId={song.id} />
                     </div>
 
-                    {/* Menu Button */}
                     <div className="flex-shrink-0">
                       <button
                         onClick={(e) => e.stopPropagation()}

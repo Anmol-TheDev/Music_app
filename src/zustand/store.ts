@@ -1,6 +1,20 @@
 import { create } from "zustand";
 import Api from "../Api";
-export const useFetch = create((set) => ({
+
+type Song = any;
+
+type FetchState = {
+  songs: Song[] | null | false;
+  albums: any[] | null | false;
+  artists: any[] | null | false;
+  Topresult: any | null;
+  setTopresult: (props: any) => void;
+  fetchSongs: (search: string, setMusicId?: (id: string) => void) => Promise<void>;
+  fetchAlbums: (search: string) => Promise<void>;
+  fetchArtists: (search?: string) => Promise<void>;
+};
+
+export const useFetch = create<FetchState>((set) => ({
   songs: null,
   albums: null,
   artists: null,
@@ -9,48 +23,34 @@ export const useFetch = create((set) => ({
   fetchSongs: async (search) => {
     try {
       const res = await Api(`/api/search/songs?query=${search}`);
-
-      if (res.data.data.results[0]) {
-        const topResult = res.data.data.results[0];
-        const initialSongs = res.data.data.results.slice(0, 5);
-
-        // Fetch suggestions for this song
+      if ((res as any).data.data.results[0]) {
+        const topResult = (res as any).data.data.results[0];
+        const initialSongs = (res as any).data.data.results.slice(0, 5);
         const suggestionsRes = await fetch(
           `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${topResult.id}/suggestions?limit=30`
         );
         const suggestionsData = await suggestionsRes.json();
-
-        // Combine and deduplicate songs based on 'id'
         const allSongs = [...initialSongs, ...suggestionsData.data];
-        const uniqueSongsMap = new Map();
-
-        allSongs.forEach((song) => {
+        const uniqueSongsMap = new Map<string, any>();
+        allSongs.forEach((song: any) => {
           if (!uniqueSongsMap.has(song.id)) {
             uniqueSongsMap.set(song.id, song);
           }
         });
-
         const uniqueSongs = Array.from(uniqueSongsMap.values());
-
-        set({
-          Topresult: topResult,
-          songs: uniqueSongs,
-        });
+        set({ Topresult: topResult, songs: uniqueSongs });
       } else {
-        set({
-          songs: false,
-        });
+        set({ songs: false });
       }
     } catch (error) {
       console.error(error);
     }
   },
-
   fetchAlbums: async (search) => {
     try {
       const res = await Api(`/api/search/albums?query=${search}`);
-      if (res.data.data.results[0]) {
-        set({ albums: res.data.data.results });
+      if ((res as any).data.data.results[0]) {
+        set({ albums: (res as any).data.data.results });
       } else set({ albums: false });
     } catch (error) {
       console.log(error);
@@ -59,8 +59,8 @@ export const useFetch = create((set) => ({
   fetchArtists: async (search) => {
     try {
       const res = await Api(`/api/search/artists?query=${search || "top artists"} `);
-      if (res.data.data.results[0]) {
-        set({ artists: res?.data?.data?.results });
+      if ((res as any).data.data.results[0]) {
+        set({ artists: (res as any)?.data?.data?.results });
       } else set({ artists: false });
     } catch (error) {
       console.log(error);
@@ -68,7 +68,54 @@ export const useFetch = create((set) => ({
   },
 }));
 
-export const useStore = create((set, get) => ({
+type RepeatMode = "none" | "one" | "all";
+
+type StoreState = {
+  playlist: any[];
+  isUser: boolean;
+  dialogOpen: boolean;
+  musicId: string | null;
+  currentAlbumId: string | null;
+  currentArtistId: string | null;
+  currentSong: any | null;
+  isPlaying: boolean;
+  queue: any[];
+  likedSongs: string[];
+  currentIndex: number;
+  volume: number;
+  muted: boolean;
+  shuffle: boolean;
+  repeat: RepeatMode;
+  played: number;
+  duration: number;
+  setPlaylist: (prope: any) => void;
+  emptyPlaylist: () => void;
+  setIsUser: (prop: boolean) => void;
+  setDialogOpen: (prop: boolean) => void;
+  setMusicId: (id: string) => void;
+  setAlbumId: (id: string | null) => void;
+  setArtistId: (id: string | null) => void;
+  setCurrentSong: (song: any) => void;
+  setIsPlaying: (prop: boolean) => void;
+  setQueue: (prop: any[]) => void;
+  setLikedSongs: (songs: string[]) => void;
+  addLikedSong: (songId: string) => void;
+  removeLikedSong: (songId: string) => void;
+  isLiked: (songId: string) => boolean;
+  setVolume: (volume: number) => void;
+  setMuted: (muted: boolean) => void;
+  setShuffle: (shuffle: boolean) => void;
+  setRepeat: (repeat: RepeatMode) => void;
+  setPlayed: (played: number) => void;
+  setDuration: (duration: number) => void;
+  addToQueue: (song: any) => void;
+  addToQueueNext: (song: any) => void;
+  playNext: () => void;
+  playPrevious: () => void;
+  handleSongEnd: () => void;
+};
+
+export const useStore = create<StoreState>((set, get) => ({
   playlist: [],
   isUser: false,
   dialogOpen: false,
@@ -84,7 +131,7 @@ export const useStore = create((set, get) => ({
     typeof window !== "undefined"
       ? localStorage.getItem("volume") === null
         ? 0.5
-        : Number.parseFloat(localStorage.getItem("volume"))
+        : Number.parseFloat(localStorage.getItem("volume") || "0.5")
       : 0.5,
   muted: false,
   shuffle: false,
@@ -92,18 +139,15 @@ export const useStore = create((set, get) => ({
   played: 0,
   duration: 0,
 
-  setPlaylist: (prope) =>
-    set((state) => ({
-      playlist: [...state.playlist, prope],
-    })),
+  setPlaylist: (prope) => set((state) => ({ playlist: [...state.playlist, prope] })),
   emptyPlaylist: () => set({ playlist: [] }),
   setIsUser: (prop) => set({ isUser: prop }),
   setDialogOpen: (prop) => set({ dialogOpen: prop }),
 
   setMusicId: (id) => {
     const { queue } = get();
-    const newIndex = queue.findIndex((song) => song.id === id);
-    const currentSong = queue.find((song) => song.id === id);
+    const newIndex = queue.findIndex((song: any) => song.id === id);
+    const currentSong = queue.find((song: any) => song.id === id);
     set({
       musicId: id,
       currentAlbumId: null,
@@ -121,14 +165,9 @@ export const useStore = create((set, get) => ({
   setIsPlaying: (prop) => set({ isPlaying: prop }),
   setQueue: (prop) => set({ queue: prop, currentIndex: 0 }),
   setLikedSongs: (songs) => set({ likedSongs: songs }),
-  addLikedSong: (songId) =>
-    set((state) => ({
-      likedSongs: [...state.likedSongs, songId],
-    })),
+  addLikedSong: (songId) => set((state) => ({ likedSongs: [...state.likedSongs, songId] })),
   removeLikedSong: (songId) =>
-    set((state) => ({
-      likedSongs: state.likedSongs.filter((id) => id !== songId),
-    })),
+    set((state) => ({ likedSongs: state.likedSongs.filter((id) => id !== songId) })),
   isLiked: (songId) => get().likedSongs.includes(songId),
 
   setVolume: (volume) => {
@@ -143,10 +182,7 @@ export const useStore = create((set, get) => ({
   setPlayed: (played) => set({ played }),
   setDuration: (duration) => set({ duration }),
 
-  addToQueue: (song) =>
-    set((state) => ({
-      queue: [...state.queue, song],
-    })),
+  addToQueue: (song) => set((state) => ({ queue: [...state.queue, song] })),
 
   addToQueueNext: (song) =>
     set((state) => {
@@ -163,7 +199,7 @@ export const useStore = create((set, get) => ({
       set({ played: 0 });
       return;
     }
-    let nextIndex;
+    let nextIndex: number;
     if (shuffle) nextIndex = Math.floor(Math.random() * queue.length);
     else {
       nextIndex = currentIndex + 1;
@@ -172,29 +208,19 @@ export const useStore = create((set, get) => ({
         else return;
       }
     }
-    set({
-      currentIndex: nextIndex,
-      musicId: queue[nextIndex]?.id,
-      played: 0,
-      isPlaying: false,
-    });
+    set({ currentIndex: nextIndex, musicId: queue[nextIndex]?.id, played: 0, isPlaying: false });
   },
 
   playPrevious: () => {
     const { queue, currentIndex, shuffle } = get();
     if (queue.length === 0) return;
-    let prevIndex;
+    let prevIndex: number;
     if (shuffle) prevIndex = Math.floor(Math.random() * queue.length);
     else {
       prevIndex = currentIndex - 1;
       if (prevIndex < 0) prevIndex = queue.length - 1;
     }
-    set({
-      currentIndex: prevIndex,
-      musicId: queue[prevIndex]?.id,
-      played: 0,
-      isPlaying: false,
-    });
+    set({ currentIndex: prevIndex, musicId: queue[prevIndex]?.id, played: 0, isPlaying: false });
   },
 
   handleSongEnd: () => {

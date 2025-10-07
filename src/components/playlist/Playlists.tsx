@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { db, app } from "../../Auth/firebase";
 import { addDoc, arrayUnion, collection } from "firebase/firestore";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -13,26 +13,21 @@ import { deletePlaylist } from "../../Api";
 import { fetchFireStore } from "../../Api";
 import { toast } from "sonner";
 
-export default function Playlist({ setPopover }) {
+export default function Playlist({ setPopover }: { setPopover: (open: boolean) => void }) {
   const navigate = useNavigate();
   const user = getAuth(app)?.currentUser;
   const [isDialog, setIsDialog] = useState(false);
-  const input = useRef(null);
+  const input = useRef<HTMLInputElement | null>(null);
   const { playlist, setPlaylist, emptyPlaylist, setLikedSongs } = useStore();
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     if (!input.current?.value?.trim()) {
-      return; // Don't submit if input is empty
+      return;
     }
-
     setIsDialog(false);
     try {
-      const collectionRef = collection(db, "users", user?.uid, "playlists");
-      await addDoc(collectionRef, {
-        name: input.current.value,
-        songs: arrayUnion(),
-      });
+      const collectionRef = collection(db, "users", user?.uid as string, "playlists");
+      await addDoc(collectionRef, { name: input.current.value, songs: arrayUnion() });
       emptyPlaylist();
       fetchFireStore(setPlaylist, setLikedSongs);
       toast.success("Playlist created successfully!");
@@ -42,17 +37,14 @@ export default function Playlist({ setPopover }) {
     }
   }
 
-  const handleClick = (list) => {
+  const handleClick = (list: any) => {
     const id = list?.id;
-    const path = {
-      pathname: "/playlist",
-      search: createSearchParams({ id }).toString(),
-    };
+    const path = { pathname: "/playlist", search: createSearchParams({ id }).toString() } as any;
     setPopover(false);
     navigate(path);
   };
 
-  const handleOpenDialog = (e) => {
+  const handleOpenDialog = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDialog(true);
   };
@@ -65,34 +57,21 @@ export default function Playlist({ setPopover }) {
         <DialogContent>
           <DialogTitle>Name is needed to create Playlist</DialogTitle>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Enter the name of playlist"
-              ref={input}
-              required
-            />
+            <Input type="text" placeholder="Enter the name of playlist" ref={input} required />
             <Button type="submit">Submit</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <ScrollArea className="flex flex-col h-40 sm:h-64">
-        {playlist.map((list) => (
-          <div
-            key={list.id}
-            className="p-2 rounded-lg w-full hover:bg-secondary flex"
-          >
-            <p
-              onClick={() => handleClick(list)}
-              className="w-full cursor-pointer"
-            >
+        {playlist.map((list: any) => (
+          <div key={list.id} className="p-2 rounded-lg w-full hover:bg-secondary flex">
+            <p onClick={() => handleClick(list)} className="w-full cursor-pointer">
               {list.data.name}
             </p>
             <Trash2
               size={18}
-              onClick={() =>
-                deletePlaylist(list.id, playlist, setPlaylist, emptyPlaylist)
-              }
+              onClick={() => deletePlaylist(list.id, playlist, setPlaylist, emptyPlaylist)}
               className="cursor-pointer"
             />
           </div>

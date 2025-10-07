@@ -14,25 +14,23 @@ export default function Home() {
   const navigate = useNavigate();
   const { setIsUser, setPlaylist, setLikedSongs } = useStore();
   useEffect(() => {
-    // Firebase Auth
     const auth = getAuth(app);
     onAuthStateChanged(auth, (user) => {
       if (user) setIsUser(true);
     });
     fetchFireStore(setPlaylist, setLikedSongs);
 
-    // Default search
     const DEFAULT_SEARCH = "top hits";
-    const searchText = localStorage.getItem("search")
-    if(!searchText) {
-      localStorage.setItem("search", DEFAULT_SEARCH)
+    const searchText = localStorage.getItem("search");
+    if (!searchText) {
+      localStorage.setItem("search", DEFAULT_SEARCH);
     }
     const pathName = `/search?searchTxt=${localStorage.getItem("search")}`;
     const currentSearch = new URLSearchParams(window.location.search).get("searchTxt");
     if (!currentSearch) {
       navigate(pathName);
     }
-}, []);
+  }, []);
   return (
     <>
       <div className="flex items-start">
