@@ -6,7 +6,7 @@ import Album from "./components/Album/Album";
 import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
-
+import Profile from "./components/Profile/Profile";
 function App() {
   const router = createBrowserRouter([
     {
@@ -33,6 +33,10 @@ function App() {
         {
           path: "/liked",
           element: <LikedSongs />,
+        },
+        {
+          path: "/profile",
+          element: <Profile />,
         },
       ],
     },

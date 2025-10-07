@@ -16,11 +16,7 @@ import { useStore } from "../../zustand/store";
 import { Dialog, DialogContent } from "../ui/dialog";
 import AuthTab from "../../Auth/AuthTab";
 import { signOut, getAuth } from "firebase/auth";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Playlist from "../playlist/Playlists";
 import { app } from "../../Auth/firebase";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -36,8 +32,7 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [popover, setPopover] = useState(false);
 
-  const { isUser, setIsUser, dialogOpen, setDialogOpen, playlist, likedSongs } =
-    useStore();
+  const { isUser, setIsUser, dialogOpen, setDialogOpen, playlist, likedSongs } = useStore();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -84,9 +79,7 @@ const Sidebar = () => {
   }, []);
 
   const storedSearch = localStorage.getItem("search") || "top hits";
-  const homeSearchPath = `/search?searchTxt=${encodeURIComponent(
-    storedSearch
-  )}`;
+  const homeSearchPath = `/search?searchTxt=${encodeURIComponent(storedSearch)}`;
 
   const menuItems = [
     {
@@ -118,6 +111,13 @@ const Sidebar = () => {
       label: "About Me",
       icon: Baby,
       external: "https://anmol.pro/",
+    },
+    {
+      id: "Profile",
+      label: "Profile",
+      icon: User,
+      requiresAuth: true,
+      path: "/profile",
     },
   ];
 
@@ -166,9 +166,7 @@ const Sidebar = () => {
             <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Sangeet App
             </h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              Your music, your way
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Your music, your way</p>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -199,9 +197,7 @@ const Sidebar = () => {
                     >
                       <item.icon size={20} className="flex-shrink-0" />
                       <span className="flex-1 text-left">{item.label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        (Login)
-                      </span>
+                      <span className="text-xs text-muted-foreground">(Login)</span>
                     </Button>
                   </li>
                 );
@@ -233,11 +229,7 @@ const Sidebar = () => {
                               {playlist.length}
                             </span>
                           )}
-                          {popover ? (
-                            <ChevronDown size={16} />
-                          ) : (
-                            <ChevronRight size={16} />
-                          )}
+                          {popover ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="relative w-72 p-4">
@@ -263,11 +255,7 @@ const Sidebar = () => {
                         "hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                       )}
                     >
-                      <a
-                        href={item.external}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={item.external} target="_blank" rel="noopener noreferrer">
                         <item.icon size={20} className="flex-shrink-0" />
                         <span>{item.label}</span>
                       </a>
@@ -285,8 +273,7 @@ const Sidebar = () => {
                       "w-full justify-start gap-3 px-3 py-5 text-base font-medium",
                       "hover:bg-accent hover:text-accent-foreground transition-all duration-200",
                       "relative overflow-hidden",
-                      isActive(item.id) &&
-                        "bg-accent text-accent-foreground font-semibold"
+                      isActive(item.id) && "bg-accent text-accent-foreground font-semibold"
                     )}
                   >
                     <Link
@@ -356,9 +343,7 @@ const Sidebar = () => {
         </div>
 
         <div className="px-4 py-3 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
-            © 2025 Anmol Singh
-          </p>
+          <p className="text-xs text-muted-foreground text-center">© 2025 Anmol Singh</p>
         </div>
       </div>
     </>
