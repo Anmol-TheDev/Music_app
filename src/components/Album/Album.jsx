@@ -18,6 +18,7 @@ import {
   DrawerDescription,
   DrawerClose,
 } from "../ui/drawer";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function Album() {
   const [albumData, setAlbumData] = useState(null);
@@ -45,6 +46,7 @@ export default function Album() {
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const { handleSongClick } = useSongHandlers();
 
   // Function to calculate luminance and determine text color
   const getTextColor = (rgbColor) => {
@@ -86,19 +88,6 @@ export default function Album() {
     };
     fetching();
   }, [albumId, setQueue]);
-
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-      setAlbumId(albumId);
-    } else {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
-    }
-  }
 
   function handlePlayAll() {
     if (currentAlbumId == albumId) {
@@ -421,7 +410,7 @@ export default function Album() {
                   <div className="md:hidden">
                     <div
                       className="flex items-center gap-3 p-3 min-h-[60px] cursor-pointer"
-                      onClick={() => handleSongClick(song)}
+                      onClick={() => handleSongClick(song, { albumId: albumId })}
                     >
                       {/* Track Number / Play Button */}
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
@@ -435,7 +424,7 @@ export default function Album() {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { albumId: albumId });
                           }}
                           className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
                             song.id === musicId ? "block" : "hidden group-hover:block"
@@ -514,7 +503,7 @@ export default function Album() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { albumId: albumId });
                           }}
                           className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${
                             song.id === musicId ? "block" : "hidden group-hover:block"

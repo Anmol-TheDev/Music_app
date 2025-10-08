@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../../zustand/store";
 import { ScrollArea } from "../ui/scroll-area";
 import { Play, Pause } from "lucide-react";
 import Api from "../../Api";
 import Like from "../ui/Like";
 import Menu from "../Menu";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function LikedSongs() {
-  const { likedSongs, setMusicId, musicId, isPlaying, setIsPlaying, isUser } = useStore();
+  const { likedSongs, musicId, isPlaying, setIsPlaying, isUser } = useStore();
   const [likedSongsData, setLikedSongsData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { handleSongClick } = useSongHandlers();
 
   useEffect(() => {
     const abortController = new AbortController();
-    
+
     const fetchLikedSongsData = async () => {
       if (likedSongs.length === 0) {
         if (!abortController.signal.aborted) {
@@ -24,14 +26,14 @@ export default function LikedSongs() {
       }
 
       try {
-      if (!abortController.signal.aborted) {
-        setLikedSongsData([]);
-        setIsLoading(false);
-      }
+        if (!abortController.signal.aborted) {
+          setLikedSongsData([]);
+          setIsLoading(false);
+        }
         // Join song IDs with comma for API request
-        const songIds = likedSongs.join(',');
+        const songIds = likedSongs.join(",");
         const response = await Api(`/api/songs?ids=${songIds}`);
-        
+
         // Check if component is still mounted before updating state
         if (!abortController.signal.aborted && response.data.success) {
           setLikedSongsData(response.data.data);
@@ -48,21 +50,12 @@ export default function LikedSongs() {
     };
 
     fetchLikedSongsData();
-    
+
     // Cleanup function to abort request if component unmounts or dependencies change
     return () => {
       abortController.abort();
     };
   }, [likedSongs]);
-
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
-  }
 
   if (!isUser) {
     return (

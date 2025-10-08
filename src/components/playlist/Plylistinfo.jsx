@@ -9,6 +9,7 @@ import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
 import { Play, Heart, Clock, Pause } from "lucide-react";
 import { toast } from "sonner";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function Plylistinfo() {
   const url = useLocation();
@@ -17,6 +18,8 @@ export default function Plylistinfo() {
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState();
   const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
+  const { handleSongClick } = useSongHandlers();
+
   let count = playlistData.slice(0, 3).length;
 
   useEffect(() => {
@@ -51,13 +54,6 @@ export default function Plylistinfo() {
     setQueue(playlistData);
   }, [playlistData]);
 
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-    } else {
-      setIsPlaying(true);
-    }
-  }
   return (
     <>
       <ScrollArea className="h-[100dvh]">
@@ -75,11 +71,7 @@ export default function Plylistinfo() {
                         className={`object-cover ${
                           count === 1 ? "w-full h-full" : ""
                         }${count === 2 ? "w-1/2 h-full" : ""}${
-                          count === 3
-                            ? i === 0
-                              ? "w-full h-1/2"
-                              : "w-1/2 h-1/2"
-                            : ""
+                          count === 3 ? (i === 0 ? "w-full h-1/2" : "w-1/2 h-1/2") : ""
                         }${count === 4 ? "w-1/2 h-1/2" : ""}`}
                       />
                     ))}
@@ -88,9 +80,7 @@ export default function Plylistinfo() {
 
                 <div className="flex-1">
                   <p className="text-sm text-gray-400 mb-2">PLAYLIST</p>
-                  <h1 className="text-3xl font-bold mb-4 truncate w-24">
-                    {playlistName}
-                  </h1>
+                  <h1 className="text-3xl font-bold mb-4 truncate w-24">{playlistName}</h1>
                   <div className="flex items-center gap-4">
                     <button className="bg-primary text-primary-foreground rounded-full p-3 hover:opacity-90">
                       <Play size={24} fill="currentColor" />
@@ -131,9 +121,7 @@ export default function Plylistinfo() {
                       />
                       <div className="flex flex-col">
                         <span className="font-medium">{song.name}</span>
-                        <span className="text-sm text-gray-400">
-                          {song.artist}
-                        </span>
+                        <span className="text-sm text-gray-400">{song.artist}</span>
                       </div>
                     </div>
                     <div className="flex gap-4 items-center">
