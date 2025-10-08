@@ -11,7 +11,11 @@ import Albums from "../Album/Albums";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
-  const { setMusicId, musicId, isPlaying, setIsPlaying, currentSong } = useStore();
+  const setMusicId = useStore((state) => state.setMusicId);
+  const musicId = useStore((state) => state.musicId);
+  const isPlaying = useStore((state) => state.isPlaying);
+  const setIsPlaying = useStore((state) => state.setIsPlaying);
+  const currentSong = useStore((state) => state.currentSong);
   const url = useLocation();
   const search = url.search.split("=")[1];
 
