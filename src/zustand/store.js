@@ -107,16 +107,11 @@ export const useStore = create((set, get) => ({
     const currentSong = queue.find((song) => song.id === id);
 
     if (shuffle) {
-      const songInHistory = shuffleHistory.find((song) => song.id === id);
       let newShuffleHistory = [...shuffleHistory];
       let newShuffleHistoryIndex = shuffleHistoryIndex;
 
-      if (!songInHistory) {
-        newShuffleHistory = [...shuffleHistory, currentSong];
-        newShuffleHistoryIndex = newShuffleHistory.length - 1;
-      } else {
-        newShuffleHistoryIndex = shuffleHistory.findIndex((song) => song.id === id);
-      }
+      newShuffleHistory = [...shuffleHistory, currentSong];
+      newShuffleHistoryIndex = newShuffleHistory.length - 1;
 
       set({
         musicId: id,
@@ -147,13 +142,23 @@ export const useStore = create((set, get) => ({
   setCurrentSong: (song) => set({ currentSong: song }),
   setIsPlaying: (prop) => set({ isPlaying: prop }),
   setQueue: (prop) => {
+    const { shuffle, currentSong } = get();
     const shuffledQueue = [...prop].sort(() => Math.random() - 0.5);
+
+    const filteredShuffledQueue =
+      shuffle && currentSong
+        ? shuffledQueue.filter((song) => song.id !== currentSong.id)
+        : shuffledQueue;
+
+    const preservedHistory = shuffle && currentSong ? [currentSong] : [];
+    const preservedIndex = shuffle && currentSong ? 0 : -1;
+
     set({
       queue: prop,
       currentIndex: 0,
-      shuffledQueue: shuffledQueue,
-      shuffleHistory: [],
-      shuffleHistoryIndex: -1,
+      shuffledQueue: filteredShuffledQueue,
+      shuffleHistory: preservedHistory,
+      shuffleHistoryIndex: preservedIndex,
     });
   },
   setLikedSongs: (songs) => set({ likedSongs: songs }),
@@ -179,6 +184,10 @@ export const useStore = create((set, get) => ({
     if (shuffle) {
       const shuffledQueue = [...queue].sort(() => Math.random() - 0.5);
 
+      const filteredShuffledQueue = currentSong
+        ? shuffledQueue.filter((song) => song.id !== currentSong.id)
+        : shuffledQueue;
+
       let shuffleHistory = [];
       let shuffleHistoryIndex = -1;
 
@@ -189,7 +198,7 @@ export const useStore = create((set, get) => ({
 
       set({
         shuffle: true,
-        shuffledQueue: shuffledQueue,
+        shuffledQueue: filteredShuffledQueue,
         shuffleHistory: shuffleHistory,
         shuffleHistoryIndex: shuffleHistoryIndex,
       });
@@ -244,6 +253,7 @@ export const useStore = create((set, get) => ({
         set({
           shuffleHistoryIndex: nextHistoryIndex,
           musicId: nextSong.id,
+          currentSong: nextSong,
           played: 0,
           isPlaying: false,
         });
@@ -251,11 +261,15 @@ export const useStore = create((set, get) => ({
         if (shuffledQueue.length === 0) {
           if (repeat === "all") {
             const newShuffledQueue = [...queue].sort(() => Math.random() - 0.5);
+            const firstSong = newShuffledQueue[0];
+            const remainingQueue = newShuffledQueue.slice(1);
+
             set({
-              shuffledQueue: newShuffledQueue,
-              shuffleHistory: [],
-              shuffleHistoryIndex: -1,
-              musicId: newShuffledQueue[0]?.id,
+              shuffledQueue: remainingQueue,
+              shuffleHistory: [firstSong],
+              shuffleHistoryIndex: 0,
+              musicId: firstSong.id,
+              currentSong: firstSong,
               played: 0,
               isPlaying: false,
             });
@@ -274,6 +288,7 @@ export const useStore = create((set, get) => ({
           shuffleHistoryIndex: newShuffleHistory.length - 1,
           shuffledQueue: newShuffledQueue,
           musicId: nextSong.id,
+          currentSong: nextSong,
           played: 0,
           isPlaying: false,
         });
@@ -303,6 +318,7 @@ export const useStore = create((set, get) => ({
         set({
           shuffleHistoryIndex: shuffleHistoryIndex - 1,
           musicId: prevSong.id,
+          currentSong: prevSong,
           played: 0,
           isPlaying: false,
         });
@@ -310,6 +326,7 @@ export const useStore = create((set, get) => ({
         const firstSong = shuffleHistory[0];
         set({
           musicId: firstSong.id,
+          currentSong: firstSong,
           played: 0,
           isPlaying: false,
         });
