@@ -6,6 +6,7 @@ import Album from "./components/Album/Album";
 import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
+import LandingPage from "./components/LandingPage";
 import Profile from "./components/Profile/Profile"; // 1. Import the new component
 
 function App() {
@@ -15,6 +16,10 @@ function App() {
       element: <Home />,
       errorElement: <ErrorPage />,
       children: [
+        {
+          index: true,
+          element: <LandingPage />,
+        },
         {
           path: "/artist",
           element: <Artist />,

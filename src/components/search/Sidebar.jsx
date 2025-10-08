@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  Compass,
 } from "lucide-react";
 import { useStore } from "../../zustand/store";
 import { Dialog, DialogContent } from "../ui/dialog";
@@ -19,14 +20,14 @@ import { signOut, getAuth } from "firebase/auth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Playlist from "../playlist/Playlists";
 import { app } from "../../Auth/firebase";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import { ThemeToggle } from "../ThemeToggle";
 
 const Sidebar = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const sidebarRef = useRef(null);
   const auth = getAuth(app);
   const [isOpen, setIsOpen] = useState(false);
@@ -47,11 +48,10 @@ const Sidebar = () => {
 
   const isActive = (itemId) => {
     if (itemId === "home") {
-      return (
-        location.pathname === "/" ||
-        location.pathname === "/search" ||
-        location.search.includes("searchTxt")
-      );
+      return location.pathname === "/";
+    }
+    if (itemId === "search") {
+      return location.pathname === "/search" || location.search.includes("searchTxt");
     }
     // Updated to check for other paths
     return location.pathname === `/${itemId}`;
@@ -74,25 +74,25 @@ const Sidebar = () => {
   }, []);
 
   const storedSearch = localStorage.getItem("search") || "top hits";
-  const homeSearchPath = `/search?searchTxt=${encodeURIComponent(storedSearch)}`;
 
   const menuItems = [
     {
       id: "home",
       label: "Home",
       icon: Home,
-      path: homeSearchPath,
-      onClick: () => {
-        navigate(homeSearchPath);
-        setIsOpen(false);
-      },
+      path: "/",
+    },
+    {
+      id: "search",
+      label: "Explore",
+      icon: Compass,
+      path: `/search?searchTxt=${encodeURIComponent(storedSearch)}`,
     },
     {
       id: "liked",
       label: "Liked Songs",
       icon: Heart,
       path: "/liked",
-      requiresAuth: true, // It's good practice to require auth for liked songs
       badge: isUser && likedSongs.length > 0 ? likedSongs.length : null,
     },
     {

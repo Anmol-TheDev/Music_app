@@ -36,10 +36,7 @@ export default function InputBar() {
   };
 
   useEffect(() => {
-    const search = localStorage.getItem("search");
-    if (search) {
-      setSearchInput(search);
-    }
+    // Don't load from localStorage on mount - let URL drive the state
     searchBarRef.current.addEventListener("focus", () => {
       setIsSearchBarFocused(true);
     });
@@ -53,6 +50,27 @@ export default function InputBar() {
       }
     });
   }, []);
+
+  // Clear search input when navigating away from search page
+  useEffect(() => {
+    if (CurrPath.pathname === "/") {
+      setSearchInput("");
+      setSuggestions([]);
+    } else if (CurrPath.pathname === "/search") {
+      // Only populate from URL search params if present
+      const urlParams = new URLSearchParams(CurrPath.search);
+      const searchFromUrl = urlParams.get("searchTxt");
+      if (searchFromUrl) {
+        setSearchInput(decodeURIComponent(searchFromUrl));
+      } else {
+        setSearchInput("");
+      }
+    } else {
+      // Clear search input on any other page
+      setSearchInput("");
+      setSuggestions([]);
+    }
+  }, [CurrPath.pathname, CurrPath.search]);
 
   useEffect(() => {
     const fetchSearch = async () => {
