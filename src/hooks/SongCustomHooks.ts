@@ -9,7 +9,6 @@ interface SongClickOptions {
 export const useSongHandlers = () => {
   // state
   const musicId = useStore((state) => state.musicId);
-  const isPlaying = useStore((state) => state.isPlaying);
 
   // actions
   const setMusicId = useStore((state) => state.setMusicId);
@@ -19,7 +18,6 @@ export const useSongHandlers = () => {
 
   const handleSongClick = useCallback(
     (song: { id: string }, options?: SongClickOptions) => {
-      console.log("song id: ", song.id, " options: ", options);
       if (song.id !== musicId) {
         setMusicId(song.id);
         if (options?.albumId) setAlbumId(options.albumId);
@@ -27,7 +25,7 @@ export const useSongHandlers = () => {
       }
       setIsPlaying(true);
     },
-    [musicId, isPlaying, setMusicId, setIsPlaying, setAlbumId, setArtistId]
+    [musicId, setMusicId, setIsPlaying, setAlbumId, setArtistId]
   );
 
   return {
