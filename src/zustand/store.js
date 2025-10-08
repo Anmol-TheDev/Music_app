@@ -4,6 +4,7 @@ import Api from "../Api";
 // Constants
 const INITIAL_SONGS_LIMIT = 5;
 const SUGGESTIONS_LIMIT = 30;
+
 export const useFetch = create((set) => ({
   songs: null,
   albums: null,
@@ -235,7 +236,6 @@ export const useStore = create((set, get) => ({
       const newQueue = [...state.queue];
       newQueue.splice(insertPos, 0, song);
 
-      // Update shuffled queue if shuffle is active
       let newShuffledQueue = state.shuffledQueue;
       if (state.shuffle) {
         newShuffledQueue = [...state.shuffledQueue, song].sort(() => Math.random() - 0.5);
