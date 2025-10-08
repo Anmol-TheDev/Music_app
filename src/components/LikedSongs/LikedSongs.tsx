@@ -3,12 +3,13 @@ import { useStore } from "../../zustand/store";
 import { ScrollArea } from "../ui/scroll-area";
 import { Play, Pause } from "lucide-react";
 import Api from "../../Api";
+import type { ApiEnvelope, Song } from "../../types";
 import Like from "../ui/Like";
 import Menu from "../Menu";
 
 export default function LikedSongs() {
   const { likedSongs, setMusicId, musicId, isPlaying, setIsPlaying, isUser } = useStore();
-  const [likedSongsData, setLikedSongsData] = useState<any[]>([]);
+  const [likedSongsData, setLikedSongsData] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +29,8 @@ export default function LikedSongs() {
           setIsLoading(false);
         }
         const songIds = likedSongs.join(",");
-        const response = await Api(`/api/songs?ids=${songIds}`);
-        if (!abortController.signal.aborted && (response as any).data.success) {
+        const response = await Api<ApiEnvelope<Song[]>>(`/api/songs?ids=${songIds}`);
+        if (!abortController.signal.aborted && response.data.success) {
           setLikedSongsData(response.data.data);
         }
       } catch (error) {
@@ -49,7 +50,7 @@ export default function LikedSongs() {
     };
   }, [likedSongs]);
 
-  function handleSongClick(song: any) {
+  function handleSongClick(song: Song) {
     if (song.id !== musicId) {
       setMusicId(song.id);
       setIsPlaying(true);

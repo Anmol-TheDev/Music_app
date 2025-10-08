@@ -1,24 +1,13 @@
-/**
- * ThemeContext.jsx
- *
- * Provides a centralized theme management system for the Music App.
- * Supports Light, Dark, and System themes, as well as preset color themes.
- *
- * Exports:
- * - ThemeProvider: React context provider wrapping the app and managing theme state.
- * - useTheme: Custom hook to access current theme and theme setter.
- *
- * Features:
- * - Persists theme selection in localStorage.
- * - Automatically applies system theme if 'system' is selected.
- * - Updates CSS variables dynamically for custom themes.
- * - Throws an error if useTheme is called outside ThemeProvider.
- */
-
-
 import { createContext, useContext, useEffect, useState } from "react";
 
-const ThemeContext = createContext();
+type ThemeName = keyof typeof presetThemes | "system";
+
+type ThemeContextValue = {
+  theme: ThemeName;
+  setTheme: (t: ThemeName) => void;
+};
+
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 // Full theme definitions
 export const presetThemes = {
@@ -87,18 +76,17 @@ export const presetThemes = {
   },
 };
 
-
-export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "default";
+export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+  const [theme, setTheme] = useState<ThemeName>(() => {
+    return (localStorage.getItem("theme") as ThemeName) || "default";
   });
 
-  // Helper to apply custom color overrides
-  const applyCustomColors = (root) => {
+  const applyCustomColors = (root: HTMLElement) => {
     try {
-      const customColors = JSON.parse(
-        localStorage.getItem("customColors") || "{}"
-      );
+      const customColors = JSON.parse(localStorage.getItem("customColors") || "{}") as Record<
+        string,
+        string
+      >;
       Object.entries(customColors).forEach(([key, value]) =>
         root.style.setProperty(`--${key}`, value)
       );
@@ -119,25 +107,21 @@ export const ThemeProvider = ({ children }) => {
       "--accent",
     ];
 
-    // Clear previous variables
     allVars.forEach((v) => root.style.removeProperty(v));
 
-    let themeToApply = theme;
-    let cleanup;
+    let themeToApply: keyof typeof presetThemes;
+    if (theme === "system") themeToApply = "light";
+    else themeToApply = theme as keyof typeof presetThemes;
+    let cleanup: (() => void) | undefined;
 
-    // Handle system theme
     if (theme === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      themeToApply = mediaQuery.matches ? "dark" : "light";
+      themeToApply = (mediaQuery.matches ? "dark" : "light") as keyof typeof presetThemes;
 
-      const listener = (e) => {
-        const newTheme = e.matches ? "dark" : "light";
+      const listener = (e: MediaQueryListEvent) => {
+        const newTheme = (e.matches ? "dark" : "light") as keyof typeof presetThemes;
         const selected = presetThemes[newTheme] || presetThemes.light;
-
-        Object.entries(selected).forEach(([key, value]) =>
-          root.style.setProperty(key, value)
-        );
-
+        Object.entries(selected).forEach(([key, value]) => root.style.setProperty(key, value));
         applyCustomColors(root);
       };
 
@@ -145,13 +129,8 @@ export const ThemeProvider = ({ children }) => {
       cleanup = () => mediaQuery.removeEventListener("change", listener);
     }
 
-    // Apply preset theme first
     const selectedTheme = presetThemes[themeToApply] || presetThemes.light;
-    Object.entries(selectedTheme).forEach(([key, value]) =>
-      root.style.setProperty(key, value)
-    );
-
-    // Apply custom color overrides if present
+    Object.entries(selectedTheme).forEach(([key, value]) => root.style.setProperty(key, value));
     applyCustomColors(root);
 
     return cleanup;
@@ -161,11 +140,7 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

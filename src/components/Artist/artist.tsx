@@ -4,14 +4,22 @@ import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import { useStore } from "../../zustand/store";
+import type { ApiEnvelope, ArtistSummary, Song, ImageResource } from "../../types";
 import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
 
+type ArtistData = {
+  id: string;
+  name: string;
+  image: ImageResource[];
+  topSongs: Song[];
+};
+
 function Artist() {
-  const [data, setData] = useState<any>();
-  const [bgColor, setBgColor] = useState<any>();
+  const [data, setData] = useState<ArtistData | null>();
+  const [bgColor, setBgColor] = useState<{ bg1?: string; bg2?: string } | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
@@ -34,13 +42,15 @@ function Artist() {
     const fetching = async () => {
       try {
         setIsLoading(true);
-        const res = await Api(`/api/artists/${artistId}`);
+        const res = await Api<ApiEnvelope<ArtistData>>(`/api/artists/${artistId}`);
         setData(res.data.data);
         setQueue(res.data.data.topSongs);
-        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }: any) => {
-          setBgColor({ bg1: averageColor, bg2: dominantColor });
-          setTextColor(getTextColor(dominantColor));
-        });
+        getImageColors(res.data.data.image[2].url).then(
+          ({ averageColor, dominantColor }: { averageColor: string; dominantColor: string }) => {
+            setBgColor({ bg1: averageColor, bg2: dominantColor });
+            setTextColor(getTextColor(dominantColor));
+          }
+        );
       } catch (error) {
         toast.error("Failed to load artist data.");
         console.error("Error fetching artist data:", error);
@@ -52,7 +62,7 @@ function Artist() {
     fetching();
   }, [artistId, setQueue]);
 
-  function handleSongClick(song: any) {
+  function handleSongClick(song: Song) {
     if (song.id !== musicId) {
       setMusicId(song.id);
       setArtistId(artistId);
@@ -65,7 +75,7 @@ function Artist() {
     if (currentArtistId == artistId) {
       setIsPlaying(!isPlaying);
     } else {
-      if (data.topSongs?.length > 0) {
+      if (data?.topSongs?.length > 0) {
         setQueue(data.topSongs);
         setMusicId(data.topSongs[0].id);
         setIsPlaying(true);
@@ -197,7 +207,7 @@ function Artist() {
             </div>
 
             <div className="space-y-1">
-              {data.topSongs.map((song: any, index: number) => (
+              {data.topSongs.map((song: Song, index: number) => (
                 <div
                   key={song.id || index}
                   className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${song.id === musicId ? "bg-muted" : ""} cursor-pointer`}

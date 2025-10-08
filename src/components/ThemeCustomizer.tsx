@@ -24,18 +24,18 @@ export function ThemeCustomizer() {
     }
   }, []);
 
-  const applyTheme = (themeName: string) => {
+  const applyTheme = (themeName: keyof typeof presetThemes | string) => {
     const root = document.documentElement as HTMLElement;
-    const themeObj = (presetThemes as any)[themeName] as Record<string, string> | undefined;
+    const preset = (presetThemes as Record<string, Record<string, string>>)[themeName as string];
 
-    if (themeObj) {
-      Object.entries(themeObj).forEach(([key, value]) => {
+    if (preset) {
+      Object.entries(preset).forEach(([key, value]) => {
         root.style.setProperty(key, value);
       });
 
-      setSelectedTheme(themeName);
-      setTheme(themeName as any);
-      localStorage.setItem("theme", themeName);
+      setSelectedTheme(String(themeName));
+      setTheme(themeName as keyof typeof presetThemes);
+      localStorage.setItem("theme", String(themeName));
     }
   };
 
@@ -74,7 +74,7 @@ export function ThemeCustomizer() {
 
           <TabsContent value="presets" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              {Object.keys(presetThemes as any).map((themeName) => (
+              {Object.keys(presetThemes).map((themeName) => (
                 <button
                   key={themeName}
                   onClick={() => applyTheme(themeName)}
@@ -89,19 +89,19 @@ export function ThemeCustomizer() {
                     <div
                       className="w-8 h-8 rounded-full"
                       style={{
-                        backgroundColor: `hsl(${(presetThemes as any)[themeName]["--primary"]})`,
+                        backgroundColor: `hsl(${presetThemes[themeName]["--primary"]})`,
                       }}
                     />
                     <div
                       className="w-8 h-8 rounded-full"
                       style={{
-                        backgroundColor: `hsl(${(presetThemes as any)[themeName]["--secondary"]})`,
+                        backgroundColor: `hsl(${presetThemes[themeName]["--secondary"]})`,
                       }}
                     />
                     <div
                       className="w-8 h-8 rounded-full"
                       style={{
-                        backgroundColor: `hsl(${(presetThemes as any)[themeName]["--accent"]})`,
+                        backgroundColor: `hsl(${presetThemes[themeName]["--accent"]})`,
                       }}
                     />
                   </div>

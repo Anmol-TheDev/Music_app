@@ -12,7 +12,9 @@ import { User, Heart, ListMusic } from "lucide-react";
 
 export default function Profile() {
   const { isUser, likedSongs, playlist } = useStore();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ displayName?: string | null; email?: string | null } | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const displayNameRef = useRef<HTMLInputElement | null>(null);
@@ -34,14 +36,18 @@ export default function Profile() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     const newDisplayName = (displayNameRef.current?.value || "").trim();
-    if (user.displayName !== newDisplayName && newDisplayName) {
+    if ((user?.displayName || "") !== newDisplayName && newDisplayName) {
       try {
         await updateProfile(auth.currentUser!, { displayName: newDisplayName });
-        setUser({ ...auth.currentUser });
+        setUser({
+          displayName: auth.currentUser?.displayName || newDisplayName,
+          email: auth.currentUser?.email,
+        });
         toast.success("Profile updated successfully!");
         setIsEditing(false);
-      } catch (error: any) {
-        toast.error("Failed to update profile", { description: error.message });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        toast.error("Failed to update profile", { description: err.message });
       }
     } else {
       setIsEditing(false);

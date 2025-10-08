@@ -10,6 +10,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import ReactPlayer from "react-player";
+import type { Song } from "../../types";
 import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer";
@@ -19,9 +20,9 @@ import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
 
 function MusicPlayer() {
   const playerRef = useRef<ReactPlayer | null>(null);
-  const [bgColor, setBgColor] = useState<any>();
+  const [bgColor, setBgColor] = useState<{ bg1?: string; bg2?: string } | undefined>();
   const [musicPlayerDrawer, setMusicPlayerDrawer] = useState(false);
-  const [song, setSong] = useState<any>();
+  const [song, setSong] = useState<Song | null>();
   const { songs } = useFetch();
   const {
     musicId,
@@ -63,12 +64,14 @@ function MusicPlayer() {
       if (!musicId) return;
       try {
         const res = await Api(`/api/songs/${musicId}`);
-        const songData = (res as any).data?.data?.[0];
+        const songData = res.data?.data?.[0] as Song | undefined;
         setSong(songData);
         if (songData?.image?.[2]?.url) {
-          getImageColors(songData.image[2].url).then(({ averageColor, dominantColor }: any) => {
-            setBgColor({ bg1: averageColor, bg2: dominantColor });
-          });
+          getImageColors(songData.image[2].url).then(
+            ({ averageColor, dominantColor }: { averageColor: string; dominantColor: string }) => {
+              setBgColor({ bg1: averageColor, bg2: dominantColor });
+            }
+          );
         }
         setIsPlaying(true);
       } catch (error) {
@@ -98,17 +101,19 @@ function MusicPlayer() {
   const handleDuration = (newDuration: number) => setDuration(newDuration);
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPlayed(parseFloat(e.target.value));
-  const handleSeekMouseUp = (e: any) => {
+  const handleSeekMouseUp = (
+    e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>
+  ) => {
     let seekValue: number | undefined;
     if (e.type === "touchend") {
-      const touch = e.changedTouches[0];
+      const touch = (e as React.TouchEvent<HTMLInputElement>).changedTouches[0];
       const target = document.elementFromPoint(
         touch.clientX,
         touch.clientY
       ) as HTMLInputElement | null;
-      if (target && (target as any).value) seekValue = parseFloat((target as any).value);
+      if (target && target.value) seekValue = parseFloat(target.value);
     } else {
-      seekValue = parseFloat(e.target.value);
+      seekValue = parseFloat((e as React.MouseEvent<HTMLInputElement>).currentTarget.value);
     }
     if (seekValue !== undefined) playerRef.current?.seekTo(seekValue);
   };
@@ -246,7 +251,7 @@ function MusicPlayer() {
         </Drawer>
 
         <ReactPlayer
-          ref={playerRef as any}
+          ref={playerRef}
           key={String(musicId)}
           url={song?.downloadUrl?.[4]?.url || ""}
           playing={isPlaying}

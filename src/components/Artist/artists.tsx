@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
+import type { ArtistSummary } from "../../types";
 
 function RandomArtists({ search }: { search: string }) {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ function RandomArtists({ search }: { search: string }) {
     const path = {
       pathname: "/artist",
       search: createSearchParams({ Id }).toString(),
-    } as any;
+    } as { pathname: string; search: string };
     navigate(path);
   }
 
@@ -44,7 +45,7 @@ function RandomArtists({ search }: { search: string }) {
         >
           <h2 className="text-2xl font-bold mb-4">Artists</h2>
           <div className="flex space-x-4 overflow-x-scroll">
-            {artists?.map((artist: any, i: number) => (
+            {artists?.map((artist: ArtistSummary, i: number) => (
               <div
                 key={i}
                 className="bg-secondary rounded-2xl p-3 sm:p-4 flex flex-col items-center flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"

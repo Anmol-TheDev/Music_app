@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { app, db } from "../../Auth/firebase";
 import { getAuth } from "firebase/auth";
 import Api from "../../Api";
+import type { Song } from "../../types";
 import { doc, getDoc } from "firebase/firestore";
 import { useLocation } from "react-router-dom";
 import { ScrollArea } from "../ui/scroll-area";
@@ -14,7 +15,7 @@ export default function Plylistinfo() {
   const url = useLocation();
   const playlistId = (url?.search || "").split("=")[1];
   const user = getAuth(app).currentUser;
-  const [playlistData, setPlaylistData] = useState<any[]>([]);
+  const [playlistData, setPlaylistData] = useState<Song[]>([]);
   const [playlistName, setPlaylistName] = useState<string | undefined>();
   const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
   let count = playlistData.slice(0, 3).length;
@@ -26,11 +27,11 @@ export default function Plylistinfo() {
         const docRef = doc(db, "users", user?.uid as string, "playlists", playlistId);
         const data = await getDoc(docRef);
         if (data.exists()) {
-          setPlaylistName((data.data() as any).name);
-          for (const element of (data.data() as any).songs as string[]) {
+          setPlaylistName((data.data() as { name?: string; songs?: string[] }).name);
+          for (const element of (data.data() as { songs?: string[] }).songs as string[]) {
             try {
               const res = await Api(`/api/songs/${element}`);
-              setPlaylistData((prevData) => [...prevData, (res as any).data.data[0]]);
+              setPlaylistData((prevData) => [...prevData, res.data.data[0] as Song]);
             } catch (apiError) {
               toast.error(`Failed to fetch song: ${element}`);
               console.error(`Error fetching song ${element}:`, apiError);
@@ -51,7 +52,7 @@ export default function Plylistinfo() {
     setQueue(playlistData);
   }, [playlistData]);
 
-  function handleSongClick(song: any) {
+  function handleSongClick(song: Song) {
     if (song.id !== musicId) {
       setMusicId(song.id);
     } else {

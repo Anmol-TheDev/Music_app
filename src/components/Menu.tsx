@@ -18,6 +18,7 @@ import { app } from "../Auth/firebase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
+import type { Song as AppSong, ArtistSummary } from "../types";
 import {
   Drawer,
   DrawerContent,
@@ -27,19 +28,13 @@ import {
   DrawerClose,
 } from "./ui/drawer";
 
-type Artist = { id?: string; name?: string; perma_url?: string };
-type SongImage = { url?: string };
-type Song = {
-  id?: string;
-  name?: string;
-  url?: string;
+type Song = AppSong & {
   perma_url?: string;
   permaUrl?: string;
   permalink?: string;
-  image?: SongImage[];
-  album?: { id?: string };
+  album?: { id?: string } | AppSong["album"];
   albumId?: string;
-  artists?: { primary?: { name?: string }[]; all?: Artist[] };
+  artists?: { primary?: { name?: string }[]; all?: ArtistSummary[] } | AppSong["artists"];
 };
 
 type MenuProps = {
@@ -117,7 +112,7 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
   const handleAddToQueue = (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     if (addToQueue) {
-      addToQueue(song as any);
+      addToQueue((song || {}) as AppSong);
       toast.success("Added to queue!");
     } else {
       toast.info("Queue feature coming soon!");
@@ -127,7 +122,7 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
   const handleAddToNext = (e?: { stopPropagation?: () => void }) => {
     e?.stopPropagation?.();
     if (addToQueueNext) {
-      addToQueueNext(song as any);
+      addToQueueNext((song || {}) as AppSong);
       toast.success("Playing Next!");
     } else {
       toast.info("Queue feature coming soon!");
@@ -235,13 +230,13 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                     {isAuthenticated ? (
                       <div className="flex flex-col">
                         {playlist?.length ? (
-                          playlist.map((list: any) => (
+                          playlist.map((list) => (
                             <button
                               key={list.id}
                               className="w-full flex items-center gap-3 px-3 h-12 rounded-md hover:bg-accent/60 text-left"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                pushInDb(list.id, (song as any).id);
+                                pushInDb(list.id, (song as AppSong).id as string);
                                 toast.success(`Added to ${list.data.name}`);
                                 handleOpenChange(false);
                               }}
@@ -279,20 +274,20 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                         .map((artist) => (
                           <button
                             key={
-                              (artist as any).id ||
-                              (artist as any).perma_url ||
-                              (artist as any).name
+                              (artist as ArtistSummary).id ||
+                              (artist as ArtistSummary).perma_url ||
+                              (artist as ArtistSummary).name
                             }
                             className="w-full flex items-center gap-3 px-3 h-12 rounded-md hover:bg-accent/60 text-left"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/artist?Id=${(artist as any).id}`);
+                              navigate(`/artist?Id=${(artist as ArtistSummary).id}`);
                               handleOpenChange(false);
                             }}
-                            title={`Go to ${(artist as any).name}`}
+                            title={`Go to ${(artist as ArtistSummary).name}`}
                           >
                             <User className="w-5 h-5 text-muted-foreground" />
-                            <span className="text-sm">Go to {(artist as any).name}</span>
+                            <span className="text-sm">Go to {(artist as ArtistSummary).name}</span>
                           </button>
                         ))}
 
@@ -372,7 +367,7 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                 className="gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddToNext(e as any);
+                  handleAddToNext(e);
                 }}
                 title="Queue this to play next"
               >
@@ -383,7 +378,7 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                 className="gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddToQueue(e as any);
+                  handleAddToQueue(e);
                 }}
                 title="Add to queue"
               >
@@ -404,13 +399,13 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                   </MenubarSubTrigger>
                   <MenubarSubContent className="w-56">
                     {playlist?.length ? (
-                      playlist.map((list: any) => (
+                      playlist.map((list) => (
                         <MenubarItem
                           key={list.id}
                           className="p-2 rounded-md w-full hover:bg-accent/50"
                           onClick={(e) => {
                             e.stopPropagation();
-                            pushInDb(list.id, (song as any).id);
+                            pushInDb(list.id, (song as AppSong).id as string);
                             toast.success(`Added to ${list.data.name}`);
                           }}
                           title={`Add to ${list.data.name}`}
@@ -452,16 +447,18 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                     .map((artist) => (
                       <MenubarItem
                         key={
-                          (artist as any).id || (artist as any).perma_url || (artist as any).name
+                          (artist as ArtistSummary).id ||
+                          (artist as ArtistSummary).perma_url ||
+                          (artist as ArtistSummary).name
                         }
                         className="p-2 rounded-md w-full hover:bg-accent/50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/artist?Id=${(artist as any).id}`);
+                          navigate(`/artist?Id=${(artist as ArtistSummary).id}`);
                         }}
-                        title={`Go to ${(artist as any).name}`}
+                        title={`Go to ${(artist as ArtistSummary).name}`}
                       >
-                        {(artist as any).name}
+                        {(artist as ArtistSummary).name}
                       </MenubarItem>
                     ))}
 
@@ -471,19 +468,19 @@ export default function Menu({ song, onOpenChange }: MenuProps) {
                 </MenubarSubContent>
               </MenubarSub>
 
-              {(song?.album?.id || song?.albumId) && (
+              {(song?.album && (song.album as { id?: string }).id) || song?.albumId ? (
                 <MenubarItem
                   className="gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleGoToAlbum(e as any);
+                    handleGoToAlbum(e);
                   }}
                   title="Go to album"
                 >
                   <Disc3 className="w-4 h-4 text-muted-foreground" />
                   Go to Album
                 </MenubarItem>
-              )}
+              ) : null}
 
               <MenubarSeparator className="my-1" />
 

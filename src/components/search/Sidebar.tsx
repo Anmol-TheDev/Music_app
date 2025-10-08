@@ -75,7 +75,20 @@ const Sidebar = () => {
   const storedSearch = localStorage.getItem("search") || "top hits";
   const homeSearchPath = `/search?searchTxt=${encodeURIComponent(storedSearch)}`;
 
-  const menuItems = [
+  const menuItems: Array<
+    | { id: "home"; label: string; icon: typeof Home; path: string; onClick: () => void }
+    | {
+        id: "liked";
+        label: string;
+        icon: typeof Heart;
+        path: string;
+        requiresAuth: true;
+        badge: number | null;
+      }
+    | { id: "playlist"; label: string; icon: typeof List; expandable: true; requiresAuth: true }
+    | { id: "profile"; label: string; icon: typeof User; path: string; requiresAuth: true }
+    | { id: "about"; label: string; icon: typeof Baby; external: string }
+  > = [
     {
       id: "home",
       label: "Home",
@@ -164,7 +177,7 @@ const Sidebar = () => {
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
             {menuItems.map((item) => {
-              if ((item as any).requiresAuth && !isUser) {
+              if ("requiresAuth" in item && !isUser) {
                 return (
                   <li key={item.id}>
                     <Button
@@ -187,7 +200,7 @@ const Sidebar = () => {
                 );
               }
 
-              if ((item as any).expandable) {
+              if ("expandable" in item) {
                 return (
                   <li key={item.id}>
                     <Popover open={popover} onOpenChange={setPopover}>
@@ -221,14 +234,14 @@ const Sidebar = () => {
                           className="absolute top-2 right-2 cursor-pointer hover:bg-accent rounded-sm p-1 transition-colors"
                           onClick={() => setPopover(false)}
                         />
-                        <Playlist setPopover={setPopover as any} />
+                        <Playlist setPopover={setPopover} />
                       </PopoverContent>
                     </Popover>
                   </li>
                 );
               }
 
-              if ((item as any).external) {
+              if ("external" in item) {
                 return (
                   <li key={item.id}>
                     <Button
@@ -239,7 +252,7 @@ const Sidebar = () => {
                         "hover:bg-accent hover:text-accent-foreground transition-all duration-200"
                       )}
                     >
-                      <a href={(item as any).external} target="_blank" rel="noopener noreferrer">
+                      <a href={item.external} target="_blank" rel="noopener noreferrer">
                         <item.icon size={20} className="flex-shrink-0" />
                         <span>{item.label}</span>
                       </a>
@@ -261,9 +274,9 @@ const Sidebar = () => {
                     )}
                   >
                     <Link
-                      to={(item as any).path}
+                      to={item.path}
                       onClick={() => {
-                        (item as any).onClick?.();
+                        if ("onClick" in item) item.onClick?.();
                         setIsOpen(false);
                       }}
                     >
@@ -272,9 +285,9 @@ const Sidebar = () => {
                       )}
                       <item.icon size={20} className="flex-shrink-0" />
                       <span className="flex-1 text-left">{item.label}</span>
-                      {(item as any).badge && (
+                      {"badge" in item && item.badge && (
                         <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
-                          {(item as any).badge}
+                          {item.badge}
                         </span>
                       )}
                     </Link>

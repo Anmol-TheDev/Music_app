@@ -1,18 +1,19 @@
 import { useRouteError } from "react-router-dom";
 
 const ErrorPage = () => {
-  const error = useRouteError() as any;
+  const error = useRouteError() as unknown;
   console.error(error);
 
   let errorMessage = "Something went wrong.";
   let errorStatus: string | number = "";
 
   if (error && typeof error === "object" && "status" in error) {
-    errorStatus = (error as any).status;
-    if ((error as any).status === 404) {
+    const err = error as { status?: number | string; statusText?: string };
+    errorStatus = err.status ?? "";
+    if (err.status === 404) {
       errorMessage = "Page Not Found.";
-    } else if ((error as any).statusText) {
-      errorMessage = (error as any).statusText;
+    } else if (err.statusText) {
+      errorMessage = err.statusText;
     }
   } else if (error instanceof Error) {
     errorMessage = error.message;

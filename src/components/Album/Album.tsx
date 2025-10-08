@@ -3,6 +3,7 @@ import { Play, Plus, Clock, Pause, Share2, Shuffle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import Api from "../../Api";
 import { useStore } from "../../zustand/store";
+import type { ApiEnvelope, Song, ImageResource } from "../../types";
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import Menu from "../Menu";
@@ -19,8 +20,17 @@ import {
   DrawerClose,
 } from "../ui/drawer";
 
+type AlbumData = {
+  id: string;
+  name: string;
+  year?: string | number;
+  image: ImageResource[];
+  description?: string;
+  songs: Song[];
+};
+
 export default function Album() {
-  const [albumData, setAlbumData] = useState<any>(null);
+  const [albumData, setAlbumData] = useState<AlbumData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
@@ -39,8 +49,8 @@ export default function Album() {
   } = useStore();
   const searchParams = new URLSearchParams(url.search);
   const albumId = searchParams.get("Id");
-  const [songs, setSongs] = useState<any[] | null>(null);
-  const [bgColor, setBgColor] = useState<any>();
+  const [songs, setSongs] = useState<Song[] | null>(null);
+  const [bgColor, setBgColor] = useState<{ bg1?: string; bg2?: string } | undefined>();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
@@ -60,14 +70,16 @@ export default function Album() {
     const fetching = async () => {
       try {
         setIsLoading(true);
-        const res = await Api(`/api/albums?id=${albumId}`);
+        const res = await Api<ApiEnvelope<AlbumData>>(`/api/albums?id=${albumId}`);
         setAlbumData(res.data.data);
         setSongs(res.data.data.songs);
         setQueue(res.data.data.songs);
-        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }: any) => {
-          setBgColor({ bg1: averageColor, bg2: dominantColor });
-          setTextColor(getTextColor(dominantColor));
-        });
+        getImageColors(res.data.data.image[2].url).then(
+          ({ averageColor, dominantColor }: { averageColor: string; dominantColor: string }) => {
+            setBgColor({ bg1: averageColor, bg2: dominantColor });
+            setTextColor(getTextColor(dominantColor));
+          }
+        );
       } catch (error) {
         toast.error("Failed to load album data.");
         console.error("Album API fetch error:", error);
@@ -79,10 +91,10 @@ export default function Album() {
     fetching();
   }, [albumId, setQueue]);
 
-  function handleSongClick(song: any) {
+  function handleSongClick(song: Song) {
     if (song.id !== musicId) {
       setMusicId(song.id);
-      setAlbumId(albumId as any);
+      setAlbumId(albumId);
     } else {
       setIsPlaying(!isPlaying);
     }
@@ -96,7 +108,7 @@ export default function Album() {
         setQueue(songs);
         setMusicId(songs[0].id);
         setIsPlaying(true);
-        setAlbumId(albumId as any);
+        setAlbumId(albumId);
       }
     }
   }
@@ -105,12 +117,12 @@ export default function Album() {
     if (songs?.length) {
       const randomIndex = Math.floor(Math.random() * songs.length);
       setMusicId(songs[randomIndex].id);
-      setAlbumId(albumId as any);
+      setAlbumId(albumId);
       setIsPlaying(true);
     }
   }
 
-  function formatArtist(song: any, check = false) {
+  function formatArtist(song: Song, check = false) {
     const all = song.artists.primary;
     const mql = window.matchMedia("(max-width: 768px)");
     const isMobile = mql.matches;
@@ -118,8 +130,8 @@ export default function Album() {
     const artists = all
       .slice(0, x)
       .map(
-        (artist: any) =>
-          `<a href="/artist?Id=${artist.id}" class="hover:underline">${artist.name.trim()}</a>`
+        (artist) =>
+          `<a href="/artist?Id=${artist.id}" class="hover:underline">${artist.name?.trim()}</a>`
       )
       .join(", ");
     return all.length > x ? `${artists} & more` : artists;
@@ -154,14 +166,14 @@ export default function Album() {
     }
   };
 
-  const totalDuration = songs?.reduce((acc, song) => acc + song.duration, 0) || 0;
+  const totalDuration = songs?.reduce((acc, song) => acc + (song.duration || 0), 0) || 0;
   const totalMinutes = Math.floor(totalDuration / 60);
   const totalHours = Math.floor(totalMinutes / 60);
   const displayMinutes = totalMinutes % 60;
 
   async function handleAddAllToPlaylist(playlistId: string) {
     try {
-      const ids = (songs || []).map((s: any) => s.id).filter(Boolean);
+      const ids = (songs || []).map((s) => s.id).filter(Boolean) as string[];
       if (!ids.length) return;
       pushManyToDb(playlistId, ids);
       fetchFireStore(setPlaylist, setLikedSongs);
@@ -174,7 +186,7 @@ export default function Album() {
 
   async function handleCreatePlaylist(e: React.FormEvent) {
     e.preventDefault();
-    const ids = (songs || []).map((s: any) => s.id).filter(Boolean);
+    const ids = (songs || []).map((s) => s.id).filter(Boolean) as string[];
     const playlistName = newPlaylistName?.trim() || albumData?.name || "New Playlist";
     const res = await createPlaylistWithSongs(playlistName, ids);
     if (res?.ok) {
@@ -340,7 +352,7 @@ export default function Album() {
             )}
 
             <div className="space-y-1">
-              {songs?.map((song: any, index: number) => (
+              {songs?.map((song: Song, index: number) => (
                 <div
                   key={song.id || index}
                   className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${song.id === musicId || openMenuId === song.id ? "bg-muted/50" : ""}`}
@@ -575,7 +587,7 @@ export default function Album() {
                 <div className="rounded-md border border-white/15 bg-white/5">
                   {Array.isArray(playlist) && playlist.length > 0 ? (
                     <ul className="divide-y divide-white/10">
-                      {playlist.map((pl: any) => (
+                      {playlist.map((pl) => (
                         <li key={pl.id}>
                           <button
                             onClick={() => {
@@ -646,7 +658,7 @@ export default function Album() {
               <div className="max-h-56 overflow-y-auto rounded-md border border-white/15 bg-white/5">
                 {Array.isArray(playlist) && playlist.length > 0 ? (
                   <ul className="divide-y divide-white/10">
-                    {playlist.map((pl: any) => (
+                    {playlist.map((pl) => (
                       <li key={pl.id}>
                         <button
                           onClick={() => handleAddAllToPlaylist(pl.id)}

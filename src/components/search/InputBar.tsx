@@ -3,6 +3,8 @@ import { Search } from "lucide-react";
 import { Input } from "../ui/input";
 import { createSearchParams, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Api from "../../Api";
+import type { ApiEnvelope, SearchResults } from "../../types";
+import type { Song } from "../../types";
 
 export default function InputBar() {
   const [searchInput, setSearchInput] = useState("");
@@ -24,7 +26,7 @@ export default function InputBar() {
     const path = {
       pathname: "/search",
       search: createSearchParams({ searchtxt: query }).toString(),
-    } as any;
+    } as { pathname: string; search: string };
     if (CurrPath.pathname !== "/search") router(path);
     setIsSearchBarFocused(false);
     if (query !== searchInput) setSearchInput(query);
@@ -49,10 +51,12 @@ export default function InputBar() {
     const fetchSearch = async () => {
       setLoading(true);
       if (searchInput && isSearchBarFocused) {
-        const res = await Api(`/api/search/songs?query=${searchInput}&limit=4`);
-        const data = (res as any).data.data.results.map((res: any) => ({
-          id: res["id"],
-          name: res["name"],
+        const res = await Api<ApiEnvelope<SearchResults<Song>>>(
+          `/api/search/songs?query=${searchInput}&limit=4`
+        );
+        const data = (res.data?.data?.results || []).map((res) => ({
+          id: res.id,
+          name: res.name,
         }));
         setSuggestions(data);
         setLoading(false);

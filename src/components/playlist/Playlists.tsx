@@ -11,6 +11,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { deletePlaylist } from "../../Api";
 import { fetchFireStore } from "../../Api";
+import type { PlaylistItem } from "../../types";
 import { toast } from "sonner";
 
 export default function Playlist({ setPopover }: { setPopover: (open: boolean) => void }) {
@@ -37,9 +38,12 @@ export default function Playlist({ setPopover }: { setPopover: (open: boolean) =
     }
   }
 
-  const handleClick = (list: any) => {
+  const handleClick = (list: PlaylistItem) => {
     const id = list?.id;
-    const path = { pathname: "/playlist", search: createSearchParams({ id }).toString() } as any;
+    const path = { pathname: "/playlist", search: createSearchParams({ id }).toString() } as {
+      pathname: string;
+      search: string;
+    };
     setPopover(false);
     navigate(path);
   };
@@ -64,7 +68,7 @@ export default function Playlist({ setPopover }: { setPopover: (open: boolean) =
       </Dialog>
 
       <ScrollArea className="flex flex-col h-40 sm:h-64">
-        {playlist.map((list: any) => (
+        {playlist.map((list: PlaylistItem) => (
           <div key={list.id} className="p-2 rounded-lg w-full hover:bg-secondary flex">
             <p onClick={() => handleClick(list)} className="w-full cursor-pointer">
               {list.data.name}

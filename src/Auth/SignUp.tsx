@@ -19,8 +19,28 @@ import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useStore } from "../zustand/store";
 import { toast } from "sonner";
 
-const validatePassword = (password) => {
-  const requirements = {
+type PasswordRequirements = {
+  minLength: boolean;
+  hasLetter: boolean;
+  hasNumbers: boolean;
+  hasSpecialChar: boolean;
+};
+
+type PasswordValidation = {
+  requirements: PasswordRequirements;
+  score: number;
+  isValid: boolean;
+};
+
+type FieldErrors = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  submit?: string;
+};
+
+const validatePassword = (password: string): PasswordValidation => {
+  const requirements: PasswordRequirements = {
     minLength: password.length >= 7,
     hasLetter: /[a-zA-Z]/.test(password),
     hasNumbers: /\d/.test(password),
@@ -32,23 +52,22 @@ const validatePassword = (password) => {
 };
 
 function SignUp() {
-  const email = useRef();
-  const password = useRef();
-  const confPassword = useRef();
+  const email = useRef<HTMLInputElement | null>(null);
+  const password = useRef<HTMLInputElement | null>(null);
+  const confPassword = useRef<HTMLInputElement | null>(null);
   const { setIsUser, setDialogOpen } = useStore();
   const navigate = useNavigate();
 
-  const [passwordValue, setPasswordValue] = useState("");
-  const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
-  const [passwordValidation, setPasswordValidation] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loadingEmail, setLoadingEmail] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
+  const [passwordValue, setPasswordValue] = useState<string>("");
+  const [confirmPasswordValue, setConfirmPasswordValue] = useState<string>("");
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidation | null>(null);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [loadingEmail, setLoadingEmail] = useState<boolean>(false);
+  const [loadingGoogle, setLoadingGoogle] = useState<boolean>(false);
+  const [loadingGithub, setLoadingGithub] = useState<boolean>(false);
 
-  // Combined loading state for disabling all inputs
   const isAnyLoading = loadingEmail || loadingGoogle || loadingGithub;
 
   useEffect(() => {
@@ -69,26 +88,26 @@ function SignUp() {
     else setPasswordValidation(null);
   }, [passwordValue]);
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPasswordValue(value);
-    password.current.value = value;
+    if (password.current) password.current.value = value;
     if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
   };
 
-  const handleConfirmPasswordChange = (e) => {
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmPasswordValue(value);
-    confPassword.current.value = value;
+    if (confPassword.current) confPassword.current.value = value;
     if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoadingEmail(true);
     setErrors({});
-    const newErrors = {};
-    if (!email.current.value.trim()) newErrors.email = "Email is required";
+    const newErrors: FieldErrors = {};
+    if (!email.current?.value.trim()) newErrors.email = "Email is required";
     const validation = validatePassword(passwordValue);
     if (!validation.isValid) newErrors.password = "Password does not meet all requirements";
     if (passwordValue !== confirmPasswordValue)
@@ -102,42 +121,45 @@ function SignUp() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email.current.value.trim(), passwordValue);
+      await createUserWithEmailAndPassword(
+        auth,
+        (email.current?.value || "").trim(),
+        passwordValue
+      );
       toast.success("Account created successfully! Welcome!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
-      console.error("Sign up error:", error);
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error("Sign up error:", err);
       let errorMessage = "Failed to create account";
       let isFieldError = false;
 
-      // Provide user-friendly error messages
-      if (error.code === "auth/configuration-not-found") {
+      if (err.code === "auth/configuration-not-found") {
         errorMessage = "Authentication service is not properly configured. Please contact support.";
-      } else if (error.code === "auth/email-already-in-use") {
+      } else if (err.code === "auth/email-already-in-use") {
         errorMessage = "This email is already registered. Try logging in instead.";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === "auth/invalid-email") {
+      } else if (err.code === "auth/invalid-email") {
         errorMessage = "Invalid email address format.";
         newErrors.email = errorMessage;
         isFieldError = true;
-      } else if (error.code === "auth/weak-password") {
+      } else if (err.code === "auth/weak-password") {
         errorMessage = "Password is too weak. Please use a stronger password.";
         newErrors.password = errorMessage;
         isFieldError = true;
-      } else if (error.code === "auth/operation-not-allowed") {
+      } else if (err.code === "auth/operation-not-allowed") {
         errorMessage = "Email/password sign-up is not enabled. Please contact support.";
-      } else if (error.code === "auth/network-request-failed") {
+      } else if (err.code === "auth/network-request-failed") {
         errorMessage = "Network error. Please check your internet connection.";
-      } else if (error.message) {
-        errorMessage = error.message
+      } else if (err.message) {
+        errorMessage = err.message
           .replace("Firebase: ", "")
           .replace(/\(auth\/[^)]+\)/, "")
           .trim();
       }
 
-      // Only show in Alert banner if it's not a field-specific error
       if (isFieldError) {
         setErrors({ ...newErrors });
       } else {
@@ -158,9 +180,10 @@ function SignUp() {
       toast.success("Successfully signed in with Google!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
-      console.error("Google login error:", error);
-      if (error.code === "auth/popup-blocked") {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error("Google login error:", err);
+      if (err.code === "auth/popup-blocked") {
         toast.info("Popup blocked! Redirecting to Google sign-in...");
         try {
           await signInWithRedirect(auth, provider);
@@ -168,19 +191,19 @@ function SignUp() {
           toast.error("Failed to redirect to Google sign-in");
         }
       } else if (
-        error.code === "auth/cancelled-popup-request" ||
-        error.code === "auth/popup-closed-by-user"
+        err.code === "auth/cancelled-popup-request" ||
+        err.code === "auth/popup-closed-by-user"
       ) {
         toast.info("Sign-in cancelled");
-      } else if (error.code === "auth/configuration-not-found") {
+      } else if (err.code === "auth/configuration-not-found") {
         setErrors({ submit: "Google sign-in is not properly configured. Please contact support." });
         toast.error("Google sign-in configuration error");
-      } else if (error.code === "auth/network-request-failed") {
+      } else if (err.code === "auth/network-request-failed") {
         setErrors({ submit: "Network error. Please check your internet connection." });
         toast.error("Network error");
-      } else if (error.code !== "auth/popup-closed-by-user") {
+      } else if (err.code !== "auth/popup-closed-by-user") {
         const errorMsg =
-          error.message
+          err.message
             ?.replace("Firebase: ", "")
             .replace(/\(auth\/[^)]+\)/, "")
             .trim() || "Failed to sign in with Google";
@@ -201,9 +224,10 @@ function SignUp() {
       toast.success("Successfully signed in with GitHub!");
       setDialogOpen(false);
       setIsUser(true);
-    } catch (error) {
-      console.error("GitHub login error:", error);
-      if (error.code === "auth/popup-blocked") {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error("GitHub login error:", err);
+      if (err.code === "auth/popup-blocked") {
         toast.info("Popup blocked! Redirecting to GitHub sign-in...");
         try {
           await signInWithRedirect(auth, provider);
@@ -211,19 +235,19 @@ function SignUp() {
           toast.error("Failed to redirect to GitHub sign-in");
         }
       } else if (
-        error.code === "auth/cancelled-popup-request" ||
-        error.code === "auth/popup-closed-by-user"
+        err.code === "auth/cancelled-popup-request" ||
+        err.code === "auth/popup-closed-by-user"
       ) {
         toast.info("Sign-in cancelled");
-      } else if (error.code === "auth/configuration-not-found") {
+      } else if (err.code === "auth/configuration-not-found") {
         setErrors({ submit: "GitHub sign-in is not properly configured. Please contact support." });
         toast.error("GitHub sign-in configuration error");
-      } else if (error.code === "auth/network-request-failed") {
+      } else if (err.code === "auth/network-request-failed") {
         setErrors({ submit: "Network error. Please check your internet connection." });
         toast.error("Network error");
-      } else if (error.code !== "auth/popup-closed-by-user") {
+      } else if (err.code !== "auth/popup-closed-by-user") {
         const errorMsg =
-          error.message
+          err.message
             ?.replace("Firebase: ", "")
             .replace(/\(auth\/[^)]+\)/, "")
             .trim() || "Failed to sign in with GitHub";
@@ -330,7 +354,6 @@ function SignUp() {
             </div>
           )}
 
-          {/* Error message */}
           {errors.password && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" />

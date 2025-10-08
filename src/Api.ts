@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { ApiEnvelope, PlaylistDoc, PlaylistItem, Song } from "./types";
 import { toast } from "sonner";
 
 const Api = axios.create({ baseURL: "https://saavn.dev" });
@@ -38,9 +39,9 @@ import {
 import { app, db } from "./Auth/firebase";
 
 export const fetchFireStore = (
-  setPlaylist: (p: { id: string; data: any }) => void,
+  setPlaylist: (p: PlaylistItem) => void,
   setLikedSongs: (ids: string[]) => void
-) => {
+): void => {
   let auth = getAuth(app);
   onAuthStateChanged(auth, async (user) => {
     if (user?.uid) {
@@ -48,7 +49,7 @@ export const fetchFireStore = (
         const docRef = collection(db, "users", user?.uid, "playlists");
         const docSnap = await getDocs(docRef);
         docSnap.forEach((e) => {
-          setPlaylist({ id: e.id, data: e.data() });
+          setPlaylist({ id: e.id, data: e.data() as PlaylistDoc });
         });
         const userDocRef = doc(db, "users", user?.uid);
         const userDoc = await getDoc(userDocRef);
@@ -124,10 +125,10 @@ export async function createPlaylistWithSongs(name: string, songIds: string[] = 
 
 export async function deletePlaylist(
   playlistId: string,
-  playlists: { id: string; data: any }[],
-  setPlaylist: (p: { id: string; data: any }) => void,
+  playlists: PlaylistItem[],
+  setPlaylist: (p: PlaylistItem) => void,
   emptyPlaylist: () => void
-) {
+): Promise<void> {
   const auth = getAuth(app);
   const user = auth?.currentUser;
   if (user?.uid) {
@@ -170,7 +171,7 @@ export function removeFromLikedSongs(songId: string) {
   }
 }
 
-export async function fetchLikedSongs() {
+export async function fetchLikedSongs(): Promise<string[]> {
   const auth = getAuth(app);
   const user = auth?.currentUser;
   if (user?.uid) {
@@ -187,10 +188,10 @@ export async function fetchLikedSongs() {
   return [] as string[];
 }
 
-export async function fetchSongsByIds(songIds: string[]) {
+export async function fetchSongsByIds(songIds: string[]): Promise<ApiEnvelope<Song[]>> {
   try {
     const idsString = songIds.join(",");
-    const response = await Api(`/api/songs?ids=${idsString}`);
+    const response = await Api<ApiEnvelope<Song[]>>(`/api/songs?ids=${idsString}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching songs by IDs:", error);

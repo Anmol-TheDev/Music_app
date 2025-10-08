@@ -8,6 +8,7 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
+import type { Song } from "../../types";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
@@ -20,7 +21,7 @@ export default function SearchComponent() {
     fetchSongs(search, setMusicId);
   }, [url, search]);
 
-  function handleSongClick(song: any) {
+  function handleSongClick(song: Song) {
     if (song.id !== musicId) {
       setMusicId(song.id);
     } else {
@@ -172,7 +173,7 @@ export default function SearchComponent() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-4">Songs</h2>
                 <ScrollArea className="h-[40vh]   sm:h-[50vh]">
                   <ul className="space-y-2 ">
-                    {songs.map((song: any, index: number) => (
+                    {songs.map((song: Song, index: number) => (
                       <li
                         key={index}
                         className={`${song.id === musicId ? "bg-secondary" : "bg-background"} flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:bg-secondary hover:scale-[1.03] duration-200 `}

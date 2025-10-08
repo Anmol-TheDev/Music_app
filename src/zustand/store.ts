@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import Api from "../Api";
-
-type Song = any;
+import type { ApiEnvelope, SearchResults, Song, AlbumSummary, ArtistSummary } from "../types";
+import type { RepeatMode } from "../components/music/types";
 
 type FetchState = {
   songs: Song[] | null | false;
-  albums: any[] | null | false;
-  artists: any[] | null | false;
-  Topresult: any | null;
-  setTopresult: (props: any) => void;
+  albums: AlbumSummary[] | null | false;
+  artists: ArtistSummary[] | null | false;
+  Topresult: Song | AlbumSummary | ArtistSummary | null;
+  setTopresult: (props: Song | AlbumSummary | ArtistSummary | null) => void;
   fetchSongs: (search: string, setMusicId?: (id: string) => void) => Promise<void>;
   fetchAlbums: (search: string) => Promise<void>;
   fetchArtists: (search?: string) => Promise<void>;
@@ -22,18 +22,19 @@ export const useFetch = create<FetchState>((set) => ({
   setTopresult: (props) => set({ Topresult: props }),
   fetchSongs: async (search) => {
     try {
-      const res = await Api(`/api/search/songs?query=${search}`);
-      if ((res as any).data.data.results[0]) {
-        const topResult = (res as any).data.data.results[0];
-        const initialSongs = (res as any).data.data.results.slice(0, 5);
+      const res = await Api<ApiEnvelope<SearchResults<Song>>>(`/api/search/songs?query=${search}`);
+      const hasResults = Array.isArray(res.data?.data?.results) && res.data.data.results[0];
+      if (hasResults) {
+        const topResult = res.data.data.results[0];
+        const initialSongs = res.data.data.results.slice(0, 5);
         const suggestionsRes = await fetch(
           `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${topResult.id}/suggestions?limit=30`
         );
-        const suggestionsData = await suggestionsRes.json();
-        const allSongs = [...initialSongs, ...suggestionsData.data];
-        const uniqueSongsMap = new Map<string, any>();
-        allSongs.forEach((song: any) => {
-          if (!uniqueSongsMap.has(song.id)) {
+        const suggestionsData = (await suggestionsRes.json()) as ApiEnvelope<Song[]>;
+        const allSongs: Song[] = [...initialSongs, ...(suggestionsData.data || [])];
+        const uniqueSongsMap = new Map<string, Song>();
+        allSongs.forEach((song: Song) => {
+          if (song.id && !uniqueSongsMap.has(song.id)) {
             uniqueSongsMap.set(song.id, song);
           }
         });
@@ -48,9 +49,12 @@ export const useFetch = create<FetchState>((set) => ({
   },
   fetchAlbums: async (search) => {
     try {
-      const res = await Api(`/api/search/albums?query=${search}`);
-      if ((res as any).data.data.results[0]) {
-        set({ albums: (res as any).data.data.results });
+      const res = await Api<ApiEnvelope<SearchResults<AlbumSummary>>>(
+        `/api/search/albums?query=${search}`
+      );
+      const hasResults = Array.isArray(res.data?.data?.results) && res.data.data.results[0];
+      if (hasResults) {
+        set({ albums: res.data.data.results });
       } else set({ albums: false });
     } catch (error) {
       console.log(error);
@@ -58,9 +62,12 @@ export const useFetch = create<FetchState>((set) => ({
   },
   fetchArtists: async (search) => {
     try {
-      const res = await Api(`/api/search/artists?query=${search || "top artists"} `);
-      if ((res as any).data.data.results[0]) {
-        set({ artists: (res as any)?.data?.data?.results });
+      const res = await Api<ApiEnvelope<SearchResults<ArtistSummary>>>(
+        `/api/search/artists?query=${search || "top artists"} `
+      );
+      const hasResults = Array.isArray(res.data?.data?.results) && res.data.data.results[0];
+      if (hasResults) {
+        set({ artists: res.data.data.results });
       } else set({ artists: false });
     } catch (error) {
       console.log(error);
@@ -68,18 +75,16 @@ export const useFetch = create<FetchState>((set) => ({
   },
 }));
 
-type RepeatMode = "none" | "one" | "all";
-
 type StoreState = {
-  playlist: any[];
+  playlist: { id: string; data: { name: string; songs: string[] } }[];
   isUser: boolean;
   dialogOpen: boolean;
   musicId: string | null;
   currentAlbumId: string | null;
   currentArtistId: string | null;
-  currentSong: any | null;
+  currentSong: Song | null;
   isPlaying: boolean;
-  queue: any[];
+  queue: Song[];
   likedSongs: string[];
   currentIndex: number;
   volume: number;
@@ -88,16 +93,16 @@ type StoreState = {
   repeat: RepeatMode;
   played: number;
   duration: number;
-  setPlaylist: (prope: any) => void;
+  setPlaylist: (prope: { id: string; data: { name: string; songs: string[] } }) => void;
   emptyPlaylist: () => void;
   setIsUser: (prop: boolean) => void;
   setDialogOpen: (prop: boolean) => void;
   setMusicId: (id: string) => void;
   setAlbumId: (id: string | null) => void;
   setArtistId: (id: string | null) => void;
-  setCurrentSong: (song: any) => void;
+  setCurrentSong: (song: Song | null) => void;
   setIsPlaying: (prop: boolean) => void;
-  setQueue: (prop: any[]) => void;
+  setQueue: (prop: Song[]) => void;
   setLikedSongs: (songs: string[]) => void;
   addLikedSong: (songId: string) => void;
   removeLikedSong: (songId: string) => void;
@@ -108,8 +113,8 @@ type StoreState = {
   setRepeat: (repeat: RepeatMode) => void;
   setPlayed: (played: number) => void;
   setDuration: (duration: number) => void;
-  addToQueue: (song: any) => void;
-  addToQueueNext: (song: any) => void;
+  addToQueue: (song: Song) => void;
+  addToQueueNext: (song: Song) => void;
   playNext: () => void;
   playPrevious: () => void;
   handleSongEnd: () => void;
@@ -146,13 +151,13 @@ export const useStore = create<StoreState>((set, get) => ({
 
   setMusicId: (id) => {
     const { queue } = get();
-    const newIndex = queue.findIndex((song: any) => song.id === id);
-    const currentSong = queue.find((song: any) => song.id === id);
+    const newIndex = queue.findIndex((song: Song) => song.id === id);
+    const currentSong = queue.find((song: Song) => song.id === id) || null;
     set({
       musicId: id,
       currentAlbumId: null,
       currentArtistId: null,
-      currentSong: currentSong || null,
+      currentSong,
       currentIndex: newIndex >= 0 ? newIndex : 0,
       played: 0,
       isPlaying: false,
