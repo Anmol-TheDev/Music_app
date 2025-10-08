@@ -12,7 +12,7 @@
 
 **A modern, feature-rich music streaming application built with cutting-edge web technologies**
 
-[Live Demo](#) • [Documentation](#getting-started) • [Report Bug](https://github.com/Anmol-TheDev/Music_app/issues) • [Request Feature](https://github.com/Anmol-TheDev/Music_app/issues)
+[🎵 Live Demo](https://music.anmol.pro/) • [Documentation](#getting-started) • [Report Bug](https://github.com/Anmol-TheDev/Music_app/issues) • [Request Feature](https://github.com/Anmol-TheDev/Music_app/issues)
 
 </div>
 
@@ -38,7 +38,7 @@
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 Our music app is built using modern web technologies to ensure optimal performance and user experience:
 
@@ -67,7 +67,7 @@ Our music app is built using modern web technologies to ensure optimal performan
 
 ---
 
-## Features
+## ✨ Features
 
 ### **Core Music Features**
 - **Advanced Search** - Find songs, artists, and albums instantly
@@ -94,11 +94,11 @@ Our music app is built using modern web technologies to ensure optimal performan
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 Follow these steps to set up the Music App locally on your machine.
 
-### Prerequisites
+### 📋 Prerequisites
 
 Ensure you have the following installed:
 
@@ -109,7 +109,7 @@ Ensure you have the following installed:
   ```
 - **Firebase Account** - [Create one here](https://console.firebase.google.com/)
 
-### Installation
+### ⚙️ Installation
 
 1. **Clone the repository**
    ```bash
@@ -164,7 +164,7 @@ pnpm run preview
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 Music_app/
@@ -189,11 +189,11 @@ Music_app/
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
 
-### How to Contribute
+### 🚀 How to Contribute
 
 1. **Star the repository** (it really helps!)
 2. **Fork the project**
@@ -211,7 +211,7 @@ We welcome contributions from the community! Whether you're fixing bugs, adding 
    ```
 6. **Open a Pull Request**
 
-### Development Guidelines
+### 📋 Development Guidelines
 
 - Follow the existing code style and conventions
 - Write clear, descriptive commit messages
@@ -223,7 +223,7 @@ For detailed contributing guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.
 
 ---
 
-## API Documentation
+## 📚 API Documentation
 
 This application uses the **[Saavn.dev API](https://saavn.dev/docs)** for music data and streaming. The API provides:
 
@@ -237,21 +237,21 @@ Base URL: `https://saavn.dev`
 
 ---
 
-## License
+## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## Contact & Support
+## 📞 Contact & Support
 
-### Get Help
+### 🆘 Get Help
 
 - **Bug Reports**: [Create an Issue](https://github.com/Anmol-TheDev/Music_app/issues/new)
 - **Feature Requests**: [Request a Feature](https://github.com/Anmol-TheDev/Music_app/issues/new)
 - **Questions**: [Discussions](https://github.com/Anmol-TheDev/Music_app/discussions)
 
-### Community
+### 🌐 Community
 
 - **Star us on GitHub** - Show your support!
 - **Follow for updates** - Stay informed about new releases
