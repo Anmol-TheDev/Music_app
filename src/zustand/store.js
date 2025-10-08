@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import Api from "../Api";
+
+// Constants
+const INITIAL_SONGS_LIMIT = 5;
+const SUGGESTIONS_LIMIT = 30;
 export const useFetch = create((set) => ({
   songs: null,
   albums: null,
@@ -12,10 +16,10 @@ export const useFetch = create((set) => ({
 
       if (res.data.data.results[0]) {
         const topResult = res.data.data.results[0];
-        const initialSongs = res.data.data.results.slice(0, 5);
+        const initialSongs = res.data.data.results.slice(0, INITIAL_SONGS_LIMIT);
 
         const suggestionsRes = await fetch(
-          `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${topResult.id}/suggestions?limit=30`
+          `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${topResult.id}/suggestions?limit=${SUGGESTIONS_LIMIT}`
         );
         const suggestionsData = await suggestionsRes.json();
 
@@ -51,7 +55,7 @@ export const useFetch = create((set) => ({
         set({ albums: res.data.data.results });
       } else set({ albums: false });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   },
   fetchArtists: async (search) => {
@@ -61,7 +65,7 @@ export const useFetch = create((set) => ({
         set({ artists: res?.data?.data?.results });
       } else set({ artists: false });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   },
 }));
@@ -93,9 +97,9 @@ export const useStore = create((set, get) => ({
   shuffleHistoryIndex: -1,
   shuffledQueue: [],
 
-  setPlaylist: (prope) =>
+  setPlaylist: (prop) =>
     set((state) => ({
-      playlist: [...state.playlist, prope],
+      playlist: [...state.playlist, prop],
     })),
   emptyPlaylist: () => set({ playlist: [] }),
   setIsUser: (prop) => set({ isUser: prop }),
@@ -105,6 +109,11 @@ export const useStore = create((set, get) => ({
     const { queue, shuffle, shuffleHistory, shuffleHistoryIndex } = get();
     const newIndex = queue.findIndex((song) => song.id === id);
     const currentSong = queue.find((song) => song.id === id);
+
+    if (!currentSong) {
+      console.warn(`Song with id ${id} not found in queue`);
+      return;
+    }
 
     if (shuffle) {
       let newShuffleHistory = [...shuffleHistory];
@@ -117,7 +126,7 @@ export const useStore = create((set, get) => ({
         musicId: id,
         currentAlbumId: null,
         currentArtistId: null,
-        currentSong: currentSong || null,
+        currentSong: currentSong,
         currentIndex: newIndex >= 0 ? newIndex : 0,
         played: 0,
         isPlaying: false,
@@ -129,7 +138,7 @@ export const useStore = create((set, get) => ({
         musicId: id,
         currentAlbumId: null,
         currentArtistId: null,
-        currentSong: currentSong || null,
+        currentSong: currentSong,
         currentIndex: newIndex >= 0 ? newIndex : 0,
         played: 0,
         isPlaying: false,
@@ -225,7 +234,17 @@ export const useStore = create((set, get) => ({
       const insertPos = Math.min(state.currentIndex + 1, state.queue.length);
       const newQueue = [...state.queue];
       newQueue.splice(insertPos, 0, song);
-      return { queue: newQueue };
+
+      // Update shuffled queue if shuffle is active
+      let newShuffledQueue = state.shuffledQueue;
+      if (state.shuffle) {
+        newShuffledQueue = [...state.shuffledQueue, song].sort(() => Math.random() - 0.5);
+      }
+
+      return {
+        queue: newQueue,
+        shuffledQueue: newShuffledQueue,
+      };
     }),
 
   playNext: () => {
@@ -302,6 +321,7 @@ export const useStore = create((set, get) => ({
       set({
         currentIndex: nextIndex,
         musicId: queue[nextIndex]?.id,
+        currentSong: queue[nextIndex],
         played: 0,
         isPlaying: false,
       });
@@ -337,6 +357,7 @@ export const useStore = create((set, get) => ({
       set({
         currentIndex: prevIndex,
         musicId: queue[prevIndex]?.id,
+        currentSong: queue[prevIndex],
         played: 0,
         isPlaying: false,
       });
