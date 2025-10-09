@@ -96,7 +96,7 @@ export const usePlayAll = (
         setIsPlaying(true);
       }
     } else {
-      if (songs?.length && songs.length > 0) {
+      if (songs && songs.length > 0) {
         setCurrentList(songs);
         setMusicId(songs[0].id);
         setIsPlaying(true);
@@ -129,7 +129,7 @@ export const useShuffle = (
   const setContextId = contextType === "album" ? setAlbumId : setArtistId;
 
   const handleShuffle = useCallback(() => {
-    if (songs?.length && songs.length > 0) {
+    if (songs && songs.length > 0) {
       const randomIndex = Math.floor(Math.random() * songs.length);
       setMusicId(songs[randomIndex].id);
       setIsPlaying(true);
