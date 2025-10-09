@@ -89,7 +89,7 @@ export const usePlayAll = (
   const setContextId = contextType === "album" ? setAlbumId : setArtistId;
 
   const handlePlayAll = useCallback(() => {
-    if (currentContextId == contextId) {
+    if (currentContextId === contextId) {
       if (isPlaying) {
         setIsPlaying(false);
       } else {

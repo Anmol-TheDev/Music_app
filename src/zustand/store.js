@@ -127,7 +127,7 @@ export const useStore = create((set, get) => ({
       isPlaying: false,
       autoPlay: false,
       shuffleHistory: shuffle ? [currentSong] : [],
-      shuffledQueue: [],
+      shuffledQueue: shuffle ? [...newQueue].sort(() => Math.random() - 0.5) : [],
       previous: [],
     };
 
