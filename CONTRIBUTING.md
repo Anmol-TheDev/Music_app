@@ -133,6 +133,33 @@ pnpm run format
 - Update **README.md** or inline docs if adding new features.
 - Make sure UI is responsive and accessible.
 
+## Tech Stack
+
+Our music app is built using modern web technologies to ensure optimal performance and user experience:
+
+### Frontend
+- **[React 19.0.0](https://reactjs.org/)** - Latest React with concurrent features
+- **[Vite 6.3.6](https://vitejs.dev/)** - Lightning-fast build tool and dev server
+- **[Tailwind CSS 3.4.17](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Radix UI](https://www.radix-ui.com/)** - Unstyled, accessible UI components
+
+### State Management & Routing
+- **[Zustand 5.0.2](https://github.com/pmndrs/zustand)** - Lightweight state management
+- **[React Router DOM 7.1.1](https://reactrouter.com/)** - Declarative routing
+
+### Authentication & Backend
+- **[Firebase 11.10.0](https://firebase.google.com/)** - Authentication and real-time database
+- **[Saavn.dev API](https://saavn.dev)** - Music streaming API
+
+### Audio & Visualization
+- **[React Player 2.16.0](https://github.com/cookpete/react-player)** - Media player component
+- **[React Audio Visualize 1.2.0](https://github.com/bouzidanas/react-audio-visualize)** - Audio visualization
+
+### Development Tools
+- **[ESLint 9.17.0](https://eslint.org/)** - Code linting and formatting
+- **[Prettier 3.6.2](https://prettier.io/)** - Code formatter
+- **[Husky 9.1.7](https://typicode.github.io/husky/)** - Git hooks
+
 ##  Communication
 
 - Use GitHub Issues for discussions before starting large changes.
