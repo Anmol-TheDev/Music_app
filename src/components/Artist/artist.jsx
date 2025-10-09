@@ -8,6 +8,7 @@ import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 import ArtistBio from "./ArtistBio";
 
 function Artist() {
@@ -18,11 +19,12 @@ function Artist() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
-  const { setMusicId, musicId, isPlaying, setIsPlaying, setQueue, currentArtistId, setArtistId } =
-    useStore();
+  // FIX: Removed `setArtistId` as it's not used directly in this component
+  const { musicId, isPlaying, setIsPlaying, setQueue, currentArtistId } = useStore();
   const artistId = url.search.split("=")[1];
   const { handleSongClick } = useSongHandlers();
 
+  // Function to calculate luminance and determine text color
   const getTextColor = (rgbColor) => {
     const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (!match) return "white";
@@ -42,6 +44,7 @@ function Artist() {
         setData(artistData);
         setQueue(artistData.topSongs);
 
+        // Fetch artist biography
         if (artistData.name) {
           const artistBio = await fetchArtistBio(artistData.name);
           if (artistBio) {
@@ -49,6 +52,7 @@ function Artist() {
           }
         }
 
+        // Generate colors from the artist image
         getImageColors(artistData.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
           setTextColor(getTextColor(dominantColor));
@@ -64,24 +68,13 @@ function Artist() {
     fetching();
   }, [artistId, setQueue]);
 
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-      setArtistId(artistId);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
-  }
-
   function handlePlayAll() {
     if (currentArtistId === artistId) {
       setIsPlaying(!isPlaying);
     } else {
-      if (data.topSongs?.length > 0) {
+      if (data?.topSongs?.length > 0) {
         setQueue(data.topSongs);
-        setMusicId(data.topSongs[0].id);
-        setIsPlaying(true);
-        setArtistId(artistId);
+        handleSongClick(data.topSongs[0], { artistId: artistId, play: true });
       }
     }
   }
@@ -89,9 +82,8 @@ function Artist() {
   function handleShuffle() {
     if (data?.topSongs?.length > 0) {
       const randomIndex = Math.floor(Math.random() * data.topSongs.length);
-      setMusicId(data.topSongs[randomIndex].id);
-      setIsPlaying(true);
-      setArtistId(artistId);
+      const randomSong = data.topSongs[randomIndex];
+      handleSongClick(randomSong, { artistId: artistId, play: true });
     }
   }
 
@@ -120,6 +112,7 @@ function Artist() {
   return (
     <ScrollArea className="h-[100dvh]">
       <div className="min-h-screen pb-32">
+        {/* Hero Section */}
         <div
           className="relative w-full pb-8"
           style={{
@@ -128,6 +121,7 @@ function Artist() {
               : "linear-gradient(180deg, hsl(var(--muted)) 0%, transparent 100%)",
           }}
         >
+          {/* Dark/Light overlay for better text contrast */}
           <div
             className={`absolute inset-0 bg-gradient-to-b to-transparent ${
               textColor === "dark" ? "from-white/80 via-white/60" : "from-black/60 via-black/50"
@@ -136,6 +130,7 @@ function Artist() {
 
           <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start">
+              {/* Artist Image */}
               <div className="relative mx-auto sm:mx-0 flex-shrink-0 hover:scale-105 transition-transform">
                 <div
                   className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-2xl transition-opacity duration-300 ${
@@ -155,6 +150,7 @@ function Artist() {
                 )}
               </div>
 
+              {/* Artist Info */}
               <div className="flex-1 text-center sm:text-left space-y-4 lg:space-y-6">
                 <div className="space-y-2">
                   <p
@@ -181,6 +177,7 @@ function Artist() {
                   </h1>
                 </div>
 
+                {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 justify-center sm:justify-start pt-2">
                   <button
                     onClick={handlePlayAll}
@@ -214,12 +211,14 @@ function Artist() {
           </div>
         </div>
 
+        {/* Top Songs & Bio Section */}
         <div className="container mx-auto px-3 sm:px-4 py-8">
           <div className="space-y-6">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-2xl lg:text-3xl font-bold">Popular</h2>
             </div>
 
+            {/* Songs List */}
             <div className="space-y-1">
               {data.topSongs.map((song, index) => (
                 <div
@@ -229,11 +228,15 @@ function Artist() {
                   } cursor-pointer`}
                   onClick={() => handleSongClick(song, { artistId: artistId })}
                 >
+                  {/* Mobile Layout */}
                   <div className="sm:hidden">
                     <div className="flex items-center gap-3 p-3 min-h-[60px]">
+                      {/* Track Number / Play Button */}
                       <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                         <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
+                          className={`text-sm text-muted-foreground group-hover:hidden ${
+                            song.id === musicId ? "hidden" : ""
+                          }`}
                         >
                           {index + 1}
                         </span>
@@ -242,21 +245,25 @@ function Artist() {
                             e.stopPropagation();
                             handleSongClick(song, { artistId: artistId });
                           }}
-                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
+                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
+                            song.id === musicId ? "block" : "hidden group-hover:block"
+                          }`}
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
-                              className="w-5 h-5 text-primary cursor-pointer hover:scale-125 transition-transform"
+                              className="w-5 h-5 text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPlaying(false);
                               }}
                             />
                           ) : (
-                            <Play className="w-8 h-5 text-primary cursor-pointer hover:scale-125 transition-transform" />
+                            <Play className="w-5 h-5 text-primary" />
                           )}
                         </button>
                       </div>
+
+                      {/* Song Image */}
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                         <img
                           src={song.image[1].url || "/placeholder.svg"}
@@ -265,9 +272,13 @@ function Artist() {
                           className="w-full h-full object-cover"
                         />
                       </div>
+
+                      {/* Song Info */}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
-                          className={`font-medium text-sm leading-5 ${song.id === musicId ? "text-primary" : "text-foreground"}`}
+                          className={`font-medium text-sm leading-5 ${
+                            song.id === musicId ? "text-primary" : "text-foreground"
+                          }`}
                           style={{
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
@@ -279,10 +290,13 @@ function Artist() {
                           {song.name}
                         </h3>
                       </div>
+
+                      {/* Like Button */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                        {" "}
-                        <Like songId={song.id} />{" "}
+                        <Like songId={song.id} />
                       </div>
+
+                      {/* Menu Button */}
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
@@ -291,11 +305,16 @@ function Artist() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Desktop/Tablet Layout */}
                   <div className="hidden sm:block">
                     <div className="flex items-center gap-4 p-3 lg:p-4">
+                      {/* Track Number / Play Button */}
                       <div className="w-6 flex items-center justify-center flex-shrink-0">
                         <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
+                          className={`text-sm text-muted-foreground group-hover:hidden ${
+                            song.id === musicId ? "hidden" : ""
+                          }`}
                         >
                           {index + 1}
                         </span>
@@ -304,21 +323,25 @@ function Artist() {
                             e.stopPropagation();
                             handleSongClick(song, { artistId: artistId });
                           }}
-                          className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
+                          className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${
+                            song.id === musicId ? "block" : "hidden group-hover:block"
+                          }`}
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
-                              className="w-5 h-5 text-primary cursor-pointer hover:scale-125 transition-transform"
+                              className="w-5 h-5 text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPlaying(false);
                               }}
                             />
                           ) : (
-                            <Play className="w-6 h-5 text-primary cursor-pointer hover:scale-125 transition-transform" />
+                            <Play className="w-5 h-5 text-primary" />
                           )}
                         </button>
                       </div>
+
+                      {/* Song Image */}
                       <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                         <img
                           src={song.image[1].url || "/placeholder.svg"}
@@ -327,22 +350,31 @@ function Artist() {
                           className="w-full h-full object-cover"
                         />
                       </div>
+
+                      {/* Song Info */}
                       <div className="flex-1 min-w-0">
                         <h3
-                          className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
+                          className={`font-medium truncate ${
+                            song.id === musicId ? "text-primary" : "text-foreground"
+                          }`}
                         >
                           {song.name}
                         </h3>
                         <p className="text-sm text-muted-foreground truncate">{data.name}</p>
                       </div>
+
+                      {/* Duration */}
                       <div className="text-sm text-muted-foreground font-mono">
                         {Math.floor(song.duration / 60)}:
                         {(song.duration % 60).toString().padStart(2, "0")}
                       </div>
+
+                      {/* Like Button */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                        {" "}
-                        <Like songId={song.id} />{" "}
+                        <Like songId={song.id} />
                       </div>
+
+                      {/* Menu Button */}
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
