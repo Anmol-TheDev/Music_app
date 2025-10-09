@@ -12,7 +12,6 @@ import { useSongHandlers, useIsMobile } from "@/hooks/SongCustomHooks";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
-  const setMusicId = useStore((state) => state.setMusicId);
   const musicId = useStore((state) => state.musicId);
   const isPlaying = useStore((state) => state.isPlaying);
   const setIsPlaying = useStore((state) => state.setIsPlaying);
@@ -142,7 +141,9 @@ export default function SearchComponent() {
                     <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                       <button
                         onClick={() => {
-                          musicId != Topresult?.id ? setMusicId(Topresult?.id) : setIsPlaying(true);
+                          musicId != Topresult?.id
+                            ? handleSongClick(Topresult)
+                            : setIsPlaying(true);
                         }}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >

@@ -41,14 +41,23 @@ export const useSongHandlers = () => {
 /**
  * Calculate luminance from RGB color and determine appropriate text color
  */
-export const getTextColor = (rgbColor: string): "dark" | "white" => {
-  // Extract RGB values from rgb(r, g, b) string
-  const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!match) return "white";
+export const getTextColor = (color: string): "dark" | "white" => {
+  const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  let r: number | undefined;
+  let g: number | undefined;
+  let b: number | undefined;
 
-  const r = Number.parseInt(match[1]);
-  const g = Number.parseInt(match[2]);
-  const b = Number.parseInt(match[3]);
+  if (rgbMatch) {
+    r = Number.parseInt(rgbMatch[1]);
+    g = Number.parseInt(rgbMatch[2]);
+    b = Number.parseInt(rgbMatch[3]);
+  } else {
+    const hexMatch = color.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    if (!hexMatch) return "white";
+    r = Number.parseInt(hexMatch[1], 16);
+    g = Number.parseInt(hexMatch[2], 16);
+    b = Number.parseInt(hexMatch[3], 16);
+  }
 
   // Calculate relative luminance (WCAG formula)
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;

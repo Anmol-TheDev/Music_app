@@ -109,7 +109,7 @@ export const useStore = create((set, get) => ({
   setDialogOpen: (prop) => set({ dialogOpen: prop }),
 
   setMusicId: (id) => {
-    const { shuffle, shuffleHistory, currentList } = get();
+    const { shuffle, currentList } = get();
 
     if (!Array.isArray(currentList) || currentList.length === 0) return;
 
@@ -126,11 +126,10 @@ export const useStore = create((set, get) => ({
       played: 0,
       isPlaying: false,
       autoPlay: false,
+      shuffleHistory: shuffle ? [currentSong] : [],
+      shuffledQueue: [],
+      previous: [],
     };
-
-    if (shuffle) {
-      newState.shuffleHistory = [...shuffleHistory, currentSong];
-    }
 
     set(newState);
   },

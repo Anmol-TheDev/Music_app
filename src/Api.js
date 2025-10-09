@@ -214,7 +214,7 @@ export async function fetchSongById(songId) {
     const response = await Api(`/api/songs/${songId}`);
     return response.data.data[0];
   } catch (error) {
-    console.error("Error fetching songs by IDs:", error);
+    console.error("Error fetching song by ID:", error);
     return { success: false, data: [] };
   }
 }
