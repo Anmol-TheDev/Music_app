@@ -1,0 +1,10 @@
+# CODEOWNERS file
+
+# This file specifies the owners of different parts of the codebase.
+# When a Pull Request modifies files in a path owned by a team,
+# that team will be automatically requested for review.
+
+# 1. GLOBAL OWNER (Always Tagged)
+# This rule is the least specific and applies to EVERYTHING (*).
+# The user @Anmol-TheDev will be requested for review on every single PR.
+* @Anmol-TheDev
