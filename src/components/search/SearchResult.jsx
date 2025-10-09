@@ -8,6 +8,7 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
@@ -21,16 +22,10 @@ export default function SearchComponent() {
 
   useEffect(() => {
     fetchAlbums(search);
-    fetchSongs(search, setMusicId);
+    fetchSongs(search);
   }, [url, search]);
 
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-    } else {
-      setIsPlaying(true);
-    }
-  }
+  const { handleSongClick } = useSongHandlers();
 
   const formatViews = (views) => {
     if (views == null) return;

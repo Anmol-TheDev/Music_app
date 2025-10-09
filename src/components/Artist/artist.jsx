@@ -8,6 +8,7 @@ import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 function Artist() {
   const [data, setData] = useState();
@@ -19,6 +20,7 @@ function Artist() {
   const { setMusicId, musicId, isPlaying, setIsPlaying, setQueue, currentArtistId, setArtistId } =
     useStore();
   const artistId = url.search.split("=")[1];
+  const { handleSongClick } = useSongHandlers();
 
   // Function to calculate luminance and determine text color
   const getTextColor = (rgbColor) => {
@@ -61,19 +63,6 @@ function Artist() {
     };
     fetching();
   }, [artistId, setQueue]);
-
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-      setArtistId(artistId);
-    } else {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
-    }
-  }
 
   function handlePlayAll() {
     if (currentArtistId == artistId) {
@@ -240,7 +229,7 @@ function Artist() {
                   className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${
                     song.id === musicId ? "bg-muted" : ""
                   } cursor-pointer`}
-                  onClick={() => handleSongClick(song)}
+                  onClick={() => handleSongClick(song, { artistId: artistId })}
                 >
                   {/* Mobile Layout */}
                   <div className="sm:hidden">
@@ -257,7 +246,7 @@ function Artist() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { artistId: artistId });
                           }}
                           className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
                             song.id === musicId ? "block" : "hidden group-hover:block"
@@ -337,7 +326,7 @@ function Artist() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { artistId: artistId });
                           }}
                           className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${
                             song.id === musicId ? "block" : "hidden group-hover:block"
