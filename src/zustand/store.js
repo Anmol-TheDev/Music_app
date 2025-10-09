@@ -231,7 +231,7 @@ export const useStore = create((set, get) => ({
   addToQueueNext: (song) =>
     set((state) => {
       const newQueue = [...state.queue];
-      newQueue.splice(0, 0, song);
+      newQueue.unshift(song);
 
       // Update shuffled queue if shuffle is active
       let newShuffledQueue = state.shuffledQueue;
@@ -264,14 +264,13 @@ export const useStore = create((set, get) => ({
 
     if (queue.length === 0) {
       if (repeat === "all") {
-        previous.push(currentSong);
         set({
           musicId: songList[0].id,
           currentSong: songList[0],
           queue: songList.slice(1),
           played: 0,
           isPlaying: false,
-          previous: previous,
+          previous: [...previous, currentSong],
         });
       } else {
         const { currentSong, currentAlbumId, currentArtistId } = get();
@@ -286,22 +285,22 @@ export const useStore = create((set, get) => ({
               const suggested = data?.data || [];
 
               if (suggested.length > 0) {
+                const [first, ...rest] = suggested;
                 set({
-                  queue: suggested,
-                  musicId: suggested[0].id,
-                  currentSong: suggested[0],
+                  queue: rest,
+                  musicId: first.id,
+                  currentSong: first,
                   played: 0,
                   isPlaying: true,
                   autoPlay: true,
                 });
               }
-              return;
             } catch (error) {
               console.error("Failed to fetch suggested songs:", error);
-              return;
             }
           })();
-        } else return;
+        }
+        return;
       }
     }
 
