@@ -52,11 +52,12 @@ export const getTextColor = (color: string): "dark" | "white" => {
     g = Number.parseInt(rgbMatch[2]);
     b = Number.parseInt(rgbMatch[3]);
   } else {
-    const hexMatch = color.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    const hexMatch = color.match(/^#?([a-f\d]{1,2})([a-f\d]{1,2})([a-f\d]{1,2})$/i);
     if (!hexMatch) return "white";
-    r = Number.parseInt(hexMatch[1], 16);
-    g = Number.parseInt(hexMatch[2], 16);
-    b = Number.parseInt(hexMatch[3], 16);
+    const expandHex = (hex: string) => (hex.length === 1 ? hex + hex : hex);
+    r = Number.parseInt(expandHex(hexMatch[1]), 16);
+    g = Number.parseInt(expandHex(hexMatch[2]), 16);
+    b = Number.parseInt(expandHex(hexMatch[3]), 16);
   }
 
   // Calculate relative luminance (WCAG formula)
