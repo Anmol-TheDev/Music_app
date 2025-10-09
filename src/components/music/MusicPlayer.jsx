@@ -155,86 +155,78 @@ function MusicPlayer() {
         <DrawerContent className="h-[15dvh]">
           <DrawerTitle hidden />
           <div
-            className="h-full fixed bottom-0 left-0 right-0 text-white p-4"
-            style={{ background: `linear-gradient(${bgColor?.bg1} 0%, ${bgColor?.bg2} 100%)` }}
+            className="fixed bottom-0 left-0 right-0 bg-black text-white flex items-center justify-between px-4 py-2 shadow-lg"
           >
-            <div className="max-w-screen-lg mx-auto">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  {song?.image?.[2]?.url ? (
-                    <img
-                      src={song?.image?.[2]?.url}
-                      alt=""
-                      loading="lazy"
-                      className="w-12 h-12 rounded-md shadow-lg object-cover"
-                      onError={(e) => {
+            <div className="flex items-center space-x-3 w-1/4">
+              {song?.image?.[2]?.url ? (
+                <img
+                  src={song.image[2].url}
+                  alt={song.name}
+                  loading="lazy"
+                  className="w-12 h-12 object-cover rounded-md"
+                  onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/image.png";
                       }}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-md shadow-lg grid place-items-center bg-black/30">
-                      <Play className="w-5 h-5 text-white" />
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-sm font-semibold bg-gray-200/20 px-2 rounded-md">{song?.name}</h3>
-                    <p className="text-xs text-gray-400">{song?.artist}</p>
-                  </div>
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-md shadow-lg grid place-items-center bg-black/30">
+                  <Play className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center space-x-4">
-                  <button onClick={() => setShuffle(!shuffle)} className={`${shuffle ? "text-secondary" : "text-white"}`}>
-                    <Shuffle className="w-5 h-5" />
-                  </button>
-                  <button className="focus:outline-none" onClick={playPrevious}>
-                    <SkipBack className="w-5 h-5" />
-                  </button>
-                  <button onClick={handlePlayPause} className="focus:outline-none bg-white text-black rounded-full p-2">
-                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                  </button>
-                  <button className="focus:outline-none" onClick={playNext}>
-                    <SkipForward className="w-5 h-5" />
-                  </button>
-                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold">{song?.name}</span>
+                <span className="text-xs text-gray-400">{song?.artist}</span>
               </div>
-
-              <div className="flex items-center space-x-4">
-                <span className="text-xs">{formatTime(duration * played)}</span>
-                <div className="flex-grow">
-                  <input
-                    type="range"
-                    min={0}
-                    max={0.999999}
-                    step="any"
-                    value={played}
-                    onChange={handleSeekChange}
-                    onMouseUp={handleSeekMouseUp}
-                    onTouchEnd={handleSeekMouseUp}
-                    className="w-full h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
+            </div>
+          
+            <div className="flex flex-col items-center w-2/4">
+              <div className="flex items-center space-x-4 mb-1">
+                <button onClick={() => setShuffle(!shuffle)} className={`${shuffle ? "text-green-500" : "text-white"}`}><Shuffle className="w-4 h-4"/></button>
+                <button onClick={playPrevious}><SkipBack className="w-5 h-5"/></button>
+                <button onClick={handlePlayPause} className="bg-white text-black rounded-full p-2">
+                  {isPlaying ? <Pause className="w-5 h-5"/> : <Play className="w-5 h-5"/>}
+                </button>
+                <button onClick={playNext}><SkipForward className="w-5 h-5"/></button>
+              </div>
+              <div className="flex items-center space-x-2 w-full">
+                <span className="text-sm">{formatTime(duration * played)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={0.999999}
+                  step="any"
+                  value={played}
+                  onChange={handleSeekChange}
+                  onMouseUp={handleSeekMouseUp}
+                  onTouchEnd={handleSeekMouseUp}
+                    className="flex-grow h-1 rounded-full cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${played * 100}%, #4B5563 ${played * 100}%, #4B5563 100%)`,
+                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${played*100}%, #4B5563 ${played*100}%, #4B5563 100%)`
                     }}
                   />
-                </div>
-                <span className="text-xs">{formatTime(duration)}</span>
-                <div className="flex items-center space-x-2">
-                  <button onClick={handleToggleMute} className="focus:outline-none">
-                    <VolumeIcon />
-                  </button>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step="any"
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className="w-20 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`,
-                    }}
-                  />
+                  <span className="text-sm">{formatTime(duration)}</span>
                 </div>
               </div>
+            
+              <div className="flex items-center space-x-3 w-1/4 justify-end">
+                <button onClick={handleToggleMute}>
+                <VolumeIcon className="w-4 h-4"/>
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step="any"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-20 h-1 rounded-full cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume*100}%, #4B5563 ${volume*100}%, #4B5563 100%)`
+                }}
+              />
+              <button>
+              </button>
             </div>
           </div>
         </DrawerContent>
