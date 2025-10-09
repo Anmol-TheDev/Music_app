@@ -17,9 +17,8 @@ export default function Plylistinfo() {
   const user = getAuth(app).currentUser;
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState();
-  const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
+  const { isPlaying, setIsPlaying, setMusicId, musicId, setCurrentList } = useStore();
   const { handleSongClick } = useSongHandlers();
-
   let count = playlistData.slice(0, 3).length;
 
   useEffect(() => {
@@ -48,10 +47,10 @@ export default function Plylistinfo() {
       }
     }
     getFireStore();
-  }, [user, url]);
+  }, [user, url, playlistId]);
 
   useEffect(() => {
-    setQueue(playlistData);
+    setCurrentList(playlistData);
   }, [playlistData]);
 
   return (
