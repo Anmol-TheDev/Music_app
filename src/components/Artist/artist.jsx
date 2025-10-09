@@ -21,6 +21,7 @@ function Artist() {
   const { setMusicId, musicId, isPlaying, setIsPlaying, setQueue, currentArtistId, setArtistId } =
     useStore();
   const artistId = url.search.split("=")[1];
+  const { handleSongClick } = useSongHandlers();
 
   const getTextColor = (rgbColor) => {
     const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
@@ -226,7 +227,7 @@ function Artist() {
                   className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${
                     song.id === musicId ? "bg-muted" : ""
                   } cursor-pointer`}
-                  onClick={() => handleSongClick(song)}
+                  onClick={() => handleSongClick(song, { artistId: artistId })}
                 >
                   <div className="sm:hidden">
                     <div className="flex items-center gap-3 p-3 min-h-[60px]">
@@ -239,7 +240,7 @@ function Artist() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { artistId: artistId });
                           }}
                           className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
                         >
@@ -301,7 +302,7 @@ function Artist() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song);
+                            handleSongClick(song, { artistId: artistId });
                           }}
                           className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
                         >
