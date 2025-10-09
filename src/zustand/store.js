@@ -298,6 +298,7 @@ export const useStore = create((set, get) => ({
               return;
             } catch (error) {
               console.error("Failed to fetch suggested songs:", error);
+              return;
             }
           })();
         } else return;
@@ -354,7 +355,6 @@ export const useStore = create((set, get) => ({
       const newShuffledQueue = [...shuffledQueue];
       newShuffledQueue.unshift(currentSong);
       if (shuffleHistory.length === 0) {
-        shuffledQueue.unshift(currentSong);
         set({
           shuffledQueue: newShuffledQueue,
           played: 0,
@@ -368,8 +368,8 @@ export const useStore = create((set, get) => ({
         currentSong: prevSong,
         played: 0,
         isPlaying: false,
-        shuffledQueue: shuffledQueue,
-        shuffleHistory: shuffleHistory,
+        shuffledQueue: newShuffledQueue,
+        shuffleHistory: newHistory,
       });
     } else {
       const newPrevious = [...previous];
