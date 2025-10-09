@@ -1,5 +1,14 @@
 import React, { useRef, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume1, Volume2, VolumeX, Shuffle } from "lucide-react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume1,
+  Volume2,
+  VolumeX,
+  Shuffle,
+} from "lucide-react";
 import ReactPlayer from "react-player";
 import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
@@ -13,7 +22,7 @@ function MusicPlayer() {
   const [bgColor, setBgColor] = React.useState();
   const [musicPlayerDrawer, setMusicPlayerDrawer] = React.useState(false);
   const [song, setSong] = React.useState();
-  
+
   // Get state from Zustand stores
   const { songs } = useFetch();
   const {
@@ -32,7 +41,7 @@ function MusicPlayer() {
     setDuration,
     setShuffle,
     playNext,
-    playPrevious
+    playPrevious,
   } = useStore();
 
   // Keyboard shortcuts
@@ -122,131 +131,148 @@ function MusicPlayer() {
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
 
   return (
-    song &&
-    ( <> 
-      <Drawer open={musicPlayerDrawer} onOpenChange={setMusicPlayerDrawer}>
-        <DrawerTrigger asChild>
-          <Button
-            variant="outline"
-            aria-label="Open player"
-            style={{ animationDuration: "5s"}}
-            className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition ${
-              isPlaying && (song?.image?.[1]?.url ? "animate-spin" : "")
-            }`}
-          >
-            {song?.image?.[1]?.url ? (
-              <img
-                className="h-full w-full object-cover"
-                src={song?.image?.[1]?.url}
-                alt=""
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = "/image.png";
-                }}
-              />
-            ) : (
-              <div className="h-full w-full grid place-items-center bg-black/30 text-white">
-                <Play className="h-6 w-6" />
-              </div>
-            )}
-          </Button>
-        </DrawerTrigger>
-        <DrawerContent className="h-[15dvh]">
-          <DrawerTitle hidden />
-          <div
-            className="fixed bottom-0 left-0 right-0 bg-black text-white flex items-center justify-between px-4 py-2 shadow-lg"
-          >
-            <div className="flex items-center space-x-3 w-1/4">
-              {song?.image?.[2]?.url ? (
+    song && (
+      <>
+        <Drawer open={musicPlayerDrawer} onOpenChange={setMusicPlayerDrawer}>
+          <DrawerTrigger asChild>
+            <Button
+              variant="outline"
+              aria-label="Open player"
+              style={{ animationDuration: "5s" }}
+              className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition ${
+                isPlaying && (song?.image?.[1]?.url ? "animate-spin" : "")
+              }`}
+            >
+              {song?.image?.[1]?.url ? (
                 <img
-                  src={song.image[2].url}
-                  alt={song.name}
+                  className="h-full w-full object-cover"
+                  src={song?.image?.[1]?.url}
+                  alt=""
                   loading="lazy"
-                  className="w-12 h-12 object-cover rounded-md"
                   onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/image.png";
-                      }}
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/image.png";
+                  }}
                 />
               ) : (
-                <div className="w-12 h-12 rounded-md shadow-lg grid place-items-center bg-black/30">
-                  <Play className="w-5 h-5 text-white" />
+                <div className="h-full w-full grid place-items-center bg-black/30 text-white">
+                  <Play className="h-6 w-6" />
                 </div>
               )}
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">{song?.name}</span>
-                <span className="text-xs text-gray-400">{song?.artist}</span>
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerTitle hidden />
+            <div
+              className="fixed bottom-0 left-0 right-0 h-[80px] text-white flex items-center justify-between px-4 py-2 shadow-2xl z-50 transition-all duration-700"
+              style={
+                bgColor
+                  ? { background: `linear-gradient(90deg, ${bgColor.bg1}, ${bgColor.bg2})` }
+                  : { backgroundColor: "#1d1d1d" }
+              }
+            >
+              <div className="flex items-center space-x-3 w-1/4">
+                {song?.image?.[2]?.url ? (
+                  <img
+                    src={song.image[2].url}
+                    alt={song.name}
+                    loading="lazy"
+                    className="w-12 h-12 object-cover rounded-md"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/image.png";
+                    }}
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-md shadow-lg grid place-items-center bg-black/30">
+                    <Play className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold">{song?.name}</span>
+                  <span className="text-xs text-gray-400">{song?.artist}</span>
+                </div>
               </div>
-            </div>
-          
-            <div className="flex flex-col items-center w-2/4">
-              <div className="flex items-center space-x-4 mb-1">
-                <button onClick={() => setShuffle(!shuffle)} className={`${shuffle ? "text-green-500" : "text-white"}`}><Shuffle className="w-4 h-4"/></button>
-                <button onClick={playPrevious}><SkipBack className="w-5 h-5"/></button>
-                <button onClick={handlePlayPause} className="bg-white text-black rounded-full p-2">
-                  {isPlaying ? <Pause className="w-5 h-5"/> : <Play className="w-5 h-5"/>}
-                </button>
-                <button onClick={playNext}><SkipForward className="w-5 h-5"/></button>
-              </div>
-              <div className="flex items-center space-x-2 w-full">
-                <span className="text-sm">{formatTime(duration * played)}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={0.999999}
-                  step="any"
-                  value={played}
-                  onChange={handleSeekChange}
-                  onMouseUp={handleSeekMouseUp}
-                  onTouchEnd={handleSeekMouseUp}
+
+              <div className="flex flex-col items-center w-2/4">
+                <div className="flex items-center space-x-4 mb-1">
+                  <button
+                    onClick={() => setShuffle(!shuffle)}
+                    className={`${shuffle ? "text-green-500" : "text-white"}`}
+                  >
+                    <Shuffle className="w-4 h-4" />
+                  </button>
+                  <button onClick={playPrevious}>
+                    <SkipBack className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handlePlayPause}
+                    className="bg-white text-black rounded-full p-2"
+                  >
+                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                  </button>
+                  <button onClick={playNext}>
+                    <SkipForward className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2 w-full">
+                  <span className="text-sm">{formatTime(duration * played)}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0.999999}
+                    step="any"
+                    value={played}
+                    onChange={handleSeekChange}
+                    onMouseUp={handleSeekMouseUp}
+                    onTouchEnd={handleSeekMouseUp}
                     className="flex-grow h-1 rounded-full cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${played*100}%, #4B5563 ${played*100}%, #4B5563 100%)`
+                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${played * 100}%, #4B5563 ${played * 100}%, #4B5563 100%)`,
                     }}
                   />
                   <span className="text-sm">{formatTime(duration)}</span>
                 </div>
               </div>
-            
+
               <div className="flex items-center space-x-3 w-1/4 justify-end">
                 <button onClick={handleToggleMute}>
-                <VolumeIcon className="w-4 h-4"/>
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step="any"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-20 h-1 rounded-full cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume*100}%, #4B5563 ${volume*100}%, #4B5563 100%)`
-                }}
-              />
-              <button>
-              </button>
+                  <VolumeIcon className="w-4 h-4" />
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step="any"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1 rounded-full cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`,
+                  }}
+                />
+                <button></button>
+              </div>
             </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+        </Drawer>
 
-      <ReactPlayer
-        ref={playerRef}
-        key={musicId} // Force re-render on song change to prevent multiple audio instances
-        url={song?.downloadUrl?.[4]?.url || ""}
-        playing={isPlaying}
-        volume={muted ? 0 : volume}
-        onProgress={handleProgress}
-        onDuration={handleDuration}
-        onPlay={() => setIsPlaying(true)}  
-        onPause={() => setIsPlaying(false)}
-        onEnded={playNext} // Use centralized next function
-        width="0"
-        height="0"
-      />
-    </>)
+        <ReactPlayer
+          ref={playerRef}
+          key={musicId} // Force re-render on song change to prevent multiple audio instances
+          url={song?.downloadUrl?.[4]?.url || ""}
+          playing={isPlaying}
+          volume={muted ? 0 : volume}
+          onProgress={handleProgress}
+          onDuration={handleDuration}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={playNext} // Use centralized next function
+          width="0"
+          height="0"
+        />
+      </>
+    )
   );
 }
 
