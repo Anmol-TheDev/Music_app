@@ -33,8 +33,6 @@ const validatePassword = (password) => {
 
 function SignUp() {
   const email = useRef();
-  const password = useRef();
-  const confPassword = useRef();
   const { setIsUser, setDialogOpen } = useStore();
   const navigate = useNavigate();
 
@@ -72,14 +70,18 @@ function SignUp() {
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPasswordValue(value);
-    password.current.value = value;
+    {
+      /*Removed the redundant ref update*/
+    }
     if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
   };
 
   const handleConfirmPasswordChange = (e) => {
     const value = e.target.value;
     setConfirmPasswordValue(value);
-    confPassword.current.value = value;
+    {
+      /*Removed the redundant ref update*/
+    }
     if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
   };
 
@@ -274,7 +276,7 @@ function SignUp() {
               type={showPassword ? "text" : "password"}
               value={passwordValue}
               onChange={handlePasswordChange}
-              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              className={`pr-10 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`} // CORRECT - check errors.password instead of errors.email
               placeholder="Enter a strong password"
               disabled={isAnyLoading}
             />
@@ -347,7 +349,7 @@ function SignUp() {
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPasswordValue}
               onChange={handleConfirmPasswordChange}
-              className={`pr-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              className={`pr-10 ${errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}`} // CORRECT - check errors.password instead of errors.email
               placeholder="Confirm your password"
               disabled={isAnyLoading}
             />
