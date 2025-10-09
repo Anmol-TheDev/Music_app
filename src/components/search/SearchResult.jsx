@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { PlayCircle, Play, Eye, Pause } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
@@ -8,8 +8,13 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import { useSongHandlers, useIsMobile } from "@/hooks/SongCustomHooks";
 
+/**
+ * Fetches and displays search results based on the current URL query, rendering the Now Playing or Top Result card, a playable song list, albums, and related artists.
+ *
+ * @returns {JSX.Element} The search results UI containing playback controls, a songs list with like/menu actions, and sections for albums and related artists. 
+ */
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
   const setMusicId = useStore((state) => state.setMusicId);
@@ -23,7 +28,8 @@ export default function SearchComponent() {
   useEffect(() => {
     fetchAlbums(search);
     fetchSongs(search);
-  }, [url, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const { handleSongClick } = useSongHandlers();
 
@@ -36,22 +42,6 @@ export default function SearchComponent() {
     }
     return views.toString();
   };
-
-  function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-      const mql = window.matchMedia("(max-width: 768px)");
-      const onChange = () => setIsMobile(mql.matches);
-      onChange();
-      if (mql.addEventListener) mql.addEventListener("change", onChange);
-      else mql.addListener(onChange);
-      return () => {
-        if (mql.removeEventListener) mql.removeEventListener("change", onChange);
-        else mql.removeListener(onChange);
-      };
-    }, []);
-    return isMobile;
-  }
 
   const isMobile = useIsMobile();
 

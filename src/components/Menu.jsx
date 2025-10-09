@@ -17,7 +17,8 @@ import { getAuth } from "firebase/auth";
 import { app } from "../Auth/firebase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useIsMobile } from "@/hooks/SongCustomHooks";
 import {
   Drawer,
   DrawerContent,
@@ -28,20 +29,18 @@ import {
 } from "./ui/drawer";
 import PropTypes from "prop-types";
 
-const MOBILE_BREAKPOINT = 768;
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    // initialize + listen
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-  return isMobile;
-}
-
+/**
+ * Render an actions menu for a song with playback, library, navigation, and share actions.
+ *
+ * Provides responsive UI: a slide-up drawer on mobile and a menubar on desktop. Actions include
+ * play next, add to queue, add to playlist (when authenticated), navigate to artist/album pages,
+ * and copy/share the song link.
+ *
+ * @param {Object} props
+ * @param {Object} props.song - Song data used to populate menu items (id, name, image, album/albumId, artists, and optional external link fields like `perma_url`, `permaUrl`, `url`, or `permalink`).
+ * @param {(open: boolean) => void} [props.onOpenChange] - Optional callback invoked when the menu/drawer open state changes; receives the new open state.
+ * @returns {JSX.Element} A React element rendering the responsive song actions menu.
+ */
 export default function Menu({ song, onOpenChange }) {
   const { playlist, isUser, addToQueue, addToQueueNext } = useStore();
   const navigate = useNavigate();

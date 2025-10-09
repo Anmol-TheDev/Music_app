@@ -11,15 +11,21 @@ import { Play, Heart, Clock, Pause } from "lucide-react";
 import { toast } from "sonner";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
+/**
+ * Render playlist metadata and an interactive list of its songs with playback controls.
+ *
+ * Fetches playlist metadata and song details for the playlistId in the URL, populates local and global state with the resulting song list, and renders a header (collage, name, actions) followed by the song list where each item can be selected or played/paused.
+ *
+ * @returns {JSX.Element} A JSX element containing the playlist header and the songs list with play/pause controls and duration display.
+ */
 export default function Plylistinfo() {
   const url = useLocation();
   const playlistId = url?.search.split("=")[1];
   const user = getAuth(app).currentUser;
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState();
-  const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
+  const { isPlaying, setIsPlaying, setMusicId, musicId, setCurrentList } = useStore();
   const { handleSongClick } = useSongHandlers();
-
   let count = playlistData.slice(0, 3).length;
 
   useEffect(() => {
@@ -48,10 +54,10 @@ export default function Plylistinfo() {
       }
     }
     getFireStore();
-  }, [user, url]);
+  }, [user, url, playlistId]);
 
   useEffect(() => {
-    setQueue(playlistData);
+    setCurrentList(playlistData);
   }, [playlistData]);
 
   return (

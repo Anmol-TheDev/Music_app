@@ -1,8 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
+import { useIsMobile } from "@/hooks/SongCustomHooks";
 
+/**
+ * Render a horizontally scrollable list of artist cards for a given search term.
+ *
+ * Each card shows the artist image or a "No Image" placeholder and the artist name;
+ * clicking a card navigates to the "/artist" route with the artist Id in the query string.
+ *
+ * @param {Object} props
+ * @param {string} props.search - Search term used to fetch artists.
+ * @returns {JSX.Element|null} The rendered artist list when artists exist, otherwise null.
+ */
 function RandomArtists({ search }) {
   const navigate = useNavigate();
   const { artists, fetchArtists } = useFetch();
@@ -17,27 +28,6 @@ function RandomArtists({ search }) {
       search: createSearchParams({ Id }).toString(),
     };
     navigate(path);
-  }
-
-  function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-      const mql = window.matchMedia("(max-width: 768px)");
-      const onChange = () => setIsMobile(mql.matches);
-
-      onChange();
-
-      if (mql.addEventListener) mql.addEventListener("change", onChange);
-      else mql.addListener(onChange);
-
-      return () => {
-        if (mql.removeEventListener) mql.removeEventListener("change", onChange);
-        else mql.removeListener(onChange);
-      };
-    }, []);
-
-    return isMobile;
   }
 
   const isMobile = useIsMobile();

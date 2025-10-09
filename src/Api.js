@@ -192,6 +192,15 @@ export function removeFromLikedSongs(songId) {
   }
 }
 
+/**
+ * Fetches the current user's liked songs from Firestore.
+ *
+ * Retrieves the authenticated user's document and returns its `likedSongs` array.
+ * If the user is not signed in, the document does not exist, `likedSongs` is missing,
+ * or an error occurs, this returns an empty array.
+ *
+ * @returns {Array} An array of liked song IDs, or an empty array if none are available.
+ */
 export async function fetchLikedSongs() {
   const auth = getAuth(app);
   const user = auth?.currentUser;
@@ -209,6 +218,26 @@ export async function fetchLikedSongs() {
   return [];
 }
 
+/**
+ * Fetches a single song by its ID from the API.
+ * @param {string|number} songId - The song identifier to request.
+ * @returns {Object} The song object returned by the API when successful; otherwise `{ success: false, data: [] }`.
+ */
+export async function fetchSongById(songId) {
+  try {
+    const response = await Api(`/api/songs/${songId}`);
+    return response.data.data[0];
+  } catch (error) {
+    console.error("Error fetching songs by IDs:", error);
+    return { success: false, data: [] };
+  }
+}
+
+/**
+ * Fetches song details for the given list of song IDs from the API.
+ * @param {Array<string|number>} songIds - Array of song IDs to request.
+ * @returns {Object} The API response data on success; on failure returns `{ success: false, data: [] }`.
+ */
 export async function fetchSongsByIds(songIds) {
   try {
     const idsString = songIds.join(",");

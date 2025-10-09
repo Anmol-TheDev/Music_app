@@ -8,8 +8,15 @@ import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import { useSongHandlers, getTextColor, usePlayAll, useShuffle } from "@/hooks/SongCustomHooks";
 
+/**
+ * Render the artist detail page, including the hero section with image and actions and a list of the artist's top songs.
+ *
+ * The component fetches artist data based on the current URL, derives UI colors from the artist image, and integrates playback, shuffle, and like/menu controls for each track. It also displays loading and "not found" states.
+ *
+ * @returns {JSX.Element} The Artist page UI as a React element.
+ */
 function Artist() {
   const [data, setData] = useState();
   const [bgColor, setBgColor] = useState();
@@ -17,27 +24,11 @@ function Artist() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
-  const { setMusicId, musicId, isPlaying, setIsPlaying, setQueue, currentArtistId, setArtistId } =
-    useStore();
+  const { musicId, isPlaying, setIsPlaying, setCurrentList, currentArtistId } = useStore();
   const artistId = url.search.split("=")[1];
   const { handleSongClick } = useSongHandlers();
-
-  // Function to calculate luminance and determine text color
-  const getTextColor = (rgbColor) => {
-    // Extract RGB values from rgb(r, g, b) string
-    const match = rgbColor.match(/rgb$$(\d+),\s*(\d+),\s*(\d+)$$/);
-    if (!match) return "white";
-
-    const r = Number.parseInt(match[1]);
-    const g = Number.parseInt(match[2]);
-    const b = Number.parseInt(match[3]);
-
-    // Calculate relative luminance (WCAG formula)
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    // If luminance > 0.6, use dark text, otherwise use white text
-    return luminance > 0.6 ? "dark" : "white";
-  };
+  const handlePlayAll = usePlayAll(artistId, data?.topSongs, "artist");
+  const handleShuffle = useShuffle(artistId, data?.topSongs, "artist");
 
   useEffect(() => {
     const fetching = async () => {
@@ -45,7 +36,7 @@ function Artist() {
         setIsLoading(true);
         const res = await Api(`/api/artists/${artistId}`);
         setData(res.data.data);
-        setQueue(res.data.data.topSongs);
+        setCurrentList(res.data.data.topSongs);
 
         // Generate colors from the artist image
         getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
@@ -62,33 +53,7 @@ function Artist() {
       }
     };
     fetching();
-  }, [artistId, setQueue]);
-
-  function handlePlayAll() {
-    if (currentArtistId == artistId) {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
-    } else {
-      if (data.topSongs?.length > 0) {
-        setQueue(data.topSongs);
-        setMusicId(data.topSongs[0].id);
-        setIsPlaying(true);
-        setArtistId(artistId);
-      }
-    }
-  }
-
-  function handleShuffle() {
-    if (data?.topSongs?.length > 0) {
-      const randomIndex = Math.floor(Math.random() * data.topSongs.length);
-      setMusicId(data.topSongs[randomIndex].id);
-      setIsPlaying(true);
-      setArtistId(artistId);
-    }
-  }
+  }, [artistId, setCurrentList]);
 
   if (isLoading) {
     return (
