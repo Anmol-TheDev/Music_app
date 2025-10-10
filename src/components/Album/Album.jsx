@@ -18,14 +18,7 @@ import {
   DrawerDescription,
   DrawerClose,
 } from "../ui/drawer";
-import {
-  useSongHandlers,
-  getTextColor,
-  usePlayAll,
-  useShuffle,
-  formatArtist,
-  useIsMobile,
-} from "@/hooks/SongCustomHooks";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function Album() {
   const [albumData, setAlbumData] = useState(null);
@@ -34,11 +27,13 @@ export default function Album() {
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
   const {
+    setMusicId,
     musicId,
     isPlaying,
     setIsPlaying,
-    setCurrentList,
+    setQueue,
     currentAlbumId,
+    setAlbumId,
     playlist,
     setPlaylist,
     setLikedSongs,
@@ -52,9 +47,23 @@ export default function Album() {
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const { handleSongClick } = useSongHandlers();
-  const handlePlayAll = usePlayAll(albumId, songs, "album");
-  const handleShuffle = useShuffle(albumId, songs, "album");
-  const isMobile = useIsMobile();
+
+  // Function to calculate luminance and determine text color
+  const getTextColor = (rgbColor) => {
+    // Extract RGB values from rgb(r, g, b) string
+    const match = rgbColor.match(/rgb$$(\d+),\s*(\d+),\s*(\d+)$$/);
+    if (!match) return "white";
+
+    const r = Number.parseInt(match[1]);
+    const g = Number.parseInt(match[2]);
+    const b = Number.parseInt(match[3]);
+
+    // Calculate relative luminance (WCAG formula)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    // If luminance > 0.6, use dark text, otherwise use white text
+    return luminance > 0.6 ? "dark" : "white";
+  };
 
   useEffect(() => {
     const fetching = async () => {
@@ -63,7 +72,7 @@ export default function Album() {
         const res = await Api(`/api/albums?id=${albumId}`);
         setAlbumData(res.data.data);
         setSongs(res.data.data.songs);
-        setCurrentList(res.data.data.songs);
+        setQueue(res.data.data.songs);
         getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
           // Determine text color based on background brightness
@@ -78,11 +87,52 @@ export default function Album() {
       }
     };
     fetching();
-  }, [albumId, setCurrentList]);
+  }, [albumId, setQueue]);
+
+  function handlePlayAll() {
+    if (currentAlbumId == albumId) {
+      if (isPlaying) {
+        setIsPlaying(false);
+      } else {
+        setIsPlaying(true);
+      }
+    } else {
+      if (songs?.length > 0) {
+        setQueue(songs);
+        setMusicId(songs[0].id);
+        setIsPlaying(true);
+        setAlbumId(albumId);
+      }
+    }
+  }
+
+  function handleShuffle() {
+    if (songs?.length > 0) {
+      const randomIndex = Math.floor(Math.random() * songs.length);
+      setMusicId(songs[randomIndex].id);
+      setAlbumId(albumId);
+      setIsPlaying(true);
+    }
+  }
+
+  function formatArtist(song, check = false) {
+    const all = song.artists.primary;
+    const x = check ? all.length : isMobile ? 1 : 3;
+
+    const artists = all
+      .slice(0, x)
+      .map(
+        (artist) =>
+          `<a href="/artist?Id=${artist.id}" class="hover:underline">${artist.name.trim()}</a>`
+      )
+      .join(", ");
+
+    return all.length > x ? `${artists} & more` : artists;
+  }
 
   function getDescription() {
     const year = albumData.year;
-    const artists = formatArtist(albumData, true, isMobile);
+    const artists = formatArtist(albumData, true);
 
     const description = `${year} · ${artists}`;
     return description;
@@ -143,6 +193,24 @@ export default function Album() {
       setIsAddToPlaylistOpen(false);
     }
   }
+
+  function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+      const mql = window.matchMedia("(max-width: 768px)");
+      const onChange = () => setIsMobile(mql.matches);
+      onChange();
+      if (mql.addEventListener) mql.addEventListener("change", onChange);
+      else mql.addListener(onChange);
+      return () => {
+        if (mql.removeEventListener) mql.removeEventListener("change", onChange);
+        else mql.removeListener(onChange);
+      };
+    }, []);
+    return isMobile;
+  }
+
+  const isMobile = useIsMobile();
 
   if (isLoading) {
     return (
@@ -394,7 +462,7 @@ export default function Album() {
                         </h3>
                         <p
                           className="text-xs text-muted-foreground truncate mt-0.5"
-                          dangerouslySetInnerHTML={{ __html: formatArtist(song, false, isMobile) }}
+                          dangerouslySetInnerHTML={{ __html: formatArtist(song) }}
                         />
                       </div>
 
@@ -465,7 +533,7 @@ export default function Album() {
                         </h3>
                         <p
                           className="text-sm text-muted-foreground truncate mt-0.5"
-                          dangerouslySetInnerHTML={{ __html: formatArtist(song, false, isMobile) }}
+                          dangerouslySetInnerHTML={{ __html: formatArtist(song) }}
                         />
                       </div>
 
@@ -481,7 +549,7 @@ export default function Album() {
 
                       {/* Menu Button */}
                       <div className="flex justify-center">
-                        <div
+                        <button
                           onClick={(e) => e.stopPropagation()}
                           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
                         >
@@ -489,7 +557,7 @@ export default function Album() {
                             song={song}
                             onOpenChange={(open) => setOpenMenuId(open ? song.id : null)}
                           />
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </div>

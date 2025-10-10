@@ -17,8 +17,9 @@ export default function Plylistinfo() {
   const user = getAuth(app).currentUser;
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState();
-  const { isPlaying, setIsPlaying, musicId, setCurrentList } = useStore();
+  const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
   const { handleSongClick } = useSongHandlers();
+
   let count = playlistData.slice(0, 3).length;
 
   useEffect(() => {
@@ -47,10 +48,10 @@ export default function Plylistinfo() {
       }
     }
     getFireStore();
-  }, [user, url, playlistId]);
+  }, [user, url]);
 
   useEffect(() => {
-    setCurrentList(playlistData);
+    setQueue(playlistData);
   }, [playlistData]);
 
   return (
@@ -106,7 +107,7 @@ export default function Plylistinfo() {
               {playlistData.map((song, index) => (
                 <li
                   key={index}
-                  onClick={() => handleSongClick(song)}
+                  onClick={() => setMusicId(song.id)}
                   className="rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300"
                 >
                   <div className="flex items-center justify-between p-3">
