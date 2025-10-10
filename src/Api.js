@@ -209,16 +209,6 @@ export async function fetchLikedSongs() {
   return [];
 }
 
-export async function fetchSongById(songId) {
-  try {
-    const response = await Api(`/api/songs/${songId}`);
-    return response.data.data[0];
-  } catch (error) {
-    console.error("Error fetching song by ID:", error);
-    return { success: false, data: [] };
-  }
-}
-
 export async function fetchSongsByIds(songIds) {
   try {
     const idsString = songIds.join(",");
