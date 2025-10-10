@@ -61,25 +61,24 @@ function MusicPlayer() {
     toggleShuffle: () => setShuffle(!shuffle),
   });
 
-  useEffect(() => {
-    document.querySelectorAll("audio").forEach((el, i) => {
-      if (i > 0) {
-        el.pause();
-        el.remove();
-      }
-    });
-  }, []);
-
   // Fetch song when musicId changes
   useEffect(() => {
-    if (!musicId) return;
-    const songData = currentSong;
-    setSong(songData);
-    if (songData?.image?.[2]?.url) {
-      getImageColors(songData.image[2].url).then(({ averageColor, dominantColor }) => {
-        setBgColor({ bg1: averageColor, bg2: dominantColor });
-      });
+    async function fetchSong() {
+      if (!musicId) return;
+      try {
+        const songData = currentSong;
+        setSong(songData);
+        if (songData?.image?.[2]?.url) {
+          getImageColors(songData.image[2].url).then(({ averageColor, dominantColor }) => {
+            setBgColor({ bg1: averageColor, bg2: dominantColor });
+          });
+        }
+        setIsPlaying(true);
+      } catch (error) {
+        console.log(error);
+      }
     }
+    fetchSong();
   }, [musicId, currentSong]);
 
   // Set queue when songs change
@@ -99,9 +98,6 @@ function MusicPlayer() {
 
   const handleProgress = (state) => {
     setPlayed(state.played);
-    if (duration * state.played >= duration) {
-      playNext();
-    }
   };
 
   const handleDuration = (newDuration) => setDuration(newDuration);
@@ -257,26 +253,22 @@ function MusicPlayer() {
           </DrawerContent>
         </Drawer>
 
-        {song?.downloadUrl?.[4]?.url && (
-          <ReactPlayer
-            ref={playerRef}
-            url={song.downloadUrl[4].url}
-            playing={isPlaying}
-            volume={muted ? 0 : volume}
-            // ❌ Removed onPlay/onPause
-            onProgress={handleProgress}
-            onDuration={handleDuration}
-            onEnded={playNext}
-            width="0"
-            height="0"
-            config={{
-              file: {
-                forceAudio: true,
-                attributes: { preload: "auto" },
-              },
-            }}
-          />
-        )}
+        <ReactPlayer
+          ref={playerRef}
+          key={musicId} // Force re-render on song change to prevent multiple audio instances
+          url={song?.downloadUrl?.[4]?.url || ""}
+          playing={isPlaying}
+          volume={muted ? 0 : volume}
+          onProgress={handleProgress}
+          onDuration={handleDuration}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={playNext} // Use centralized next function
+          width="0"
+          height="0"
+          onError={(e) => console.error("ReactPlayer error", e)}
+          config={{ file: { attributes: { preload: "auto" } } }}
+        />
       </>
     )
   );

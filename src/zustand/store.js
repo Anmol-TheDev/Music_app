@@ -98,6 +98,7 @@ export const useStore = create((set, get) => ({
   shuffleHistory: [],
   shuffledQueue: [],
   autoPlay: false,
+  playedSongIds: new Set(),
 
   setPlaylist: (prop) =>
     set((state) => ({
@@ -129,6 +130,7 @@ export const useStore = create((set, get) => ({
       shuffleHistory: shuffle ? [currentSong] : [],
       shuffledQueue: shuffle ? [...newQueue].sort(() => Math.random() - 0.5) : [],
       previous: [],
+      playedSongIds: new Set([id]),
     };
 
     set(newState);
@@ -215,17 +217,25 @@ export const useStore = create((set, get) => ({
   setDuration: (duration) => set({ duration }),
 
   addToQueue: (song) => {
-    const { autoPlay } = get();
+    const { autoPlay, shuffle } = get();
     if (autoPlay) {
-      set({
+      set((state) => ({
         queue: [song],
         autoPlay: false,
-      });
+        shuffledQueue: shuffle ? [song] : state.shuffledQueue,
+      }));
       return;
     } else {
-      set((state) => ({
-        queue: [...state.queue, song],
-      }));
+      set((state) => {
+        const nextQueue = [...state.queue, song];
+        const nextShuffled = shuffle
+          ? [...state.shuffledQueue, song].sort(() => Math.random() - 0.5)
+          : state.shuffledQueue;
+        return {
+          queue: nextQueue,
+          shuffledQueue: nextShuffled,
+        };
+      });
     }
   },
 
@@ -265,16 +275,17 @@ export const useStore = create((set, get) => ({
 
     if (queue.length === 0) {
       if (repeat === "all") {
-        set({
+        set((state) => ({
           musicId: songList[0].id,
           currentSong: songList[0],
           queue: songList.slice(1),
           played: 0,
           isPlaying: false,
           previous: [...previous, currentSong],
-        });
+          playedSongIds: new Set([...state.playedSongIds, songList[0].id]),
+        }));
       } else {
-        const { currentSong, currentAlbumId, currentArtistId } = get();
+        const { currentSong, currentAlbumId, currentArtistId, playedSongIds } = get();
 
         if (currentAlbumId === null && currentArtistId === null && currentSong?.id) {
           (async () => {
@@ -285,7 +296,22 @@ export const useStore = create((set, get) => ({
               const data = await res.json();
               const suggested = data?.data || [];
 
-              if (suggested.length > 0) {
+              // Filter out songs that have already been played
+              const filteredSuggestions = suggested.filter((song) => !playedSongIds.has(song.id));
+
+              if (filteredSuggestions.length > 0) {
+                const [first, ...rest] = filteredSuggestions;
+                set((state) => ({
+                  queue: rest,
+                  musicId: first.id,
+                  currentSong: first,
+                  played: 0,
+                  isPlaying: true,
+                  autoPlay: true,
+                  playedSongIds: new Set([...state.playedSongIds, first.id]),
+                }));
+              } else if (suggested.length > 0) {
+                // If all suggestions were already played, clear history and use fresh suggestions
                 const [first, ...rest] = suggested;
                 set({
                   queue: rest,
@@ -294,6 +320,7 @@ export const useStore = create((set, get) => ({
                   played: 0,
                   isPlaying: true,
                   autoPlay: true,
+                  playedSongIds: new Set([first.id]),
                 });
               }
             } catch (error) {
@@ -312,38 +339,41 @@ export const useStore = create((set, get) => ({
           const firstSong = newShuffledQueue[0];
           const remainingQueue = newShuffledQueue.slice(1);
 
-          set({
+          set((state) => ({
             shuffledQueue: remainingQueue,
             shuffleHistory: [...shuffleHistory, firstSong],
             musicId: firstSong.id,
             currentSong: firstSong,
             played: 0,
             isPlaying: false,
-          });
+            playedSongIds: new Set([...state.playedSongIds, firstSong.id]),
+          }));
         }
         return;
       }
 
       let nextSong = shuffledQueue[0];
 
-      set({
+      set((state) => ({
         shuffleHistory: [...shuffleHistory, currentSong],
         shuffledQueue: shuffledQueue.slice(1),
         musicId: nextSong.id,
         currentSong: nextSong,
         played: 0,
         isPlaying: false,
-      });
+        playedSongIds: new Set([...state.playedSongIds, nextSong.id]),
+      }));
     } else {
       let nextSong = queue[0];
-      set({
+      set((state) => ({
         musicId: nextSong?.id,
         currentSong: nextSong,
         played: 0,
         isPlaying: false,
         queue: queue.slice(1),
         previous: [...previous, currentSong],
-      });
+        playedSongIds: new Set([...state.playedSongIds, nextSong?.id]),
+      }));
     }
   },
 
