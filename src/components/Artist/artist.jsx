@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Api from "../../Api";
+import Api, { fetchArtistBio } from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import { useStore } from "../../zustand/store";
@@ -9,33 +9,29 @@ import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import ArtistBio from "./ArtistBio";
 
 function Artist() {
-  const [data, setData] = useState();
+  const [data, setData] = useState(null);
+  const [bio, setBio] = useState("");
   const [bgColor, setBgColor] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
-  const { setMusicId, musicId, isPlaying, setIsPlaying, setQueue, currentArtistId, setArtistId } =
-    useStore();
+  // FIX: Removed `setArtistId` as it's not used directly in this component
+  const { musicId, isPlaying, setIsPlaying, setQueue, currentArtistId } = useStore();
   const artistId = url.search.split("=")[1];
   const { handleSongClick } = useSongHandlers();
 
   // Function to calculate luminance and determine text color
   const getTextColor = (rgbColor) => {
-    // Extract RGB values from rgb(r, g, b) string
-    const match = rgbColor.match(/rgb$$(\d+),\s*(\d+),\s*(\d+)$$/);
+    const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (!match) return "white";
-
     const r = Number.parseInt(match[1]);
     const g = Number.parseInt(match[2]);
     const b = Number.parseInt(match[3]);
-
-    // Calculate relative luminance (WCAG formula)
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-    // If luminance > 0.6, use dark text, otherwise use white text
     return luminance > 0.6 ? "dark" : "white";
   };
 
@@ -44,19 +40,27 @@ function Artist() {
       try {
         setIsLoading(true);
         const res = await Api(`/api/artists/${artistId}`);
-        setData(res.data.data);
-        setQueue(res.data.data.topSongs);
+        const artistData = res.data.data;
+        setData(artistData);
+        setQueue(artistData.topSongs);
+
+        // Fetch artist biography
+        if (artistData.name) {
+          const artistBio = await fetchArtistBio(artistData.name);
+          if (artistBio) {
+            setBio(artistBio);
+          }
+        }
 
         // Generate colors from the artist image
-        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
+        getImageColors(artistData.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
-          // Determine text color based on background brightness
           setTextColor(getTextColor(dominantColor));
         });
       } catch (error) {
         toast.error("Failed to load artist data.");
         console.error("Error fetching artist data:", error);
-        setData(null); // Ensure data is null on error to trigger "Artist not found" UI
+        setData(null);
       } finally {
         setIsLoading(false);
       }
@@ -65,18 +69,12 @@ function Artist() {
   }, [artistId, setQueue]);
 
   function handlePlayAll() {
-    if (currentArtistId == artistId) {
-      if (isPlaying) {
-        setIsPlaying(false);
-      } else {
-        setIsPlaying(true);
-      }
+    if (currentArtistId === artistId) {
+      setIsPlaying(!isPlaying);
     } else {
-      if (data.topSongs?.length > 0) {
+      if (data?.topSongs?.length > 0) {
         setQueue(data.topSongs);
-        setMusicId(data.topSongs[0].id);
-        setIsPlaying(true);
-        setArtistId(artistId);
+        handleSongClick(data.topSongs[0], { artistId: artistId, play: true });
       }
     }
   }
@@ -84,9 +82,8 @@ function Artist() {
   function handleShuffle() {
     if (data?.topSongs?.length > 0) {
       const randomIndex = Math.floor(Math.random() * data.topSongs.length);
-      setMusicId(data.topSongs[randomIndex].id);
-      setIsPlaying(true);
-      setArtistId(artistId);
+      const randomSong = data.topSongs[randomIndex];
+      handleSongClick(randomSong, { artistId: artistId, play: true });
     }
   }
 
@@ -186,7 +183,7 @@ function Artist() {
                     onClick={handlePlayAll}
                     className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 shadow-lg min-h-[44px]"
                   >
-                    {!isPlaying || artistId != currentArtistId ? (
+                    {!isPlaying || artistId !== currentArtistId ? (
                       <Play className="w-5 h-5" />
                     ) : (
                       <Pause className="w-5 h-5" />
@@ -214,14 +211,14 @@ function Artist() {
           </div>
         </div>
 
-        {/* Top Songs Section */}
+        {/* Top Songs & Bio Section */}
         <div className="container mx-auto px-3 sm:px-4 py-8">
           <div className="space-y-6">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-2xl lg:text-3xl font-bold">Popular</h2>
             </div>
 
-            {/* Songs List - Improved Mobile Layout */}
+            {/* Songs List */}
             <div className="space-y-1">
               {data.topSongs.map((song, index) => (
                 <div
@@ -254,14 +251,14 @@ function Artist() {
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
-                              className="w-5 h-5 text-primary cursor-pointer hover:scale-125 transition-transform"
+                              className="w-5 h-5 text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPlaying(false);
                               }}
                             />
                           ) : (
-                            <Play className="w-8 h-5 text-primary cursor-pointer hover:scale-125 transition-transform" />
+                            <Play className="w-5 h-5 text-primary" />
                           )}
                         </button>
                       </div>
@@ -276,7 +273,7 @@ function Artist() {
                         />
                       </div>
 
-                      {/* Song Info - More space on mobile */}
+                      {/* Song Info */}
                       <div className="flex-1 min-w-0 pr-2">
                         <h3
                           className={`font-medium text-sm leading-5 ${
@@ -294,19 +291,17 @@ function Artist() {
                         </h3>
                       </div>
 
-                      {/* Like Button - Mobile */}
+                      {/* Like Button */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
                         <Like songId={song.id} />
                       </div>
 
-                      {/* Menu Button - Always visible on mobile for better UX */}
-                      <div className="flex-shrink-0">
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                        >
-                          <Menu song={song} />
-                        </button>
+                      {/* Menu Button */}
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+                      >
+                        <Menu song={song} />
                       </div>
                     </div>
                   </div>
@@ -334,14 +329,14 @@ function Artist() {
                         >
                           {isPlaying && song.id === musicId ? (
                             <Pause
-                              className="w-5 h-5 text-primary cursor-pointer hover:scale-125 transition-transform"
+                              className="w-5 h-5 text-primary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setIsPlaying(false);
                               }}
                             />
                           ) : (
-                            <Play className="w-6 h-5 text-primary cursor-pointer hover:scale-125 transition-transform" />
+                            <Play className="w-5 h-5 text-primary" />
                           )}
                         </button>
                       </div>
@@ -359,7 +354,9 @@ function Artist() {
                       {/* Song Info */}
                       <div className="flex-1 min-w-0">
                         <h3
-                          className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
+                          className={`font-medium truncate ${
+                            song.id === musicId ? "text-primary" : "text-foreground"
+                          }`}
                         >
                           {song.name}
                         </h3>
@@ -372,18 +369,17 @@ function Artist() {
                         {(song.duration % 60).toString().padStart(2, "0")}
                       </div>
 
+                      {/* Like Button */}
                       <div className="flex-shrink-0 w-8 flex items-center justify-center">
                         <Like songId={song.id} />
                       </div>
 
                       {/* Menu Button */}
-                      <div className="flex-shrink-0">
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <Menu song={song} />
-                        </button>
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Menu song={song} />
                       </div>
                     </div>
                   </div>
@@ -391,6 +387,7 @@ function Artist() {
               ))}
             </div>
           </div>
+          {data && <ArtistBio artistData={data} bioText={bio} />}
         </div>
       </div>
     </ScrollArea>
