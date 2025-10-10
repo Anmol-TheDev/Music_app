@@ -164,59 +164,63 @@ function MusicPlayer() {
           <DrawerContent>
             <DrawerTitle hidden />
             <div
-              className="fixed bottom-0 left-0 right-0 h-[80px] sm:h-20 flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 shadow-2xl z-50 transition-all duration-700"
+              className="fixed bottom-0 left-0 right-0 flex flex-wrap items-center justify-between sm:px-4 px-2 py-3 z-50 transition-all duration-700"
               style={
                 bgColor
                   ? { background: `linear-gradient(90deg, ${bgColor.bg1}, ${bgColor.bg2})` }
                   : { backgroundColor: "#1d1d1d" }
               }
             >
-              <div className="flex items-center space-x-3 w-1/4 justify-end min-w-0">
+              <div className="flex items-center space-x-1 sm:space-x-3 flex-shrink-0 w-auto sm:w-1/4 order-1 min-w-0">
                 {song?.image?.[2]?.url ? (
                   <img
                     src={song.image[2].url}
                     alt={song.name}
                     loading="lazy"
-                    className="sm:w-14 sm:h-14 h-10 w-10 object-cover rounded-md"
+                    className="sm:w-16 sm:h-16 h-10 w-10 object-contain rounded-sm"
                     onError={(e) => {
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = "/image.png";
                     }}
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-md shadow-lg grid place-items-center bg-black/30">
+                  <div className="w-16 h-16 rounded-sm grid place-items-center bg-black/30">
                     <Play className="w-5 h-5 text-white" />
                   </div>
                 )}
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-semibold truncate">{song?.name}</span>
-                  <span className="text-xs text-gray-400 truncate">{song?.artist}</span>
+                  <span className="text-md font-semibold truncate">{song?.name}</span>
+                  <span className="text-xs text-gray-300 truncate">
+                    {song?.artists?.primary?.length
+                      ? song.artists.primary.map((a) => a.name).join(", ")
+                      : "Unknown Artist"}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center w-2/4">
-                <div className="flex items-center justify-center flex-shrink-0 flex-grow space-x-2 sm:space-x-4 mb-1">
+              <div className="flex flex-col items-center flex-grow order-2 mt-0 sm:mt-2 min-w-0">
+                <div className="flex items-center justify-center space-x-2 sm:space-x-4 mb-1">
                   <button
                     onClick={() => setShuffle(!shuffle)}
                     className={`${shuffle ? "text-green-500" : "text-white"}`}
                   >
-                    <Shuffle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <Shuffle className="w-3 h-3 sm:w-5 sm:h-5" />
                   </button>
                   <button onClick={playPrevious}>
-                    <SkipBack className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <SkipBack className="w-3 h-3 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     onClick={handlePlayPause}
                     className="bg-white text-black rounded-full p-2"
                   >
                     {isPlaying ? (
-                      <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Pause className="w-3 h-3 sm:w-5 sm:h-5" />
                     ) : (
-                      <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Play className="w-3 h-3 sm:w-5 sm:h-5" />
                     )}
                   </button>
                   <button onClick={playNext}>
-                    <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <SkipForward className="w-3 h-3 sm:w-5 sm:h-5" />
                   </button>
                 </div>
 
@@ -231,7 +235,7 @@ function MusicPlayer() {
                     onChange={handleSeekChange}
                     onMouseUp={handleSeekMouseUp}
                     onTouchEnd={handleSeekMouseUp}
-                    className="flex-grow h-1 rounded-full cursor-pointer"
+                    className="flex-grow h-1 rounded-full cursor-pointe min-w-0"
                     style={{
                       background: `linear-gradient(to right, #1db954 0%, #1db954 ${played * 100}%, #4B5563 ${played * 100}%, #4B5563 100%)`,
                     }}
@@ -240,7 +244,7 @@ function MusicPlayer() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 w-1/4 justify-end min-w-0">
+              <div className="flex items-center space-x-2 justify-end w-full sm:w-1/4 order-3 mt-2 sm:mt-0 min-w-0">
                 <button onClick={handleToggleMute}>
                   <VolumeIcon className="w-4 h-4" />
                 </button>
@@ -251,7 +255,7 @@ function MusicPlayer() {
                   step="any"
                   value={volume}
                   onChange={handleVolumeChange}
-                  className="w-20 h-1 rounded-full cursor-pointer"
+                  className="w-10 sm:w-20 md:w-28 h-1 rounded-full cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #4B5563 ${volume * 100}%, #4B5563 100%)`,
                   }}
