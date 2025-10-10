@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { PlayCircle, Play, Eye, Pause } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
@@ -8,11 +8,10 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import { useSongHandlers, useIsMobile } from "@/hooks/SongCustomHooks";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
-  const setMusicId = useStore((state) => state.setMusicId);
   const musicId = useStore((state) => state.musicId);
   const isPlaying = useStore((state) => state.isPlaying);
   const setIsPlaying = useStore((state) => state.setIsPlaying);
@@ -23,7 +22,8 @@ export default function SearchComponent() {
   useEffect(() => {
     fetchAlbums(search);
     fetchSongs(search);
-  }, [url, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const { handleSongClick } = useSongHandlers();
 
@@ -36,22 +36,6 @@ export default function SearchComponent() {
     }
     return views.toString();
   };
-
-  function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-      const mql = window.matchMedia("(max-width: 768px)");
-      const onChange = () => setIsMobile(mql.matches);
-      onChange();
-      if (mql.addEventListener) mql.addEventListener("change", onChange);
-      else mql.addListener(onChange);
-      return () => {
-        if (mql.removeEventListener) mql.removeEventListener("change", onChange);
-        else mql.removeListener(onChange);
-      };
-    }, []);
-    return isMobile;
-  }
 
   const isMobile = useIsMobile();
 
@@ -157,7 +141,9 @@ export default function SearchComponent() {
                     <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                       <button
                         onClick={() => {
-                          musicId != Topresult?.id ? setMusicId(Topresult?.id) : setIsPlaying(true);
+                          musicId != Topresult?.id
+                            ? handleSongClick(Topresult)
+                            : setIsPlaying(true);
                         }}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
