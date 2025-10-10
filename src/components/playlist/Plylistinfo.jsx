@@ -9,7 +9,6 @@ import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
 import { Play, Heart, Clock, Pause, Music } from "lucide-react";
 import { toast } from "sonner";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function Plylistinfo() {
   const url = useLocation();
@@ -18,10 +17,7 @@ export default function Plylistinfo() {
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { isPlaying, musicId, setQueue } = useStore();
-
-  const { handleSongClick } = useSongHandlers();
-
+  const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
   let count = playlistData.slice(0, 4).length;
 
   useEffect(() => {
@@ -39,12 +35,14 @@ export default function Plylistinfo() {
         if (playlistSnap.exists()) {
           const playlist = playlistSnap.data();
           setPlaylistName(playlist.name);
-
           if (playlist.songs && playlist.songs.length > 0) {
             const songsResponse = await fetchSongsByIds(playlist.songs);
-            if (songsResponse.success) {
-              const validSongs = songsResponse.data.filter(Boolean);
-              setPlaylistData(validSongs);
+            if (Array.isArray(songsResponse?.data)) {
+              const songMap = new Map(songsResponse.data.map((song) => [song.id, song]));
+              const orderedSongs = playlist.songs
+                .map((id) => songMap.get(id))
+                .filter(Boolean);
+              setPlaylistData(orderedSongs);
             } else {
               toast.error("Could not load songs for this playlist.");
             }
@@ -68,6 +66,15 @@ export default function Plylistinfo() {
     }
   }, [playlistData, setQueue]);
 
+  function handleSongClick(song) {
+    if (song.id !== musicId) {
+      setMusicId(song.id);
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[90vh]">
@@ -85,20 +92,22 @@ export default function Plylistinfo() {
               <div className="w-64 h-64 border rounded-lg overflow-hidden flex-shrink-0">
                 <div className={`flex flex-wrap w-full h-full`}>
                   {playlistData.length > 0 ? (
-                    playlistData
-                      .slice(0, 4)
-                      .map((item, i) => (
-                        <img
-                          key={item.id}
-                          src={item.image[2].url}
-                          alt={`song ${i + 1}`}
-                          className={`object-cover${
-                            count === 1 ? " w-full h-full" : ""
-                          }${count === 2 ? " w-1/2 h-full" : ""}${
-                            count === 3 ? (i === 0 ? " w-full h-1/2" : " w-1/2 h-1/2") : ""
-                          }${count === 4 ? " w-1/2 h-1/2" : ""}`}
-                        />
-                      ))
+                    playlistData.slice(0, 4).map((item, i) => (
+                      <img
+                        key={item.id}
+                        src={item.image?.[2]?.url || item.image?.[1]?.url || item.image?.[0]?.url || "/api/placeholder/48/48"}
+                        alt={`song ${i + 1}`}
+                        className={`object-cover${
+                          count === 1 ? " w-full h-full" : ""
+                        }${count === 2 ? " w-1/2 h-full" : ""}${
+                          count === 3
+                            ? i === 0
+                              ? " w-full h-1/2"
+                              : " w-1/2 h-1/2"
+                            : ""
+                        }${count === 4 ? " w-1/2 h-1/2" : ""}`}
+                      />
+                    ))
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <Music className="w-16 h-16 text-muted-foreground" />
@@ -136,7 +145,7 @@ export default function Plylistinfo() {
             {playlistData.map((song, index) => (
               <li
                 key={song.id}
-                onClick={() => handleSongClick(song, playlistData)}
+                onClick={() => handleSongClick(song)}
                 className="rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer"
               >
                 <div className="flex items-center justify-between p-3">
@@ -151,7 +160,7 @@ export default function Plylistinfo() {
                     <div className="flex flex-col min-w-0">
                       <span className="font-medium truncate">{song.name}</span>
                       <span className="text-sm text-gray-400 truncate">
-                        {song.artists?.primary[0]?.name}
+                        {song.artists?.primary?.[0]?.name}
                       </span>
                     </div>
                   </div>
@@ -161,7 +170,7 @@ export default function Plylistinfo() {
                         className="w-4 h-4 sm:w-5 sm:h-5"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleSongClick(song, playlistData);
+                          setIsPlaying(false);
                         }}
                       />
                     ) : (
@@ -169,7 +178,7 @@ export default function Plylistinfo() {
                         className="w-4 h-4 sm:w-5 sm:h-5"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleSongClick(song, playlistData);
+                          handleSongClick(song);
                         }}
                       />
                     )}
