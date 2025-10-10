@@ -275,6 +275,7 @@ export const useStore = create((set, get) => ({
 
     if (queue.length === 0) {
       if (repeat === "all") {
+        if (!songList || songList.length === 0) return;
         set((state) => ({
           musicId: songList[0].id,
           currentSong: songList[0],
@@ -303,25 +304,45 @@ export const useStore = create((set, get) => ({
                 const [first, ...rest] = filteredSuggestions;
                 set((state) => ({
                   queue: rest,
+                  shuffledQueue: state.shuffle
+                    ? rest.slice().sort(() => Math.random() - 0.5)
+                    : state.shuffledQueue,
+                  shuffleHistory:
+                    state.shuffle && state.currentSong
+                      ? [...state.shuffleHistory, state.currentSong]
+                      : state.shuffleHistory,
                   musicId: first.id,
                   currentSong: first,
                   played: 0,
                   isPlaying: true,
                   autoPlay: true,
+                  previous: state.currentSong
+                    ? [...state.previous, state.currentSong]
+                    : state.previous,
                   playedSongIds: new Set([...state.playedSongIds, first.id]),
                 }));
               } else if (suggested.length > 0) {
                 // If all suggestions were already played, clear history and use fresh suggestions
                 const [first, ...rest] = suggested;
-                set({
+                set((state) => ({
                   queue: rest,
+                  shuffledQueue: state.shuffle
+                    ? rest.slice().sort(() => Math.random() - 0.5)
+                    : state.shuffledQueue,
+                  shuffleHistory:
+                    state.shuffle && state.currentSong
+                      ? [...state.shuffleHistory, state.currentSong]
+                      : state.shuffleHistory,
                   musicId: first.id,
                   currentSong: first,
                   played: 0,
                   isPlaying: true,
                   autoPlay: true,
+                  previous: state.currentSong
+                    ? [...state.previous, state.currentSong]
+                    : state.previous,
                   playedSongIds: new Set([first.id]),
-                });
+                }));
               }
             } catch (error) {
               console.error("Failed to fetch suggested songs:", error);
