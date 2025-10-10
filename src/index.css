@@ -92,3 +92,51 @@
   left: 0rem;
   z-index: 1000;
 }
+
+/* Custom range slider styles for music player */
+.progress-bar::-webkit-slider-thumb,
+.volume-bar::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border: none;
+}
+
+.progress-bar:hover::-webkit-slider-thumb,
+.volume-bar:hover::-webkit-slider-thumb,
+.progress-bar:focus::-webkit-slider-thumb,
+.volume-bar:focus::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.progress-bar::-moz-range-thumb,
+.volume-bar::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  cursor: pointer;
+  border: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progress-bar:hover::-moz-range-thumb,
+.volume-bar:hover::-moz-range-thumb,
+.progress-bar:focus::-moz-range-thumb,
+.volume-bar:focus::-moz-range-thumb {
+  opacity: 1;
+}
+
+/* Focus styles for accessibility */
+.progress-bar:focus,
+.volume-bar:focus {
+  outline: 1px solid #22c55e;
+  outline-offset: 1px;
+}

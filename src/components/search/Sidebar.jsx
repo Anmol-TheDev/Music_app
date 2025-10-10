@@ -152,10 +152,11 @@ const Sidebar = () => {
       <div
         ref={sidebarRef}
         className={cn(
-          "fixed top-0 left-0 h-full w-64 z-40",
+          "fixed top-0 left-0 z-40",
           "bg-background/95 backdrop-blur-md border-r border-border shadow-2xl",
           "transform transition-transform duration-300 ease-in-out",
-          "flex flex-col",
+          "flex flex-col rounded-br-2xl",
+          "h-[calc(100vh-4rem)] w-64", // Adjusted height for the smaller music player
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -319,12 +320,16 @@ const Sidebar = () => {
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  signOut(auth);
-                  setIsUser(false);
-                  setPopover(false);
-                  setIsOpen(false);
-                  navigate("/"); // Redirect to home on logout
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                    setIsUser(false);
+                    setPopover(false);
+                    setIsOpen(false);
+                    navigate("/"); // Redirect to home on logout
+                  } catch (error) {
+                    console.error("Sign out error:", error);
+                  }
                 }}
                 variant="destructive"
                 className={cn(
