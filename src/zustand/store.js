@@ -181,7 +181,7 @@ export const useStore = create((set, get) => ({
   },
   setMuted: (muted) => set({ muted }),
   setShuffle: (shuffle) => {
-    const { queue, currentSong } = get();
+    const { queue, currentSong, previous, shuffleHistory } = get();
     if (shuffle) {
       const shuffledQueue = [...queue].sort(() => Math.random() - 0.5);
 
@@ -189,21 +189,23 @@ export const useStore = create((set, get) => ({
         ? shuffledQueue.filter((song) => song.id !== currentSong.id)
         : shuffledQueue;
 
-      let shuffleHistory = [];
-
+      // Migrate previous history when turning shuffle ON
+      let newShuffleHistory = [...previous];
       if (currentSong) {
-        shuffleHistory = [currentSong];
+        newShuffleHistory = [...previous, currentSong];
       }
 
       set({
         shuffle: true,
         shuffledQueue: filteredShuffledQueue,
-        shuffleHistory: shuffleHistory,
+        shuffleHistory: newShuffleHistory,
       });
     } else {
+      // Migrate shuffle history back to previous when turning shuffle OFF
       set({
         shuffle: false,
         shuffledQueue: [],
+        previous: shuffleHistory,
         shuffleHistory: [],
       });
     }
