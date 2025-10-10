@@ -1,6 +1,6 @@
 <div align="center">
 
-# Music App
+# <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=35&pause=1000&color=00D9FF&center=true&vCenter=true&width=435&lines=Music+App;🎵+Music+App+🎵;Your+Music+Companion" alt="Typing SVG" />
 
 [![Node.js](https://img.shields.io/badge/Node.js-v14+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![PNPM](https://img.shields.io/badge/PNPM-Fast%20Package%20Manager-f69220?style=for-the-badge&logo=pnpm&logoColor=white)](https://pnpm.io/)
@@ -135,62 +135,9 @@ pnpm run preview
 
 ---
 
-## Project Structure
-
-```
-Music_app/
-├── public/              # Static assets
-├── src/
-│   ├── Auth/            # Authentication components
-│   ├── components/      # Reusable UI components
-│   │   ├── Album/       # Album-related components
-│   │   ├── Artist/      # Artist-related components
-│   │   ├── music/       # Music player components
-│   │   ├── playlist/    # Playlist management
-│   │   ├── search/      # Search functionality
-│   │   └── ui/          # Base UI components (Radix)
-│   ├── context/         # React context providers
-│   ├── lib/             # Utility functions
-│   └── zustand/         # State management store
-├── package.json         # Dependencies and scripts
-├── tailwind.config.js   # Tailwind CSS configuration
-├── vite.config.js       # Vite configuration
-└── firebase.js          # Firebase configuration
-```
-
----
-
 ## Contributing
 
-We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help is appreciated.
-
-### How to Contribute
-
-1. **Star the repository** (it really helps!)
-2. **Fork the project**
-3. **Create your feature branch**
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-4. **Make your changes** and commit them
-   ```bash
-   git commit -m 'Add some AmazingFeature'
-   ```
-5. **Push to the branch**
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-6. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow the existing code style and conventions
-- Write clear, descriptive commit messages
-- Add tests for new features when applicable
-- Update documentation as needed
-- Ensure all checks pass before submitting PR
-
-For detailed contributing guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for detailed information on how to get started.
 
 ---
 
