@@ -63,6 +63,8 @@ function MusicPlayer() {
 
   // Fetch song when musicId changes
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchSong() {
       if (!musicId) return;
 
@@ -77,31 +79,40 @@ function MusicPlayer() {
           throw new Error("Song not found");
         }
 
+        if (cancelled) return;
         setSong(songData);
 
         if (songData?.image?.[2]?.url) {
           try {
             const colors = await getImageColors(songData.image[2].url);
-            setBgColor({
-              bg1: colors.averageColor || "#1f2937",
-              bg2: colors.dominantColor || "#111827",
-            });
+            if (!cancelled) {
+              setBgColor({
+                bg1: colors.averageColor || "#1f2937",
+                bg2: colors.dominantColor || "#111827",
+              });
+            }
           } catch (colorError) {
             console.warn("Failed to extract colors:", colorError);
-            setBgColor({ bg1: "#1f2937", bg2: "#111827" });
+            if (!cancelled) {
+              setBgColor({ bg1: "#1f2937", bg2: "#111827" });
+            }
           }
         }
 
-        setIsPlaying(true);
+        if (!cancelled) setIsPlaying(true);
       } catch (error) {
         console.error("Failed to fetch song:", error);
-        setError(error.message || "Failed to load song");
+        if (!cancelled) setError(error.message || "Failed to load song");
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
     fetchSong();
+
+    return () => {
+      cancelled = true;
+    };
   }, [musicId, setIsPlaying]);
 
   // Set queue when songs change
@@ -173,9 +184,7 @@ function MusicPlayer() {
 
   const VolumeIcon = muted || volume === 0 ? VolumeX : volume > 0.5 ? Volume2 : Volume1;
 
-  // Don't render if no musicId
-  if (!musicId) return null;
-
+  // Always render the player; controls will be disabled if no song
   return (
     <>
       {/* Fixed Bottom Music Player */}
@@ -184,8 +193,8 @@ function MusicPlayer() {
           className="h-full w-full backdrop-blur-xl bg-background/95 shadow-lg"
           style={{
             background: song?.image?.[2]?.url
-              ? `linear-gradient(90deg, ${bgColor.bg1}15 0%, ${bgColor.bg2}15 100%), rgba(var(--background), 0.95)`
-              : "rgba(var(--background), 0.95)",
+              ? `linear-gradient(90deg, ${bgColor.bg1}15 0%, ${bgColor.bg2}15 100%), hsl(var(--background) / 0.95)`
+              : "hsl(var(--background) / 0.95)",
           }}
         >
           <div className="h-full max-w-screen-2xl mx-auto px-3 flex items-center justify-between gap-3">
@@ -249,7 +258,7 @@ function MusicPlayer() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShuffle(!shuffle)}
-                  disabled={isLoading || error}
+                  disabled={isLoading || error || !song}
                   className={`p-1.5 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                     shuffle
                       ? "text-green-500 hover:text-green-400 bg-green-500/10"
@@ -262,7 +271,7 @@ function MusicPlayer() {
 
                 <button
                   onClick={playPrevious}
-                  disabled={isLoading || error}
+                  disabled={isLoading || error || !song}
                   className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Previous track"
                 >
@@ -271,7 +280,7 @@ function MusicPlayer() {
 
                 <button
                   onClick={handlePlayPause}
-                  disabled={isLoading || error}
+                  disabled={isLoading || error || !song}
                   className="p-2 rounded-full bg-white text-black hover:scale-105 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mx-1"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
@@ -286,7 +295,7 @@ function MusicPlayer() {
 
                 <button
                   onClick={playNext}
-                  disabled={isLoading || error}
+                  disabled={isLoading || error || !song}
                   className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Next track"
                 >
@@ -296,7 +305,9 @@ function MusicPlayer() {
 
               {/* Progress Bar */}
               <div className="flex items-center gap-2 flex-1 text-[10px] text-muted-foreground ml-3">
-                <span className="w-8 text-right tabular-nums">{formatTime(duration * played)}</span>
+                <span className="w-8 text-right tabular-nums">
+                  {Number.isFinite(duration) ? formatTime(duration * played) : "0:00"}
+                </span>
                 <div className="flex-1 relative">
                   <input
                     type="range"
@@ -310,12 +321,14 @@ function MusicPlayer() {
                     disabled={isLoading || error || !duration}
                     className="w-full h-0.5 bg-muted rounded-full appearance-none cursor-pointer disabled:cursor-not-allowed progress-bar"
                     style={{
-                      background: `linear-gradient(to right, #22c55e 0%, #22c55e ${played * 100}%, rgb(var(--muted)) ${played * 100}%, rgb(var(--muted)) 100%)`,
+                      background: `linear-gradient(to right, #22c55e 0%, #22c55e ${played * 100}%, hsl(var(--muted)) ${played * 100}%, hsl(var(--muted)) 100%)`,
                     }}
                     aria-label="Seek"
                   />
                 </div>
-                <span className="w-8 tabular-nums">{formatTime(duration)}</span>
+                <span className="w-8 tabular-nums">
+                  {Number.isFinite(duration) ? formatTime(duration) : "0:00"}
+                </span>
               </div>
             </div>
 
@@ -339,7 +352,7 @@ function MusicPlayer() {
                   onChange={handleVolumeChange}
                   className="w-full h-0.5 bg-muted rounded-full appearance-none cursor-pointer volume-bar"
                   style={{
-                    background: `linear-gradient(to right, #22c55e 0%, #22c55e ${volume * 100}%, rgb(var(--muted)) ${volume * 100}%, rgb(var(--muted)) 100%)`,
+                    background: `linear-gradient(to right, #22c55e 0%, #22c55e ${volume * 100}%, hsl(var(--muted)) ${volume * 100}%, hsl(var(--muted)) 100%)`,
                   }}
                   aria-label="Volume"
                 />
