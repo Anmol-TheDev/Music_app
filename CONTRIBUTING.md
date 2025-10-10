@@ -133,6 +133,31 @@ pnpm run format
 - Update **README.md** or inline docs if adding new features.
 - Make sure UI is responsive and accessible.
 
+##  Project Structure
+
+Understanding the codebase structure will help you navigate and contribute effectively:
+
+```
+Music_app/
+├── public/              # Static assets
+├── src/
+│   ├── Auth/            # Authentication components
+│   ├── components/      # Reusable UI components
+│   │   ├── Album/       # Album-related components
+│   │   ├── Artist/      # Artist-related components
+│   │   ├── music/       # Music player components
+│   │   ├── playlist/    # Playlist management
+│   │   ├── search/      # Search functionality
+│   │   └── ui/          # Base UI components (Radix)
+│   ├── context/         # React context providers
+│   ├── lib/             # Utility functions
+│   └── zustand/         # State management store
+├── package.json         # Dependencies and scripts
+├── tailwind.config.js   # Tailwind CSS configuration
+├── vite.config.js       # Vite configuration
+└── firebase.js          # Firebase configuration
+```
+
 ## Tech Stack
 
 Our music app is built using modern web technologies to ensure optimal performance and user experience:
