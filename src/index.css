@@ -70,6 +70,35 @@
   }
 }
 
+@layer components {
+  .custom-scrollbar {
+    /* --- For Firefox --- */
+    scrollbar-width: thin;
+    /* This uses the project's theme colors so it works in light/dark mode */
+    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  }
+
+  /* --- For Chrome, Safari, Edge --- */
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 8px; /* <-- Thickness for horizontal scrollbar */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 4px;
+  }
+
+  /* The hover effect you wanted! */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent-foreground));
+  }
+}
+
 ::-webkit-scrollbar {
   width: 12px;
 }
