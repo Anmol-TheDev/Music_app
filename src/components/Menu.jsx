@@ -17,7 +17,7 @@ import { getAuth } from "firebase/auth";
 import { app } from "../Auth/firebase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/SongCustomHooks";
 import {
   Drawer,
@@ -34,6 +34,9 @@ export default function Menu({ song, onOpenChange }) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+  const menuContentRef = useRef(null);
+  const drawerContentRef = useRef(null);
   const handleOpenChange = useCallback(
     (next) => {
       setOpen(next);
@@ -41,6 +44,91 @@ export default function Menu({ song, onOpenChange }) {
     },
     [onOpenChange]
   );
+
+  // Scroll lock when mobile drawer or desktop menu is open
+  useEffect(() => {
+    const shouldLock = open || desktopMenuOpen;
+    const body = document.body;
+    const html = document.documentElement;
+    if (!body || !html) return;
+
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      paddingRight: body.style.paddingRight,
+      scrollBehavior: html.style.scrollBehavior,
+    };
+
+    let scrollY = 0;
+
+    const isWithinAllowed = (target) => {
+      const nodes = [menuContentRef.current, drawerContentRef.current];
+      return nodes.some((n) => n && n.contains(target));
+    };
+
+    const onWheel = (e) => {
+      if (!isWithinAllowed(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    const onTouchMove = (e) => {
+      if (!isWithinAllowed(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    const onKeyDown = (e) => {
+      const code = e.code || e.key;
+      if (
+        ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", "Space", " "].includes(code)
+      ) {
+        if (!isWithinAllowed(e.target)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
+    if (shouldLock) {
+      // preserve scroll position and avoid layout shift
+      scrollY = window.scrollY;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth > 0) {
+        body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      html.style.scrollBehavior = "auto";
+      body.style.overflow = "hidden";
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.width = "100%";
+
+      document.addEventListener("wheel", onWheel, { passive: false, capture: true });
+      document.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+      document.addEventListener("keydown", onKeyDown, { passive: false, capture: true });
+    }
+
+    return () => {
+      if (shouldLock) {
+        document.removeEventListener("wheel", onWheel, { capture: true });
+        document.removeEventListener("touchmove", onTouchMove, { capture: true });
+        document.removeEventListener("keydown", onKeyDown, { capture: true });
+
+        body.style.overflow = prev.overflow;
+        body.style.position = prev.position;
+        body.style.top = prev.top;
+        body.style.width = prev.width;
+        body.style.paddingRight = prev.paddingRight;
+        html.style.scrollBehavior = prev.scrollBehavior;
+        if (prev.top) {
+          const y = parseInt(prev.top || "0", 10) * -1;
+          window.scrollTo(0, y);
+        }
+      }
+    };
+  }, [open, desktopMenuOpen]);
 
   // Check if user is authenticated
   const auth = getAuth(app);
@@ -139,6 +227,7 @@ export default function Menu({ song, onOpenChange }) {
               overlayClassName="backdrop-blur-xl bg-black/30"
               className="inset-0 h-[100dvh] bg-transparent !rounded-t-3xl !border-none !bg-transparent p-0"
               aria-describedby="song-actions-desc"
+              ref={drawerContentRef}
             >
               <DrawerHeader className="sr-only">
                 <DrawerTitle>Song actions</DrawerTitle>
@@ -327,6 +416,7 @@ export default function Menu({ song, onOpenChange }) {
               className="cursor-pointer hover:bg-accent transition-colors rounded-md p-2"
               aria-label="Open actions menu"
               title="Actions"
+              onClick={() => setDesktopMenuOpen(true)}
             >
               <EllipsisVertical className="w-5 h-5" />
             </MenubarTrigger>
@@ -335,6 +425,10 @@ export default function Menu({ song, onOpenChange }) {
               className="min-w-[240px] mb-3 mr-6 p-1 bg-black/90 text-white border border-white/10 rounded-lg shadow-2xl"
               align="start"
               sideOffset={6}
+              ref={menuContentRef}
+              onPointerDownOutside={() => setDesktopMenuOpen(false)}
+              onEscapeKeyDown={() => setDesktopMenuOpen(false)}
+              onInteractOutside={() => setDesktopMenuOpen(false)}
             >
               {/* Playback group */}
               <MenubarLabel className="px-2 py-1 text-xs text-muted-foreground">
