@@ -139,7 +139,7 @@ function MusicPlayer() {
               variant="outline"
               aria-label="Open player"
               style={{ animationDuration: "5s" }}
-              className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition-colors ${
+              className={`absolute right-6 bottom-6 p-0 h-16 w-16 rounded-full overflow-hidden shadow-lg ring-1 ring-white/10 hover:ring-white/30 transition-colors transition-shadow ${
                 isPlaying && (song?.image?.[1]?.url ? "animate-spin" : "")
               }`}
             >
