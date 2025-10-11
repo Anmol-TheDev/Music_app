@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "../ui/card";
 import { PlayCircle, ArrowLeft, Play, Pause, Eye } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import Api from "../../Api";
 import { useStore } from "../../zustand/store";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
 import Menu from "../Menu";
@@ -35,14 +34,20 @@ export default function CuratedPlaylistDetail() {
   const fetchPlaylistDetails = async () => {
     try {
       setLoading(true);
-      const response = await Api(`/api/playlists?id=${playlistId}`);
 
-      if (response.data.success && response.data.data) {
-        setPlaylist(response.data.data);
-        setSongs(response.data.data.songs || []);
+      // Use backup API that actually returns songs
+      const response = await fetch(
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${playlistId}`
+      );
+      const data = await response.json();
 
-        if (response.data.data.songs && response.data.data.songs.length > 0) {
-          setQueue(response.data.data.songs);
+      if (data.success && data.data) {
+        const playlistData = data.data;
+        setPlaylist(playlistData);
+
+        if (playlistData.songs && playlistData.songs.length > 0) {
+          setSongs(playlistData.songs);
+          setQueue(playlistData.songs);
         }
       }
     } catch (error) {
@@ -111,7 +116,9 @@ export default function CuratedPlaylistDetail() {
                 <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wider">
                   Curated Playlist
                 </p>
-                <h1 className="text-3xl md:text-4xl font-bold mb-3 truncate">{playlist.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 truncate">
+                  {playlist.name || playlist.title}
+                </h1>
                 {playlist.subtitle && (
                   <p className="text-base text-muted-foreground mb-3">{playlist.subtitle}</p>
                 )}
@@ -130,75 +137,85 @@ export default function CuratedPlaylistDetail() {
                   )}
                 </div>
 
-                <button
-                  onClick={handlePlayAll}
-                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105"
-                >
-                  <Play size={24} fill="currentColor" />
-                  Play All
-                </button>
+                {songs.length > 0 && (
+                  <button
+                    onClick={handlePlayAll}
+                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 transition-all duration-200 hover:scale-105"
+                  >
+                    <Play size={24} fill="currentColor" />
+                    Play All
+                  </button>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="space-y-4 border-t pt-4">
-          <h2 className="text-2xl font-semibold">Tracks</h2>
+        {songs.length > 0 ? (
+          <div className="space-y-4 border-t pt-4">
+            <h2 className="text-2xl font-semibold">Tracks</h2>
 
-          <ul className="space-y-2">
-            {songs.map((song, index) => (
-              <li
-                key={song.id}
-                className={`${
-                  song.id === musicId ? "bg-secondary" : "bg-background"
-                } rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer`}
-              >
-                <div className="flex items-center justify-between p-3">
-                  <div className="flex items-center space-x-4 flex-1 min-w-0">
-                    <span className="text-sm w-6">{index + 1}.</span>
-                    <img
-                      src={song.image?.[1]?.url || song.image?.[0]?.url}
-                      alt={song.name}
-                      loading="lazy"
-                      className="w-12 h-12 rounded-md"
-                    />
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-medium truncate">{song.name}</span>
-                      <span className="text-sm text-muted-foreground truncate">
-                        {song.artists?.primary?.[0]?.name || "Unknown Artist"}
+            <ul className="space-y-2">
+              {songs.map((song, index) => (
+                <li
+                  key={song.id || index}
+                  className={`${
+                    song.id === musicId ? "bg-secondary" : "bg-background"
+                  } rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer`}
+                >
+                  <div className="flex items-center justify-between p-3">
+                    <div className="flex items-center space-x-4 flex-1 min-w-0">
+                      <span className="text-sm w-6">{index + 1}.</span>
+                      <img
+                        src={song.image?.[1]?.url || song.image?.[0]?.url || song.image}
+                        alt={song.name || song.title}
+                        loading="lazy"
+                        className="w-12 h-12 rounded-md"
+                      />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="font-medium truncate">{song.name || song.title}</span>
+                        <span className="text-sm text-muted-foreground truncate">
+                          {song.artists?.primary?.[0]?.name ||
+                            song.primaryArtists ||
+                            "Unknown Artist"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <span className="text-sm text-muted-foreground hidden sm:block">
+                        {Math.floor(song.duration / 60)}:
+                        {(song.duration % 60).toString().padStart(2, "0")}
                       </span>
+                      <Like songId={song.id} />
+                      {isPlaying && song.id === musicId ? (
+                        <Pause
+                          className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsPlaying(false);
+                          }}
+                        />
+                      ) : (
+                        <PlayCircle
+                          className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSongClick(song);
+                          }}
+                        />
+                      )}
+                      <Menu song={song} />
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="text-sm text-muted-foreground hidden sm:block">
-                      {Math.floor(song.duration / 60)}:
-                      {(song.duration % 60).toString().padStart(2, "0")}
-                    </span>
-                    <Like songId={song.id} />
-                    {isPlaying && song.id === musicId ? (
-                      <Pause
-                        className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsPlaying(false);
-                        }}
-                      />
-                    ) : (
-                      <PlayCircle
-                        className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSongClick(song);
-                        }}
-                      />
-                    )}
-                    <Menu song={song} />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-40 border rounded-lg">
+            <p className="text-muted-foreground">No songs found in this playlist</p>
+          </div>
+        )}
       </div>
     </ScrollArea>
   );
