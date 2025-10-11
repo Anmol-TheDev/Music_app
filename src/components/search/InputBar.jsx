@@ -35,6 +35,11 @@ export default function InputBar() {
     }
   };
 
+  function decodeHTML(html) {
+    const parser = new DOMParser();
+    return parser.parseFromString(html || "", "text/html").documentElement.textContent;
+  }
+
   useEffect(() => {
     const search = localStorage.getItem("search");
     if (search) {
@@ -62,7 +67,7 @@ export default function InputBar() {
         const data = res.data.data.results.map((res) => {
           return {
             id: res["id"],
-            name: res["name"],
+            name: decodeHTML(res["name"]),
           };
         });
 
