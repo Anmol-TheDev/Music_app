@@ -9,6 +9,10 @@ export const useFetch = create((set) => ({
   albums: null,
   artists: null,
   Topresult: null,
+  trendingTracks: null,
+  newReleases: null,
+  topArtistsCarousel: null,
+  popularPlaylists: null,
   setTopresult: (props) => set({ Topresult: props }),
   fetchSongs: async (search) => {
     try {
@@ -66,6 +70,61 @@ export const useFetch = create((set) => ({
       } else set({ artists: false });
     } catch (error) {
       console.error(error);
+    }
+  },
+  fetchTrendingTracks: async () => {
+    try {
+      const res = await Api(`/api/search/songs?query=trending hits 2025`);
+      if (res.data.data.results[0]) {
+        set({ trendingTracks: res.data.data.results.slice(0, 10) });
+      } else {
+        set({ trendingTracks: false });
+      }
+    } catch (error) {
+      console.error("Error fetching trending tracks:", error);
+      set({ trendingTracks: false });
+    }
+  },
+
+  fetchNewReleases: async () => {
+    try {
+      const res = await Api(`/api/search/albums?query=new releases 2025`);
+      if (res.data.data.results[0]) {
+        set({ newReleases: res.data.data.results.slice(0, 10) });
+      } else {
+        set({ newReleases: false });
+      }
+    } catch (error) {
+      console.error("Error fetching new releases:", error);
+      set({ newReleases: false });
+    }
+  },
+
+  fetchTopArtistsCarousel: async () => {
+    try {
+      const res = await Api(`/api/search/artists?query=top indian artists`);
+      if (res.data.data.results[0]) {
+        set({ topArtistsCarousel: res.data.data.results.slice(0, 10) });
+      } else {
+        set({ topArtistsCarousel: false });
+      }
+    } catch (error) {
+      console.error("Error fetching top artists:", error);
+      set({ topArtistsCarousel: false });
+    }
+  },
+
+  fetchPopularPlaylists: async () => {
+    try {
+      const res = await Api(`/api/search/playlists?query=popular bollywood playlists`);
+      if (res.data.data.results[0]) {
+        set({ popularPlaylists: res.data.data.results.slice(0, 10) });
+      } else {
+        set({ popularPlaylists: false });
+      }
+    } catch (error) {
+      console.error("Error fetching popular playlists:", error);
+      set({ popularPlaylists: false });
     }
   },
 }));

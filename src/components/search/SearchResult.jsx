@@ -8,6 +8,10 @@ import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
+import TrendingTracks from "../recommendations/TrendingTracks";
+import NewReleases from "../recommendations/NewReleases";
+import TopArtistsCarousel from "../recommendations/TopArtistsCarousel";
+import PopularPlaylists from "../recommendations/PopularPlaylists";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function SearchComponent() {
@@ -125,7 +129,7 @@ export default function SearchComponent() {
               songs && (
                 <div className="w-[90vw] sm:w-full md:w-1/3 lg:w-1/3">
                   <h2 className={`text-xl sm:text-2xl font-bold mb-4 ${isMobile ? "mt-4" : ""}`}>
-                    Top Result
+                    Top Result...
                   </h2>
                   <div className="relative group">
                     <Card>
@@ -223,6 +227,13 @@ export default function SearchComponent() {
                 </ScrollArea>
               </div>
             )}
+          </div>
+          {/* Reccomendations */}
+          <div className="mt-8 space-y-8">
+            <TrendingTracks />
+            <NewReleases />
+            <TopArtistsCarousel />
+            <PopularPlaylists />
           </div>
           <Albums search={search} />
           <RandomArtists search={search} />
