@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import Api from "../Api";
 
-// Constants
-const INITIAL_SONGS_LIMIT = 5;
-const SUGGESTIONS_LIMIT = 30;
+const INITIAL_SONGS_LIMIT = 1;
+const SUGGESTIONS_LIMIT = 9;
+const BASE_JIOSAAVAN_URL = "https://jiosaavan-api-2-harsh-patel.vercel.app";
 export const useFetch = create((set) => ({
   songs: null,
   albums: null,
@@ -19,7 +19,7 @@ export const useFetch = create((set) => ({
         const initialSongs = res.data.data.results.slice(0, INITIAL_SONGS_LIMIT);
 
         const suggestionsRes = await fetch(
-          `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${topResult.id}/suggestions?limit=${SUGGESTIONS_LIMIT}`
+          `${BASE_JIOSAAVAN_URL}/api/songs/${topResult.id}/suggestions?limit=${SUGGESTIONS_LIMIT}`
         );
         const suggestionsData = await suggestionsRes.json();
 
@@ -80,8 +80,10 @@ export const useStore = create((set, get) => ({
   currentSong: null,
   isPlaying: false,
   queue: [],
+  songList: [],
+  currentList: [],
+  previous: [],
   likedSongs: [],
-  currentIndex: 0,
   volume:
     typeof window !== "undefined"
       ? localStorage.getItem("volume") === null
@@ -94,56 +96,44 @@ export const useStore = create((set, get) => ({
   played: 0,
   duration: 0,
   shuffleHistory: [],
-  shuffleHistoryIndex: -1,
   shuffledQueue: [],
+  autoPlay: false,
+  playedSongIds: new Set(),
 
   setPlaylist: (prop) =>
     set((state) => ({
       playlist: [...state.playlist, prop],
     })),
   emptyPlaylist: () => set({ playlist: [] }),
+  setAutoPlay: (prop) => set({ autoPlay: prop }),
   setIsUser: (prop) => set({ isUser: prop }),
   setDialogOpen: (prop) => set({ dialogOpen: prop }),
 
   setMusicId: (id) => {
-    const { queue, shuffle, shuffleHistory, shuffleHistoryIndex } = get();
-    const newIndex = queue.findIndex((song) => song.id === id);
-    const currentSong = queue.find((song) => song.id === id);
+    const { shuffle, currentList } = get();
 
-    if (!currentSong) {
-      console.warn(`Song with id ${id} not found in queue`);
-      return;
-    }
+    if (!Array.isArray(currentList) || currentList.length === 0) return;
 
-    if (shuffle) {
-      let newShuffleHistory = [...shuffleHistory];
-      let newShuffleHistoryIndex = shuffleHistoryIndex;
+    const currentSong = currentList.find((s) => s.id === id);
+    if (!currentSong) return console.warn(`Song with id ${id} not found`);
+    const newQueue = currentList.slice(currentList.indexOf(currentSong) + 1);
+    const newState = {
+      musicId: id,
+      currentSong,
+      queue: newQueue,
+      songList: currentList,
+      currentAlbumId: null,
+      currentArtistId: null,
+      played: 0,
+      isPlaying: false,
+      autoPlay: false,
+      shuffleHistory: shuffle ? [currentSong] : [],
+      shuffledQueue: shuffle ? [...newQueue].sort(() => Math.random() - 0.5) : [],
+      previous: [],
+      playedSongIds: new Set([id]),
+    };
 
-      newShuffleHistory = [...shuffleHistory, currentSong];
-      newShuffleHistoryIndex = newShuffleHistory.length - 1;
-
-      set({
-        musicId: id,
-        currentAlbumId: null,
-        currentArtistId: null,
-        currentSong: currentSong,
-        currentIndex: newIndex >= 0 ? newIndex : 0,
-        played: 0,
-        isPlaying: false,
-        shuffleHistory: newShuffleHistory,
-        shuffleHistoryIndex: newShuffleHistoryIndex,
-      });
-    } else {
-      set({
-        musicId: id,
-        currentAlbumId: null,
-        currentArtistId: null,
-        currentSong: currentSong,
-        currentIndex: newIndex >= 0 ? newIndex : 0,
-        played: 0,
-        isPlaying: false,
-      });
-    }
+    set(newState);
   },
 
   setAlbumId: (id) => set({ currentAlbumId: id }),
@@ -160,16 +150,20 @@ export const useStore = create((set, get) => ({
         : shuffledQueue;
 
     const preservedHistory = shuffle && currentSong ? [currentSong] : [];
-    const preservedIndex = shuffle && currentSong ? 0 : -1;
 
     set({
       queue: prop,
-      currentIndex: 0,
       shuffledQueue: filteredShuffledQueue,
       shuffleHistory: preservedHistory,
-      shuffleHistoryIndex: preservedIndex,
     });
   },
+
+  setCurrentList: (prop) => {
+    set({
+      currentList: prop,
+    });
+  },
+
   setLikedSongs: (songs) => set({ likedSongs: songs }),
   addLikedSong: (songId) =>
     set((state) => ({
@@ -189,7 +183,7 @@ export const useStore = create((set, get) => ({
   },
   setMuted: (muted) => set({ muted }),
   setShuffle: (shuffle) => {
-    const { queue, currentSong } = get();
+    const { queue, currentSong, previous, shuffleHistory } = get();
     if (shuffle) {
       const shuffledQueue = [...queue].sort(() => Math.random() - 0.5);
 
@@ -197,26 +191,24 @@ export const useStore = create((set, get) => ({
         ? shuffledQueue.filter((song) => song.id !== currentSong.id)
         : shuffledQueue;
 
-      let shuffleHistory = [];
-      let shuffleHistoryIndex = -1;
-
+      // Migrate previous history when turning shuffle ON
+      let newShuffleHistory = [...previous];
       if (currentSong) {
-        shuffleHistory = [currentSong];
-        shuffleHistoryIndex = 0;
+        newShuffleHistory = [...previous, currentSong];
       }
 
       set({
         shuffle: true,
         shuffledQueue: filteredShuffledQueue,
-        shuffleHistory: shuffleHistory,
-        shuffleHistoryIndex: shuffleHistoryIndex,
+        shuffleHistory: newShuffleHistory,
       });
     } else {
+      // Migrate shuffle history back to previous when turning shuffle OFF
       set({
         shuffle: false,
         shuffledQueue: [],
+        previous: shuffleHistory,
         shuffleHistory: [],
-        shuffleHistoryIndex: -1,
       });
     }
   },
@@ -224,16 +216,33 @@ export const useStore = create((set, get) => ({
   setPlayed: (played) => set({ played }),
   setDuration: (duration) => set({ duration }),
 
-  addToQueue: (song) =>
-    set((state) => ({
-      queue: [...state.queue, song],
-    })),
+  addToQueue: (song) => {
+    const { autoPlay, shuffle } = get();
+    if (autoPlay) {
+      set((state) => ({
+        queue: [song],
+        autoPlay: false,
+        shuffledQueue: shuffle ? [song] : state.shuffledQueue,
+      }));
+      return;
+    } else {
+      set((state) => {
+        const nextQueue = [...state.queue, song];
+        const nextShuffled = shuffle
+          ? [...state.shuffledQueue, song].sort(() => Math.random() - 0.5)
+          : state.shuffledQueue;
+        return {
+          queue: nextQueue,
+          shuffledQueue: nextShuffled,
+        };
+      });
+    }
+  },
 
   addToQueueNext: (song) =>
     set((state) => {
-      const insertPos = Math.min(state.currentIndex + 1, state.queue.length);
       const newQueue = [...state.queue];
-      newQueue.splice(insertPos, 0, song);
+      newQueue.unshift(song);
 
       // Update shuffled queue if shuffle is active
       let newShuffledQueue = state.shuffledQueue;
@@ -250,116 +259,186 @@ export const useStore = create((set, get) => ({
   playNext: () => {
     const {
       queue,
-      currentIndex,
+      songList,
       shuffle,
       repeat,
       shuffleHistory,
-      shuffleHistoryIndex,
       shuffledQueue,
+      previous,
+      currentSong,
     } = get();
-    if (queue.length === 0) return;
 
     if (repeat === "one") {
       set({ played: 0 });
       return;
     }
 
-    if (shuffle) {
-      const nextHistoryIndex = shuffleHistoryIndex + 1;
-
-      if (nextHistoryIndex < shuffleHistory.length) {
-        const nextSong = shuffleHistory[nextHistoryIndex];
-        set({
-          shuffleHistoryIndex: nextHistoryIndex,
-          musicId: nextSong.id,
-          currentSong: nextSong,
+    if (queue.length === 0) {
+      if (repeat === "all") {
+        if (!songList || songList.length === 0) return;
+        set((state) => ({
+          musicId: songList[0].id,
+          currentSong: songList[0],
+          queue: songList.slice(1),
           played: 0,
           isPlaying: false,
-        });
+          previous: [...previous, currentSong],
+          playedSongIds: new Set([...state.playedSongIds, songList[0].id]),
+        }));
       } else {
-        if (shuffledQueue.length === 0) {
-          if (repeat === "all") {
-            const newShuffledQueue = [...queue].sort(() => Math.random() - 0.5);
-            const firstSong = newShuffledQueue[0];
-            const remainingQueue = newShuffledQueue.slice(1);
+        const { currentSong, currentAlbumId, currentArtistId, playedSongIds } = get();
 
-            set({
-              shuffledQueue: remainingQueue,
-              shuffleHistory: [firstSong],
-              shuffleHistoryIndex: 0,
-              musicId: firstSong.id,
-              currentSong: firstSong,
-              played: 0,
-              isPlaying: false,
-            });
-          }
-          return;
+        if (currentAlbumId === null && currentArtistId === null && currentSong?.id) {
+          (async () => {
+            try {
+              const res = await fetch(
+                `${BASE_JIOSAAVAN_URL}/api/songs/${currentSong.id}/suggestions?limit=10`
+              );
+              const data = await res.json();
+              const suggested = data?.data || [];
+
+              // Filter out songs that have already been played
+              const filteredSuggestions = suggested.filter((song) => !playedSongIds.has(song.id));
+
+              if (filteredSuggestions.length > 0) {
+                const [first, ...rest] = filteredSuggestions;
+                set((state) => ({
+                  queue: rest,
+                  shuffledQueue: state.shuffle
+                    ? rest.slice().sort(() => Math.random() - 0.5)
+                    : state.shuffledQueue,
+                  shuffleHistory:
+                    state.shuffle && state.currentSong
+                      ? [...state.shuffleHistory, state.currentSong]
+                      : state.shuffleHistory,
+                  musicId: first.id,
+                  currentSong: first,
+                  played: 0,
+                  isPlaying: true,
+                  autoPlay: true,
+                  previous: state.currentSong
+                    ? [...state.previous, state.currentSong]
+                    : state.previous,
+                  playedSongIds: new Set([...state.playedSongIds, first.id]),
+                }));
+              } else if (suggested.length > 0) {
+                // If all suggestions were already played, clear history and use fresh suggestions
+                const [first, ...rest] = suggested;
+                set((state) => ({
+                  queue: rest,
+                  shuffledQueue: state.shuffle
+                    ? rest.slice().sort(() => Math.random() - 0.5)
+                    : state.shuffledQueue,
+                  shuffleHistory:
+                    state.shuffle && state.currentSong
+                      ? [...state.shuffleHistory, state.currentSong]
+                      : state.shuffleHistory,
+                  musicId: first.id,
+                  currentSong: first,
+                  played: 0,
+                  isPlaying: true,
+                  autoPlay: true,
+                  previous: state.currentSong
+                    ? [...state.previous, state.currentSong]
+                    : state.previous,
+                  playedSongIds: new Set([first.id]),
+                }));
+              }
+            } catch (error) {
+              console.error("Failed to fetch suggested songs:", error);
+            }
+          })();
         }
-
-        const randomIndex = Math.floor(Math.random() * shuffledQueue.length);
-        const nextSong = shuffledQueue[randomIndex];
-
-        const newShuffleHistory = [...shuffleHistory, nextSong];
-        const newShuffledQueue = shuffledQueue.filter((_, index) => index !== randomIndex);
-
-        set({
-          shuffleHistory: newShuffleHistory,
-          shuffleHistoryIndex: newShuffleHistory.length - 1,
-          shuffledQueue: newShuffledQueue,
-          musicId: nextSong.id,
-          currentSong: nextSong,
-          played: 0,
-          isPlaying: false,
-        });
+        return;
       }
-    } else {
-      let nextIndex = currentIndex + 1;
-      if (nextIndex >= queue.length) {
-        if (repeat === "all") nextIndex = 0;
-        else return;
+    }
+
+    if (shuffle) {
+      if (shuffledQueue.length === 0) {
+        if (repeat === "all") {
+          const newShuffledQueue = [...songList].sort(() => Math.random() - 0.5);
+          const firstSong = newShuffledQueue[0];
+          const remainingQueue = newShuffledQueue.slice(1);
+
+          set((state) => ({
+            shuffledQueue: remainingQueue,
+            shuffleHistory: [...shuffleHistory, firstSong],
+            musicId: firstSong.id,
+            currentSong: firstSong,
+            played: 0,
+            isPlaying: false,
+            playedSongIds: new Set([...state.playedSongIds, firstSong.id]),
+          }));
+        }
+        return;
       }
-      set({
-        currentIndex: nextIndex,
-        musicId: queue[nextIndex]?.id,
-        currentSong: queue[nextIndex],
+
+      let nextSong = shuffledQueue[0];
+
+      set((state) => ({
+        shuffleHistory: [...shuffleHistory, currentSong],
+        shuffledQueue: shuffledQueue.slice(1),
+        musicId: nextSong.id,
+        currentSong: nextSong,
         played: 0,
         isPlaying: false,
-      });
+        playedSongIds: new Set([...state.playedSongIds, nextSong.id]),
+      }));
+    } else {
+      let nextSong = queue[0];
+      set((state) => ({
+        musicId: nextSong?.id,
+        currentSong: nextSong,
+        played: 0,
+        isPlaying: false,
+        queue: queue.slice(1),
+        previous: [...previous, currentSong],
+        playedSongIds: new Set([...state.playedSongIds, nextSong?.id]),
+      }));
     }
   },
 
   playPrevious: () => {
-    const { queue, currentIndex, shuffle, shuffleHistory, shuffleHistoryIndex } = get();
-    if (queue.length === 0) return;
+    const { queue, shuffle, shuffleHistory, shuffledQueue, previous, currentSong } = get();
 
     if (shuffle) {
-      if (shuffleHistoryIndex > 0) {
-        const prevSong = shuffleHistory[shuffleHistoryIndex - 1];
+      const newHistory = [...shuffleHistory];
+      const newShuffledQueue = [...shuffledQueue];
+      newShuffledQueue.unshift(currentSong);
+      if (shuffleHistory.length === 0) {
         set({
-          shuffleHistoryIndex: shuffleHistoryIndex - 1,
-          musicId: prevSong.id,
-          currentSong: prevSong,
+          shuffledQueue: newShuffledQueue,
           played: 0,
-          isPlaying: false,
         });
-      } else if (shuffleHistoryIndex === 0) {
-        const firstSong = shuffleHistory[0];
-        set({
-          musicId: firstSong.id,
-          currentSong: firstSong,
-          played: 0,
-          isPlaying: false,
-        });
+        return;
       }
-    } else {
-      let prevIndex = currentIndex - 1;
-      if (prevIndex < 0) prevIndex = queue.length - 1;
+      const prevSong = newHistory.pop();
+
       set({
-        currentIndex: prevIndex,
-        musicId: queue[prevIndex]?.id,
-        currentSong: queue[prevIndex],
+        musicId: prevSong?.id,
+        currentSong: prevSong,
         played: 0,
         isPlaying: false,
+        shuffledQueue: newShuffledQueue,
+        shuffleHistory: newHistory,
+      });
+    } else {
+      const newPrevious = [...previous];
+      const newQueue = [...queue];
+      if (newPrevious.length === 0) {
+        set({ played: 0 });
+        return;
+      }
+      const prevSong = newPrevious.pop();
+      newQueue.unshift(currentSong);
+
+      set({
+        musicId: prevSong.id,
+        currentSong: prevSong,
+        played: 0,
+        isPlaying: false,
+        queue: newQueue,
+        previous: newPrevious,
       });
     }
   },

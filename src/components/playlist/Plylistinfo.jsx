@@ -9,6 +9,7 @@ import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
 import { Play, Heart, Clock, Pause, Music } from "lucide-react";
 import { toast } from "sonner";
+import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function Plylistinfo() {
   const url = useLocation();
@@ -17,7 +18,8 @@ export default function Plylistinfo() {
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { isPlaying, setIsPlaying, setMusicId, musicId, setQueue } = useStore();
+  const { isPlaying, setIsPlaying, musicId, setCurrentList } = useStore();
+  const { handleSongClick } = useSongHandlers();
   let count = playlistData.slice(0, 4).length;
 
   useEffect(() => {
@@ -39,9 +41,7 @@ export default function Plylistinfo() {
             const songsResponse = await fetchSongsByIds(playlist.songs);
             if (Array.isArray(songsResponse?.data)) {
               const songMap = new Map(songsResponse.data.map((song) => [song.id, song]));
-              const orderedSongs = playlist.songs
-                .map((id) => songMap.get(id))
-                .filter(Boolean);
+              const orderedSongs = playlist.songs.map((id) => songMap.get(id)).filter(Boolean);
               setPlaylistData(orderedSongs);
             } else {
               toast.error("Could not load songs for this playlist.");
@@ -62,18 +62,9 @@ export default function Plylistinfo() {
 
   useEffect(() => {
     if (playlistData.length > 0) {
-      setQueue(playlistData);
+      setCurrentList(playlistData);
     }
-  }, [playlistData, setQueue]);
-
-  function handleSongClick(song) {
-    if (song.id !== musicId) {
-      setMusicId(song.id);
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
-  }
+  }, [playlistData, setCurrentList]);
 
   if (isLoading) {
     return (
@@ -92,22 +83,25 @@ export default function Plylistinfo() {
               <div className="w-64 h-64 border rounded-lg overflow-hidden flex-shrink-0">
                 <div className={`flex flex-wrap w-full h-full`}>
                   {playlistData.length > 0 ? (
-                    playlistData.slice(0, 4).map((item, i) => (
-                      <img
-                        key={item.id}
-                        src={item.image?.[2]?.url || item.image?.[1]?.url || item.image?.[0]?.url || "/api/placeholder/48/48"}
-                        alt={`song ${i + 1}`}
-                        className={`object-cover${
-                          count === 1 ? " w-full h-full" : ""
-                        }${count === 2 ? " w-1/2 h-full" : ""}${
-                          count === 3
-                            ? i === 0
-                              ? " w-full h-1/2"
-                              : " w-1/2 h-1/2"
-                            : ""
-                        }${count === 4 ? " w-1/2 h-1/2" : ""}`}
-                      />
-                    ))
+                    playlistData
+                      .slice(0, 4)
+                      .map((item, i) => (
+                        <img
+                          key={item.id}
+                          src={
+                            item.image?.[2]?.url ||
+                            item.image?.[1]?.url ||
+                            item.image?.[0]?.url ||
+                            "/api/placeholder/48/48"
+                          }
+                          alt={`song ${i + 1}`}
+                          className={`object-cover${
+                            count === 1 ? " w-full h-full" : ""
+                          }${count === 2 ? " w-1/2 h-full" : ""}${
+                            count === 3 ? (i === 0 ? " w-full h-1/2" : " w-1/2 h-1/2") : ""
+                          }${count === 4 ? " w-1/2 h-1/2" : ""}`}
+                        />
+                      ))
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <Music className="w-16 h-16 text-muted-foreground" />
