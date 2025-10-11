@@ -31,7 +31,7 @@ function RandomArtists({ search }) {
           }`}
         >
           <h2 className="text-2xl font-bold mb-4">Artists</h2>
-          <div className="flex space-x-4 overflow-x-scroll custom-scrollbar">
+          <div className="flex space-x-4 overflow-x-scroll overflow-y-hidden custom-scrollbar">
             {artists?.map((artist, i) => (
               <div
                 key={i}

@@ -69,53 +69,42 @@
     overflow: hidden;
   }
 }
-
 @layer components {
   .custom-scrollbar {
-    /* --- For Firefox --- */
+    /* For Firefox */
     scrollbar-width: thin;
-    /* This uses the project's theme colors so it works in light/dark mode */
-    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
-  }
+    scrollbar-color: hsl(var(--primary)) hsl(var(--card)); /* Thumb track, uses primary for thumb */
 
-  /* --- For Chrome, Safari, Edge --- */
-  .custom-scrollbar::-webkit-scrollbar {
-    height: 8px; /* <-- Thickness for horizontal scrollbar */
-  }
+    /* For Webkit browsers (Chrome, Safari, Edge) */
+    &::-webkit-scrollbar {
+      height: 14px; /* Thicker scrollbar height */
+      background-color: transparent; /* Make track transparent to show content or main background */
+      border-radius: 7px; /* Rounded track edges */
+    }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 4px;
-  }
+    &::-webkit-scrollbar-thumb {
+      /* Gradient for the thumb */
+      background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
+      border-radius: 7px; /* Pill shape */
+      border: 2px solid hsl(var(--background)); /* Border matching background for "padding" effect */
+      box-shadow: 0 0 8px hsla(var(--primary), 0.6); /* Vibrant glow */
+      transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease; /* Smooth transition */
+    }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground));
-    border-radius: 4px;
-  }
+    &::-webkit-scrollbar-thumb:hover {
+      /* Reverse gradient on hover, or use a single brighter accent */
+      background: linear-gradient(45deg, hsl(var(--accent)), hsl(var(--primary)));
+      box-shadow: 0 0 12px hsla(var(--primary-foreground), 0.8); /* Stronger glow on hover */
+    }
 
-  /* The hover effect you wanted! */
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--accent-foreground));
+    /* For the scrollbar corner (if vertical & horizontal scrollbars meet) */
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
   }
 }
-
-::-webkit-scrollbar {
-  width: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 .float_debouncer {
   position: absolute;
   left: 0rem;
