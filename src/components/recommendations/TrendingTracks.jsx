@@ -3,17 +3,29 @@ import { useFetch, useStore } from "../../zustand/store";
 import { Card, CardContent } from "../ui/card";
 import { Play, Pause } from "lucide-react";
 import RecommendationSection from "./RecommendationSection";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
 
 export default function TrendingTracks() {
   const { fetchTrendingTracks, trendingTracks } = useFetch();
   const musicId = useStore((state) => state.musicId);
   const isPlaying = useStore((state) => state.isPlaying);
-  const { handleSongClick } = useSongHandlers();
+  const setQueue = useStore((state) => state.setQueue);
+  const setMusicId = useStore((state) => state.setMusicId);
+  const setIsPlaying = useStore((state) => state.setIsPlaying);
 
   useEffect(() => {
     fetchTrendingTracks();
   }, []);
+
+  const handlePlaySong = (song) => {
+    if (!trendingTracks) return;
+
+    // Set the entire trending tracks as queue
+    setQueue(trendingTracks);
+
+    // Set the clicked song as current
+    setMusicId(song.id);
+    setIsPlaying(true);
+  };
 
   if (!trendingTracks || trendingTracks.length === 0) return null;
 
@@ -37,7 +49,7 @@ export default function TrendingTracks() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      useStore.getState().setIsPlaying(false);
+                      setIsPlaying(false);
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-xl transition-all duration-200 transform hover:scale-110"
                   >
@@ -47,7 +59,7 @@ export default function TrendingTracks() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleSongClick(song);
+                      handlePlaySong(song);
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-xl transition-all duration-200 transform hover:scale-110"
                   >

@@ -3,7 +3,7 @@ import { useFetch, useStore } from "../../zustand/store";
 import { Card, CardContent } from "../ui/card";
 import { Play } from "lucide-react";
 import RecommendationSection from "./RecommendationSection";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, createSearchParams } from "react-router-dom";
 
 export default function NewReleases() {
   const { fetchNewReleases, newReleases } = useFetch();
@@ -16,7 +16,12 @@ export default function NewReleases() {
 
   const handleAlbumClick = (albumId) => {
     setAlbumId(albumId);
-    navigate(`/album/${albumId}`);
+    // Match your existing Album navigation pattern
+    const path = {
+      pathname: "/album",
+      search: createSearchParams({ Id: albumId }).toString(),
+    };
+    navigate(path);
   };
 
   if (!newReleases || newReleases.length === 0) return null;
@@ -38,7 +43,13 @@ export default function NewReleases() {
                 className="w-full aspect-square object-cover rounded-lg shadow-lg"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
-                <button className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-xl transition-all duration-200 transform hover:scale-110">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAlbumClick(album.id);
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-xl transition-all duration-200 transform hover:scale-110"
+                >
                   <Play size={28} />
                 </button>
               </div>

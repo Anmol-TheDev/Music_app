@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useFetch, useStore } from "../../zustand/store";
 import { Card, CardContent } from "../ui/card";
 import RecommendationSection from "./RecommendationSection";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, createSearchParams } from "react-router-dom";
 
 export default function TopArtistsCarousel() {
   const { fetchTopArtistsCarousel, topArtistsCarousel } = useFetch();
@@ -15,7 +15,12 @@ export default function TopArtistsCarousel() {
 
   const handleArtistClick = (artistId) => {
     setArtistId(artistId);
-    navigate(`/artist/${artistId}`);
+    // Match your existing Artist navigation pattern
+    const path = {
+      pathname: "/artist",
+      search: createSearchParams({ Id: artistId }).toString(),
+    };
+    navigate(path);
   };
 
   if (!topArtistsCarousel || topArtistsCarousel.length === 0) return null;
