@@ -1,28 +1,29 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { getAuth, signOut } from "firebase/auth";
 import {
-  Home,
-  Menu,
-  X,
-  List,
-  User,
   Baby,
-  Heart,
   ChevronDown,
   ChevronRight,
+  Heart,
+  Home,
+  List,
   LogOut,
+  Menu,
+  User,
+  X,
 } from "lucide-react";
-import { useStore } from "../../zustand/store";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthTab from "../../Auth/AuthTab";
-import { signOut, getAuth } from "firebase/auth";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Playlist from "../playlist/Playlists";
 import { app } from "../../Auth/firebase";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Separator } from "../ui/separator";
+import { useStore } from "../../zustand/store";
+import Playlist from "../playlist/Playlists";
+import { useTheme } from "../ThemeProvider";
 import { ThemeToggle } from "../ThemeToggle";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent } from "../ui/dialog";
+import { Separator } from "../ui/separator";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const Sidebar = () => {
   const auth = getAuth(app);
   const [isOpen, setIsOpen] = useState(false);
   const [popover, setPopover] = useState(false);
+  const { theme } = useTheme();
 
   const { isUser, setIsUser, dialogOpen, setDialogOpen, playlist, likedSongs } = useStore();
 
@@ -159,12 +161,21 @@ const Sidebar = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="px-4 py-4 border-b border-border flex items-start justify-between">
-          <div className="flex-1 pr-2">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Sangeet App
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1">Your music, your way</p>
+        <div className="px-4 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 pr-2">
+            {/* Logo */}
+            <img
+              src={theme === "dark" ? "/logo_dark.svg" : "/logo.svg"}
+              alt="Sangeet Logo"
+              className="w-12 h-12 object-cover rounded-full"
+            />
+
+            <div>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Sangeet App
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">Your music, your way</p>
+            </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
