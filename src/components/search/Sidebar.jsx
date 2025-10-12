@@ -1,31 +1,29 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { getAuth, signOut } from "firebase/auth";
 import {
-  Home,
-  Menu,
-  X,
-  List,
-  User,
   Baby,
-  Heart,
   ChevronDown,
   ChevronRight,
+  Heart,
+  Home,
+  List,
   LogOut,
+  Menu,
+  User,
+  X,
 } from "lucide-react";
-import { useStore } from "../../zustand/store";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthTab from "../../Auth/AuthTab";
-import { signOut, getAuth } from "firebase/auth";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import Playlist from "../playlist/Playlists";
 import { app } from "../../Auth/firebase";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Separator } from "../ui/separator";
-import { ThemeToggle } from "../ThemeToggle";
+import { useStore } from "../../zustand/store";
+import Playlist from "../playlist/Playlists";
 import { useTheme } from "../ThemeProvider";
-import lightLogo from "../../../public/logo.svg";
-import darkLogo from "../../../public/logo_dark.svg";
+import { ThemeToggle } from "../ThemeToggle";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent } from "../ui/dialog";
+import { Separator } from "../ui/separator";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -167,7 +165,7 @@ const Sidebar = () => {
           <div className="flex items-center gap-2 flex-1 pr-2">
             {/* Logo */}
             <img
-              src={theme === "dark" ? darkLogo : lightLogo}
+              src={theme === "dark" ? "/logo_dark.svg" : "/logo.svg"}
               alt="Sangeet Logo"
               className="w-12 h-12 object-cover rounded-full"
             />
