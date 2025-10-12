@@ -10,7 +10,6 @@ import {
   Shuffle,
 } from "lucide-react";
 import ReactPlayer from "react-player";
-import Api from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer";
 import { Button } from "../ui/button";
@@ -34,7 +33,7 @@ function MusicPlayer() {
     duration,
     shuffle,
     setIsPlaying,
-    setQueue,
+    setCurrentList,
     setVolume,
     setMuted,
     setPlayed,
@@ -42,6 +41,7 @@ function MusicPlayer() {
     setShuffle,
     playNext,
     playPrevious,
+    currentSong,
   } = useStore();
 
   // Keyboard shortcuts
@@ -66,8 +66,7 @@ function MusicPlayer() {
     async function fetchSong() {
       if (!musicId) return;
       try {
-        const res = await Api(`/api/songs/${musicId}`);
-        const songData = res.data?.data?.[0];
+        const songData = currentSong;
         setSong(songData);
         if (songData?.image?.[2]?.url) {
           getImageColors(songData.image[2].url).then(({ averageColor, dominantColor }) => {
@@ -80,14 +79,14 @@ function MusicPlayer() {
       }
     }
     fetchSong();
-  }, [musicId, setIsPlaying]);
+  }, [musicId, currentSong]);
 
   // Set queue when songs change
   useEffect(() => {
     if (songs) {
-      setQueue(songs);
+      setCurrentList(songs);
     }
-  }, [songs, setQueue]);
+  }, [songs, setCurrentList]);
 
   // Handlers
   const handlePlayPause = () => setIsPlaying(!isPlaying);
@@ -99,9 +98,6 @@ function MusicPlayer() {
 
   const handleProgress = (state) => {
     setPlayed(state.played);
-    if (duration * state.played >= duration) {
-      playNext();
-    }
   };
 
   const handleDuration = (newDuration) => setDuration(newDuration);
@@ -270,6 +266,8 @@ function MusicPlayer() {
           onEnded={playNext} // Use centralized next function
           width="0"
           height="0"
+          onError={(e) => console.error("ReactPlayer error", e)}
+          config={{ file: { attributes: { preload: "auto" } } }}
         />
       </>
     )
