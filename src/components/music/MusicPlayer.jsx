@@ -15,12 +15,16 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer"
 import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
+import { useMusicPersistence } from "../../hooks/useMusicPersistence";
 
 function MusicPlayer() {
   const playerRef = useRef(null);
   const [bgColor, setBgColor] = React.useState();
   const [musicPlayerDrawer, setMusicPlayerDrawer] = React.useState(false);
   const [song, setSong] = React.useState();
+
+  // Initialize music persistence hook
+  useMusicPersistence();
 
   // Get state from Zustand stores
   const { songs } = useFetch();
