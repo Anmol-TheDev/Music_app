@@ -23,6 +23,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import { ThemeToggle } from "../ThemeToggle";
+import { useTheme } from "../ThemeProvider";
+import lightLogo from "../../../public/logo.svg";
+import darkLogo from "../../../public/logo_dark.svg";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -31,6 +34,7 @@ const Sidebar = () => {
   const auth = getAuth(app);
   const [isOpen, setIsOpen] = useState(false);
   const [popover, setPopover] = useState(false);
+  const { theme } = useTheme();
 
   const { isUser, setIsUser, dialogOpen, setDialogOpen, playlist, likedSongs } = useStore();
 
@@ -159,12 +163,21 @@ const Sidebar = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="px-4 py-4 border-b border-border flex items-start justify-between">
-          <div className="flex-1 pr-2">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Sangeet App
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1">Your music, your way</p>
+        <div className="px-4 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 pr-2">
+            {/* Logo */}
+            <img
+              src={theme === "dark" ? darkLogo : lightLogo}
+              alt="Sangeet Logo"
+              className="w-12 h-12 object-cover rounded-full"
+            />
+
+            <div>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Sangeet App
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">Your music, your way</p>
+            </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
