@@ -16,6 +16,7 @@ export default function SearchComponent() {
   const isPlaying = useStore((state) => state.isPlaying);
   const setIsPlaying = useStore((state) => state.setIsPlaying);
   const currentSong = useStore((state) => state.currentSong);
+  const setMusicId = useStore((state) => state.setMusicId);
   const url = useLocation();
   const search = url.search.split("=")[1];
 
@@ -37,8 +38,12 @@ export default function SearchComponent() {
     return views.toString();
   };
 
-  const isMobile = useIsMobile();
+  function handlePlayPause(status,musicId) {
+    setMusicId(musicId);
+    setIsPlaying(status);
+  }
 
+  const isMobile = useIsMobile();
   return (
     <ScrollArea className="h-[90vh] w-[dvw] flex">
       <div className="flex flex-col w-full">
@@ -85,18 +90,14 @@ export default function SearchComponent() {
                   <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                     {isPlaying ? (
                       <button
-                        onClick={() => {
-                          setIsPlaying(!isPlaying);
-                        }}
+                        onClick={() => handlePlayPause(false,currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Pause size={24} />
                       </button>
                     ) : (
                       <button
-                        onClick={() => {
-                          setIsPlaying(true);
-                        }}
+                        onClick={() => handlePlayPause(true,currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Play size={24} />
