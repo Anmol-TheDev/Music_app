@@ -1,28 +1,28 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Api, { fetchArtistBio } from "../../Api"; // Assumes fetchArtistBio is exported from Api.js
+import Api, { fetchArtistBio } from "../../Api";
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import { useStore } from "../../zustand/store";
-import { Play, Pause, Share2, Shuffle } from "lucide-react";
+import { Play, Pause, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
 import { useSongHandlers, getTextColor, usePlayAll, useShuffle } from "@/hooks/SongCustomHooks";
-import ArtistBio from "./ArtistBio"; // Import the new ArtistBio component
+import ArtistBio from "./ArtistBio";
 
 function Artist() {
   const [data, setData] = useState(null);
-  const [bio, setBio] = useState(""); // New state for the artist's biography
+  const [bio, setBio] = useState("");
   const [bgColor, setBgColor] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
-  const url = useLocation();
-  const { musicId, isPlaying, setIsPlaying, setCurrentList, currentArtistId } = useStore();
-  const artistId = url.search.split("=")[1];
+  const { search } = useLocation();
+  const { musicId, isPlaying, setCurrentList, currentArtistId } = useStore();
 
-  // Using custom hooks for consistency
+  const artistId = new URLSearchParams(search).get("Id");
+
   const { handleSongClick } = useSongHandlers();
   const handlePlayAll = usePlayAll(artistId, data?.topSongs, "artist");
   const handleShuffle = useShuffle(artistId, data?.topSongs, "artist");
@@ -31,6 +31,7 @@ function Artist() {
     const fetching = async () => {
       if (!artistId) {
         setIsLoading(false);
+        setData(null);
         return;
       }
       try {
@@ -40,7 +41,6 @@ function Artist() {
         setData(artistData);
         setCurrentList(artistData.topSongs);
 
-        // Fetch artist biography (from your PR)
         if (artistData.name) {
           const artistBio = await fetchArtistBio(artistData.name);
           if (artistBio) {
@@ -48,7 +48,6 @@ function Artist() {
           }
         }
 
-        // Generate colors from the artist image
         getImageColors(artistData.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
           setTextColor(getTextColor(dominantColor));
@@ -80,7 +79,7 @@ function Artist() {
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center space-y-4">
           <p className="text-xl text-muted-foreground">Artist not found</p>
-          <p className="text-sm text-muted-foreground">Please try again later</p>
+          <p className="text-sm text-muted-foreground">Please check the URL or try again later.</p>
         </div>
       </div>
     );
@@ -91,7 +90,7 @@ function Artist() {
       <div className="min-h-screen pb-32">
         {/* Hero Section */}
         <div
-          className="relative w-full pb-8"
+          className="relative w-full pt-24 pb-8"
           style={{
             background: bgColor
               ? `linear-gradient(180deg, ${bgColor.bg1} 0%, ${bgColor.bg2} 60%, transparent 100%)`
@@ -104,17 +103,16 @@ function Artist() {
             }`}
           ></div>
 
-          <div className="container mx-auto px-4 py-8 lg:py-12 relative z-10">
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-center lg:items-start">
-              {/* Artist Image */}
-              <div className="relative mx-auto sm:mx-0 flex-shrink-0 hover:scale-105 transition-transform">
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="flex flex-col lg:flex-row gap-8 items-center">
+              <div className="relative flex-shrink-0">
                 <div
-                  className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-2xl overflow-hidden shadow-2xl transition-opacity duration-300 ${
+                  className={`w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden shadow-2xl transition-opacity duration-300 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   <img
-                    src={data.image[2].url || "/placeholder.svg"}
+                    src={data.image[2].url}
                     alt={data.name}
                     loading="lazy"
                     className="w-full h-full object-cover"
@@ -122,64 +120,36 @@ function Artist() {
                   />
                 </div>
                 {!imageLoaded && (
-                  <div className="absolute inset-0 w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-2xl bg-muted animate-pulse"></div>
+                  <div className="absolute inset-0 w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-muted animate-pulse"></div>
                 )}
               </div>
 
-              {/* Artist Info */}
-              <div className="flex-1 text-center sm:text-left space-y-4 lg:space-y-6">
-                <div className="space-y-2">
-                  <p
-                    className={`text-sm font-medium uppercase tracking-wider drop-shadow-md opacity-90`}
-                    style={{
-                      color:
-                        textColor === "dark"
-                          ? "hsl(var(--contrast-foreground-dark))"
-                          : "hsl(var(--contrast-foreground-light))",
-                    }}
-                  >
-                    Artist
-                  </p>
-                  <h1
-                    className={`text-3xl sm:text-4xl lg:text-6xl font-bold leading-tight break-words drop-shadow-lg`}
-                    style={{
-                      color:
-                        textColor === "dark"
-                          ? "hsl(var(--contrast-foreground-dark))"
-                          : "hsl(var(--contrast-foreground-light))",
-                    }}
-                  >
-                    {data.name}
-                  </h1>
-                </div>
+              <div className="flex-1 text-center lg:text-left space-y-4">
+                <h1
+                  className={`text-4xl sm:text-5xl lg:text-7xl font-bold break-words drop-shadow-lg`}
+                  style={{ color: textColor === "dark" ? "#000" : "#FFF" }}
+                >
+                  {data.name}
+                </h1>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 justify-center sm:justify-start pt-2">
+                <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
                   <button
                     onClick={handlePlayAll}
-                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 shadow-lg min-h-[44px]"
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-full font-semibold transition-transform hover:scale-105 shadow-lg"
                   >
-                    {!isPlaying || artistId !== currentArtistId ? (
-                      <Play className="w-5 h-5" />
-                    ) : (
+                    {isPlaying && artistId === currentArtistId ? (
                       <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5" />
                     )}
+                    <span>{isPlaying && artistId === currentArtistId ? "Pause" : "Play"}</span>
                   </button>
                   <button
                     onClick={handleShuffle}
-                    className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px]"
+                    className="flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-full font-semibold transition-transform hover:scale-105"
                   >
                     <Shuffle className="w-5 h-5" />
-                    <span className="hidden xs:inline">Shuffle</span>
-                  </button>
-                  <button
-                    className={`flex items-center gap-2 backdrop-blur-sm px-4 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 min-h-[44px] shadow-md ${
-                      textColor === "dark"
-                        ? "bg-background/20 hover:bg-background/30 text-foreground border border-border/50"
-                        : "bg-white/20 hover:bg-white/30 text-white border border-white/30"
-                    }`}
-                  >
-                    <Share2 className="w-5 h-5" />
+                    <span>Shuffle</span>
                   </button>
                 </div>
               </div>
@@ -187,82 +157,61 @@ function Artist() {
           </div>
         </div>
 
-        {/* Top Songs Section */}
-        <div className="container mx-auto px-3 sm:px-4 py-8">
-          <h2 className="text-2xl lg:text-3xl font-bold mb-4">Popular</h2>
-          <div className="space-y-1">
+        {/* Top Songs & Bio Section */}
+        <div className="container mx-auto px-4 py-8">
+          <h2 className="text-2xl lg:text-3xl font-bold mb-6">Popular</h2>
+          <div className="space-y-2">
             {data.topSongs.map((song, index) => (
               <div
-                key={song.id || index}
-                className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${song.id === musicId ? "bg-muted" : ""}`}
+                key={song.id}
+                className={`group grid grid-cols-[auto,1fr,auto] sm:grid-cols-[2rem,4fr,2fr,auto] items-center gap-4 p-2 rounded-lg transition-colors cursor-pointer hover:bg-muted/60 ${
+                  song.id === musicId ? "bg-muted" : ""
+                }`}
                 onClick={() => handleSongClick(song, { artistId })}
               >
-                {/* Unified Layout for both Mobile and Desktop */}
-                <div className="flex items-center gap-3 p-3 min-h-[60px]">
-                  {/* Track Number / Play Button */}
-                  <div className="w-8 flex items-center justify-center flex-shrink-0">
-                    <span
-                      className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
-                    >
-                      {index + 1}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSongClick(song, { artistId });
-                      }}
-                      className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
-                    >
-                      {isPlaying && song.id === musicId ? (
-                        <Pause
-                          className="w-5 h-5 text-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsPlaying(false);
-                          }}
-                        />
-                      ) : (
-                        <Play className="w-5 h-5 text-primary" />
-                      )}
-                    </button>
-                  </div>
-                  {/* Song Image */}
+                <div className="flex items-center justify-center w-8">
+                  <span className="text-muted-foreground group-hover:hidden">{index + 1}</span>
+                  <button className="hidden group-hover:block">
+                    {isPlaying && song.id === musicId ? (
+                      <Pause className="w-5 h-5 text-primary" />
+                    ) : (
+                      <Play className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4">
                   <img
-                    src={song.image[1].url || "/placeholder.svg"}
+                    src={song.image[1].url}
                     alt={song.name}
-                    loading="lazy"
-                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-sm"
+                    className="w-12 h-12 rounded-md object-cover"
                   />
-                  {/* Song Info */}
                   <div className="flex-1 min-w-0">
                     <h3
-                      className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
+                      className={`font-semibold truncate ${
+                        song.id === musicId ? "text-primary" : "text-foreground"
+                      }`}
                     >
                       {song.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground truncate hidden sm:block">
-                      {data.name}
-                    </p>
+                    <p className="text-sm text-muted-foreground truncate sm:hidden">{data.name}</p>
                   </div>
-                  {/* Duration (Desktop) */}
-                  <div className="text-sm text-muted-foreground font-mono hidden sm:block">
-                    {`${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, "0")}`}
-                  </div>
-                  {/* Like & Menu Buttons */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Like songId={song.id} />
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors sm:opacity-0 sm:group-hover:opacity-100"
-                    >
-                      <Menu song={song} />
-                    </div>
-                  </div>
+                </div>
+
+                <div className="hidden sm:block text-muted-foreground truncate">{data.name}</div>
+
+                <div className="flex items-center gap-4 text-muted-foreground">
+                  <Like songId={song.id} />
+                  <span className="hidden sm:block font-mono text-sm">
+                    {`${Math.floor(song.duration / 60)}:${(song.duration % 60)
+                      .toString()
+                      .padStart(2, "0")}`}
+                  </span>
+                  <Menu song={song} />
                 </div>
               </div>
             ))}
           </div>
-          {/* Artist Biography Section */}
           {data && <ArtistBio artistData={data} bioText={bio} />}
         </div>
       </div>
