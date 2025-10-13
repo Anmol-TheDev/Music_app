@@ -35,6 +35,17 @@ export default function InputBar() {
     }
   };
 
+  function decodeHTML(html) {
+    const parser = new DOMParser();
+    return parser.parseFromString(html || "", "text/html").documentElement.textContent;
+  }
+
+  function truncateCenter(text, maxLength = 20) {
+    if (text.length <= maxLength) return text;
+    const half = Math.floor((maxLength - 3) / 2);
+    return text.slice(0, half) + "..." + text.slice(-half);
+  }
+
   useEffect(() => {
     const search = localStorage.getItem("search");
     if (search) {
@@ -62,7 +73,7 @@ export default function InputBar() {
         const data = res.data.data.results.map((res) => {
           return {
             id: res["id"],
-            name: res["name"],
+            name: decodeHTML(res["name"]),
           };
         });
 
@@ -110,7 +121,7 @@ export default function InputBar() {
                         className="p-2 hover:bg-foreground/20 rounded-md cursor-pointer  song-sugg"
                         onClick={() => searchSong(suggestion.name)}
                       >
-                        {suggestion.name}
+                        {truncateCenter(suggestion.name)}
                       </li>
                     ))}
                   </ul>
