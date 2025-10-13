@@ -110,3 +110,22 @@
   left: 0rem;
   z-index: 1000;
 }
+
+
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-smooth {
+  animation: spin-smooth 4s linear infinite;
+  animation-play-state: running;
+}
+
+.spin-paused {
+  animation-play-state: paused;
+}

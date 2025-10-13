@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import Api from "../Api";
+import { persistMusicState, restoreMusicState } from "./persistHelpers";
 
 const INITIAL_SONGS_LIMIT = 1;
 const SUGGESTIONS_LIMIT = 9;
@@ -447,5 +448,22 @@ export const useStore = create((set, get) => ({
     const { repeat, playNext } = get();
     if (repeat === "one") set({ played: 0 });
     else playNext();
+  },
+
+  // Persist and restore methods
+  persistState: async () => {
+    const { currentSong } = get();
+    await persistMusicState(currentSong);
+  },
+
+  restoreState: async () => {
+    try {
+      const data = await restoreMusicState();
+      if (data?.currentSong) {
+        set({ currentSong: data.currentSong });
+      }
+    } catch (err) {
+      console.error("Failed to restore state:", err);
+    }
   },
 }));
