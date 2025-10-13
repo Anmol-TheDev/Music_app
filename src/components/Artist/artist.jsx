@@ -9,7 +9,6 @@ import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
 import { useSongHandlers, getTextColor, usePlayAll, useShuffle } from "@/hooks/SongCustomHooks";
-import ArtistBio from "./ArtistBio";
 
 function Artist() {
   const [data, setData] = useState(null);
@@ -18,11 +17,9 @@ function Artist() {
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
-  const { search } = useLocation();
-  const { musicId, isPlaying, setCurrentList, currentArtistId } = useStore();
-
-  const artistId = new URLSearchParams(search).get("Id");
-
+  const url = useLocation();
+  const { musicId, isPlaying, setIsPlaying, setCurrentList, currentArtistId } = useStore();
+  const artistId = url.search.split("=")[1];
   const { handleSongClick } = useSongHandlers();
   const handlePlayAll = usePlayAll(artistId, data?.topSongs, "artist");
   const handleShuffle = useShuffle(artistId, data?.topSongs, "artist");
@@ -37,18 +34,11 @@ function Artist() {
       try {
         setIsLoading(true);
         const res = await Api(`/api/artists/${artistId}`);
-        const artistData = res.data.data;
-        setData(artistData);
-        setCurrentList(artistData.topSongs);
+        setData(res.data.data);
+        setCurrentList(res.data.data.topSongs);
 
-        if (artistData.name) {
-          const artistBio = await fetchArtistBio(artistData.name);
-          if (artistBio) {
-            setBio(artistBio);
-          }
-        }
-
-        getImageColors(artistData.image[2].url).then(({ averageColor, dominantColor }) => {
+        // Generate colors from the artist image
+        getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
           setTextColor(getTextColor(dominantColor));
         });

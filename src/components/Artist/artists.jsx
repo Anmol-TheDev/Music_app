@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
+import { useIsMobile } from "@/hooks/SongCustomHooks";
 
 function RandomArtists({ search }) {
   const navigate = useNavigate();
@@ -19,27 +20,6 @@ function RandomArtists({ search }) {
     navigate(path);
   }
 
-  function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-      const mql = window.matchMedia("(max-width: 768px)");
-      const onChange = () => setIsMobile(mql.matches);
-
-      onChange();
-
-      if (mql.addEventListener) mql.addEventListener("change", onChange);
-      else mql.addListener(onChange);
-
-      return () => {
-        if (mql.removeEventListener) mql.removeEventListener("change", onChange);
-        else mql.removeListener(onChange);
-      };
-    }, []);
-
-    return isMobile;
-  }
-
   const isMobile = useIsMobile();
 
   return (
@@ -51,7 +31,7 @@ function RandomArtists({ search }) {
           }`}
         >
           <h2 className="text-2xl font-bold mb-4">Artists</h2>
-          <div className="flex space-x-4 overflow-x-scroll">
+          <div className="flex space-x-4 overflow-x-scroll overflow-y-hidden custom-scrollbar">
             {artists?.map((artist, i) => (
               <div
                 key={i}

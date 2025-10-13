@@ -69,26 +69,63 @@
     overflow: hidden;
   }
 }
+@layer components {
+  .custom-scrollbar {
+    /* For Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)) hsl(var(--card)); /* Thumb track, uses primary for thumb */
 
-::-webkit-scrollbar {
-  width: 12px;
+    /* For Webkit browsers (Chrome, Safari, Edge) */
+    &::-webkit-scrollbar {
+      height: 14px; /* Thicker scrollbar height */
+      background-color: transparent; /* Make track transparent to show content or main background */
+      border-radius: 7px; /* Rounded track edges */
+    }
+
+    &::-webkit-scrollbar-thumb {
+      /* Gradient for the thumb */
+      background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
+      border-radius: 7px; /* Pill shape */
+      border: 2px solid hsl(var(--background)); /* Border matching background for "padding" effect */
+      box-shadow: 0 0 8px hsla(var(--primary), 0.6); /* Vibrant glow */
+      transition:
+        background 0.3s ease,
+        box-shadow 0.3s ease; /* Smooth transition */
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      /* Reverse gradient on hover, or use a single brighter accent */
+      background: linear-gradient(45deg, hsl(var(--accent)), hsl(var(--primary)));
+      box-shadow: 0 0 12px hsla(var(--primary-foreground), 0.8); /* Stronger glow on hover */
+    }
+
+    /* For the scrollbar corner (if vertical & horizontal scrollbars meet) */
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
 }
-
-::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 .float_debouncer {
   position: absolute;
   left: 0rem;
   z-index: 1000;
+}
+
+
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-smooth {
+  animation: spin-smooth 4s linear infinite;
+  animation-play-state: running;
+}
+
+.spin-paused {
+  animation-play-state: paused;
 }
