@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Api, { fetchArtistBio } from "../../Api";
+import Api, { fetchArtistBio } from "../../Api"; // Assumes fetchArtistBio is exported from Api.js
 import { getImageColors } from "../color/ColorGenrator";
 import { ScrollArea } from "../ui/scroll-area";
 import { useStore } from "../../zustand/store";
@@ -8,43 +8,39 @@ import { Play, Pause, Share2, Shuffle } from "lucide-react";
 import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
-import ArtistBio from "./ArtistBio";
+import { useSongHandlers, getTextColor, usePlayAll, useShuffle } from "@/hooks/SongCustomHooks";
+import ArtistBio from "./ArtistBio"; // Import the new ArtistBio component
 
 function Artist() {
   const [data, setData] = useState(null);
-  const [bio, setBio] = useState("");
+  const [bio, setBio] = useState(""); // New state for the artist's biography
   const [bgColor, setBgColor] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
-  // FIX: Removed `setArtistId` as it's not used directly in this component
-  const { musicId, isPlaying, setIsPlaying, setQueue, currentArtistId } = useStore();
+  const { musicId, isPlaying, setIsPlaying, setCurrentList, currentArtistId } = useStore();
   const artistId = url.search.split("=")[1];
-  const { handleSongClick } = useSongHandlers();
 
-  // Function to calculate luminance and determine text color
-  const getTextColor = (rgbColor) => {
-    const match = rgbColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    if (!match) return "white";
-    const r = Number.parseInt(match[1]);
-    const g = Number.parseInt(match[2]);
-    const b = Number.parseInt(match[3]);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.6 ? "dark" : "white";
-  };
+  // Using custom hooks for consistency
+  const { handleSongClick } = useSongHandlers();
+  const handlePlayAll = usePlayAll(artistId, data?.topSongs, "artist");
+  const handleShuffle = useShuffle(artistId, data?.topSongs, "artist");
 
   useEffect(() => {
     const fetching = async () => {
+      if (!artistId) {
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         const res = await Api(`/api/artists/${artistId}`);
         const artistData = res.data.data;
         setData(artistData);
-        setQueue(artistData.topSongs);
+        setCurrentList(artistData.topSongs);
 
-        // Fetch artist biography
+        // Fetch artist biography (from your PR)
         if (artistData.name) {
           const artistBio = await fetchArtistBio(artistData.name);
           if (artistBio) {
@@ -66,26 +62,7 @@ function Artist() {
       }
     };
     fetching();
-  }, [artistId, setQueue]);
-
-  function handlePlayAll() {
-    if (currentArtistId === artistId) {
-      setIsPlaying(!isPlaying);
-    } else {
-      if (data?.topSongs?.length > 0) {
-        setQueue(data.topSongs);
-        handleSongClick(data.topSongs[0], { artistId: artistId, play: true });
-      }
-    }
-  }
-
-  function handleShuffle() {
-    if (data?.topSongs?.length > 0) {
-      const randomIndex = Math.floor(Math.random() * data.topSongs.length);
-      const randomSong = data.topSongs[randomIndex];
-      handleSongClick(randomSong, { artistId: artistId, play: true });
-    }
-  }
+  }, [artistId, setCurrentList]);
 
   if (isLoading) {
     return (
@@ -121,7 +98,6 @@ function Artist() {
               : "linear-gradient(180deg, hsl(var(--muted)) 0%, transparent 100%)",
           }}
         >
-          {/* Dark/Light overlay for better text contrast */}
           <div
             className={`absolute inset-0 bg-gradient-to-b to-transparent ${
               textColor === "dark" ? "from-white/80 via-white/60" : "from-black/60 via-black/50"
@@ -211,182 +187,82 @@ function Artist() {
           </div>
         </div>
 
-        {/* Top Songs & Bio Section */}
+        {/* Top Songs Section */}
         <div className="container mx-auto px-3 sm:px-4 py-8">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-2xl lg:text-3xl font-bold">Popular</h2>
-            </div>
-
-            {/* Songs List */}
-            <div className="space-y-1">
-              {data.topSongs.map((song, index) => (
-                <div
-                  key={song.id || index}
-                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 ${
-                    song.id === musicId ? "bg-muted" : ""
-                  } cursor-pointer`}
-                  onClick={() => handleSongClick(song, { artistId: artistId })}
-                >
-                  {/* Mobile Layout */}
-                  <div className="sm:hidden">
-                    <div className="flex items-center gap-3 p-3 min-h-[60px]">
-                      {/* Track Number / Play Button */}
-                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                        <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${
-                            song.id === musicId ? "hidden" : ""
-                          }`}
-                        >
-                          {index + 1}
-                        </span>
-                        <button
+          <h2 className="text-2xl lg:text-3xl font-bold mb-4">Popular</h2>
+          <div className="space-y-1">
+            {data.topSongs.map((song, index) => (
+              <div
+                key={song.id || index}
+                className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${song.id === musicId ? "bg-muted" : ""}`}
+                onClick={() => handleSongClick(song, { artistId })}
+              >
+                {/* Unified Layout for both Mobile and Desktop */}
+                <div className="flex items-center gap-3 p-3 min-h-[60px]">
+                  {/* Track Number / Play Button */}
+                  <div className="w-8 flex items-center justify-center flex-shrink-0">
+                    <span
+                      className={`text-sm text-muted-foreground group-hover:hidden ${song.id === musicId ? "hidden" : ""}`}
+                    >
+                      {index + 1}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSongClick(song, { artistId });
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${song.id === musicId ? "block" : "hidden group-hover:block"}`}
+                    >
+                      {isPlaying && song.id === musicId ? (
+                        <Pause
+                          className="w-5 h-5 text-primary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSongClick(song, { artistId: artistId });
+                            setIsPlaying(false);
                           }}
-                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
-                            song.id === musicId ? "block" : "hidden group-hover:block"
-                          }`}
-                        >
-                          {isPlaying && song.id === musicId ? (
-                            <Pause
-                              className="w-5 h-5 text-primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsPlaying(false);
-                              }}
-                            />
-                          ) : (
-                            <Play className="w-5 h-5 text-primary" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Song Image */}
-                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                        <img
-                          src={song.image[1].url || "/placeholder.svg"}
-                          alt={song.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
                         />
-                      </div>
-
-                      {/* Song Info */}
-                      <div className="flex-1 min-w-0 pr-2">
-                        <h3
-                          className={`font-medium text-sm leading-5 ${
-                            song.id === musicId ? "text-primary" : "text-foreground"
-                          }`}
-                          style={{
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            wordBreak: "break-word",
-                          }}
-                        >
-                          {song.name}
-                        </h3>
-                      </div>
-
-                      {/* Like Button */}
-                      <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                        <Like songId={song.id} />
-                      </div>
-
-                      {/* Menu Button */}
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                      >
-                        <Menu song={song} />
-                      </div>
-                    </div>
+                      ) : (
+                        <Play className="w-5 h-5 text-primary" />
+                      )}
+                    </button>
                   </div>
-
-                  {/* Desktop/Tablet Layout */}
-                  <div className="hidden sm:block">
-                    <div className="flex items-center gap-4 p-3 lg:p-4">
-                      {/* Track Number / Play Button */}
-                      <div className="w-6 flex items-center justify-center flex-shrink-0">
-                        <span
-                          className={`text-sm text-muted-foreground group-hover:hidden ${
-                            song.id === musicId ? "hidden" : ""
-                          }`}
-                        >
-                          {index + 1}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSongClick(song, { artistId: artistId });
-                          }}
-                          className={`w-6 h-6 flex items-center justify-center transition-all duration-200 ${
-                            song.id === musicId ? "block" : "hidden group-hover:block"
-                          }`}
-                        >
-                          {isPlaying && song.id === musicId ? (
-                            <Pause
-                              className="w-5 h-5 text-primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setIsPlaying(false);
-                              }}
-                            />
-                          ) : (
-                            <Play className="w-5 h-5 text-primary" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Song Image */}
-                      <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                        <img
-                          src={song.image[1].url || "/placeholder.svg"}
-                          alt={song.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {/* Song Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-medium truncate ${
-                            song.id === musicId ? "text-primary" : "text-foreground"
-                          }`}
-                        >
-                          {song.name}
-                        </h3>
-                        <p className="text-sm text-muted-foreground truncate">{data.name}</p>
-                      </div>
-
-                      {/* Duration */}
-                      <div className="text-sm text-muted-foreground font-mono">
-                        {Math.floor(song.duration / 60)}:
-                        {(song.duration % 60).toString().padStart(2, "0")}
-                      </div>
-
-                      {/* Like Button */}
-                      <div className="flex-shrink-0 w-8 flex items-center justify-center">
-                        <Like songId={song.id} />
-                      </div>
-
-                      {/* Menu Button */}
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <Menu song={song} />
-                      </div>
+                  {/* Song Image */}
+                  <img
+                    src={song.image[1].url || "/placeholder.svg"}
+                    alt={song.name}
+                    loading="lazy"
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0 shadow-sm"
+                  />
+                  {/* Song Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
+                    >
+                      {song.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground truncate hidden sm:block">
+                      {data.name}
+                    </p>
+                  </div>
+                  {/* Duration (Desktop) */}
+                  <div className="text-sm text-muted-foreground font-mono hidden sm:block">
+                    {`${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, "0")}`}
+                  </div>
+                  {/* Like & Menu Buttons */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Like songId={song.id} />
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <Menu song={song} />
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+          {/* Artist Biography Section */}
           {data && <ArtistBio artistData={data} bioText={bio} />}
         </div>
       </div>
