@@ -152,7 +152,7 @@ const Sidebar = () => {
       <div
         ref={sidebarRef}
         className={cn(
-          "fixed top-0 left-0 h-full w-64 z-40",
+          "fixed top-0 left-0 h-full w-64 z-50",
           "bg-background/95 backdrop-blur-md border-r border-border shadow-2xl",
           "transform transition-transform duration-300 ease-in-out",
           "flex flex-col",
