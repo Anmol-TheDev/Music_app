@@ -92,7 +92,7 @@ export default function InputBar() {
 
   return (
     <form
-      className="sticky  top-0 z-50 p-3 sm:p-4 shadow-lg bg-background w-screen "
+      className="sticky  top-0 z-40 p-3 sm:p-4 shadow-lg bg-background w-screen "
       onSubmit={handleSubmit}
     >
       <div className="max-w-3xl mx-auto flex justify-center items-center gap-2 sm:gap-3">
@@ -121,7 +121,9 @@ export default function InputBar() {
                         className="p-2 hover:bg-foreground/20 rounded-md cursor-pointer  song-sugg"
                         onClick={() => searchSong(suggestion.name)}
                       >
-                        {truncateCenter(suggestion.name)}
+                        <div className="flex gap-3 ">
+                          <Search strokeWidth="0.5" /> {truncateCenter(suggestion.name)}
+                        </div>
                       </li>
                     ))}
                   </ul>
