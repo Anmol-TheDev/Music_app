@@ -9,16 +9,12 @@ Api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       toast.error(`Error: ${error.response.status} - ${error.response.statusText}`);
       console.error("API Error:", error.response.data);
     } else if (error.request) {
-      // The request was made but no response was received
       toast.error("Error: No response from server. Please check your internet connection.");
       console.error("API Error: No response received", error.request);
     } else {
-      // Something happened in setting up the request that triggered an Error
       toast.error("Error: Something went wrong with the request.");
       console.error("API Error:", error.message);
     }
@@ -42,6 +38,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { app, db } from "./Auth/firebase";
+
 export const fetchFireStore = (setPlaylist, setLikedSongs) => {
   let auth = getAuth(app);
   onAuthStateChanged(auth, async (user) => {
@@ -227,5 +224,21 @@ export async function fetchSongsByIds(songIds) {
   } catch (error) {
     console.error("Error fetching songs by IDs:", error);
     return { success: false, data: [] };
+  }
+}
+
+export async function fetchArtistBio(artistName) {
+  try {
+    const apiKey = import.meta.env.VITE_THEAUDIODB_API_KEY;
+    const url = `https://www.theaudiodb.com/api/v1/json/${apiKey}/search.php?s=${artistName}`;
+    const response = await axios.get(url);
+
+    if (response.data && response.data.artists) {
+      return response.data.artists[0].strBiographyEN;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching artist biography:", error);
+    return null;
   }
 }

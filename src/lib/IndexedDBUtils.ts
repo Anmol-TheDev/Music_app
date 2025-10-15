@@ -1,6 +1,13 @@
+// Define a basic type for a Song object
+interface Song {
+  id: string;
+  [key: string]: unknown;
+}
+
 export interface PlaybackData {
   id: string;
-  currentSong: any | null;
+  // FIX: Replaced 'any' with the specific 'Song' type
+  currentSong: Song | null;
 }
 
 export class IndexedDBUtils {
