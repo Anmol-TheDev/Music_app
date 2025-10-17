@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { PlayCircle, Play, Eye, Pause } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import RandomArtists from "../Artist/artists";
 import { useFetch, useStore } from "../../zustand/store";
 import Menu from "../Menu";
@@ -38,7 +38,7 @@ export default function SearchComponent() {
     return views.toString();
   };
 
-  function handlePlayPause(status,musicId) {
+  function handlePlayPause(status, musicId) {
     setMusicId(musicId);
     setIsPlaying(status);
   }
@@ -90,14 +90,14 @@ export default function SearchComponent() {
                   <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                     {isPlaying ? (
                       <button
-                        onClick={() => handlePlayPause(false,currentSong.id)}
+                        onClick={() => handlePlayPause(false, currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Pause size={24} />
                       </button>
                     ) : (
                       <button
-                        onClick={() => handlePlayPause(true,currentSong.id)}
+                        onClick={() => handlePlayPause(true, currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Play size={24} />
@@ -163,47 +163,61 @@ export default function SearchComponent() {
                     {songs.map((song, index) => (
                       <li
                         key={index}
-                        className={` ${
-                          song.id === musicId ? "bg-secondary" : "bg-background"
-                        } flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all hover:bg-secondary hover:scale-[1.03] duration-200 `}
+                        className={`group rounded-lg transition-all hover:bg-secondary hover:scale-[1.03] duration-200 ${song.id === musicId ? "bg-secondary" : "bg-background"}`}
                       >
-                        <div className="flex items-center space-x-2 sm:space-x-4">
-                          <span className="w-4 sm:w-6 text-center text-sm sm:text-base">
-                            {index + 1}
-                          </span>
-                          <img
-                            src={song.image ? song.image[0].url : "/api/placeholder/40/40"}
-                            alt={song.name}
-                            loading="lazy"
-                            className="w-8 h-8 sm:w-10 sm:h-10 rounded "
-                          />
-                          <div>
-                            <p className="font-medium text-sm sm:text-base truncate w-24">
-                              {song.name ? song.name : "Iss Duniya ka Papa"}
-                            </p>
-                            <p className="text-xs sm:text-sm">{song.artists?.primary[0]?.name}</p>
+                        <Link
+                          to={`/song/${song.id}`}
+                          state={{ song }}
+                          className="flex items-center justify-between p-2 sm:p-3"
+                        >
+                          <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+                            <span className="w-4 sm:w-6 text-center text-sm sm:text-base">
+                              {index + 1}
+                            </span>
+                            <img
+                              src={song.image ? song.image[0].url : "/api/placeholder/40/40"}
+                              alt={song.name}
+                              loading="lazy"
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded"
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm sm:text-base truncate">
+                                {song.name ? song.name : "Iss Duniya ka Papa"}
+                              </p>
+                              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                {song.artists?.primary[0]?.name}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2 sm:space-x-4">
-                          <span className="text-xs sm:text-sm">
-                            {Math.floor(song.duration / 60)}:
-                            {(song.duration % 60).toString().padStart(2, "0")}
-                          </span>
-                          <Like songId={song.id} />
-                          {isPlaying && song.id === musicId ? (
-                            <Pause
-                              className="w-4 h-4 sm:w-5 sm:h-5"
-                              onClick={() => setIsPlaying(false)}
-                            />
-                          ) : (
-                            <PlayCircle
-                              className="w-4 h-4 sm:w-5 sm:h-5"
-                              onClick={() => handleSongClick(song)}
-                            />
-                          )}
-
-                          <Menu song={song} />
-                        </div>
+                          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
+                              {Math.floor(song.duration / 60)}:
+                              {(song.duration % 60).toString().padStart(2, "0")}
+                            </span>
+                            <div onClick={(e) => e.preventDefault()}>
+                              <Like songId={song.id} />
+                            </div>
+                            <div
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (isPlaying && song.id === musicId) {
+                                  setIsPlaying(false);
+                                } else {
+                                  handleSongClick(song);
+                                }
+                              }}
+                            >
+                              {isPlaying && song.id === musicId ? (
+                                <Pause className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                              ) : (
+                                <PlayCircle className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                              )}
+                            </div>
+                            <div onClick={(e) => e.preventDefault()}>
+                              <Menu song={song} />
+                            </div>
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>

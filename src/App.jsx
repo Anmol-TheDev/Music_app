@@ -7,6 +7,7 @@ import Plylistinfo from "./components/playlist/Plylistinfo";
 import LikedSongs from "./components/LikedSongs/LikedSongs";
 import ErrorPage from "./components/ErrorPage";
 import Profile from "./components/Profile/Profile"; // 1. Import the new component
+import SongPage from "./components/song/SongPage";
 
 function App() {
   const router = createBrowserRouter([
@@ -39,6 +40,10 @@ function App() {
         {
           path: "/profile",
           element: <Profile />,
+        },
+        {
+          path: "/song/:songId",
+          element: <SongPage />,
         },
       ],
     },
