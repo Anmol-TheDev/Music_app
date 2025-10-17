@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useStore } from "../../zustand/store";
 import { ScrollArea } from "../ui/scroll-area";
 import { Play, Pause } from "lucide-react";
@@ -101,92 +102,92 @@ export default function LikedSongs() {
 
             <div className="space-y-1">
               {likedSongsData.map((song, index) => (
-                <div
-                  key={song.id || index}
-                  className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${
-                    song.id === musicId ? "bg-muted" : ""
-                  }`}
-                  onClick={() => handleSongClick(song)}
-                >
-                  <div className="flex items-center gap-4 p-4">
-                    {/* Track Number / Play Button */}
-                    <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                      <span
-                        className={`text-sm text-muted-foreground group-hover:hidden ${
-                          song.id === musicId ? "hidden" : ""
-                        }`}
-                      >
-                        {index + 1}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSongClick(song);
-                        }}
-                        className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
-                          song.id === musicId ? "block" : "hidden group-hover:block"
-                        }`}
-                      >
-                        {isPlaying && song.id === musicId ? (
-                          <Pause
-                            className="w-5 h-5 text-primary cursor-pointer hover:scale-110 transition-transform"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsPlaying(false);
-                            }}
-                          />
-                        ) : (
-                          <Play className="w-5 h-5 text-primary cursor-pointer hover:scale-110 transition-transform" />
-                        )}
-                      </button>
-                    </div>
+                <Link to={`/song/${song.id}`} state={{ song }} key={song.id || index}>
+                  <div
+                    className={`group rounded-lg transition-all duration-200 hover:bg-muted/50 cursor-pointer ${
+                      song.id === musicId ? "bg-muted" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 p-4">
+                      {/* Track Number / Play Button */}
+                      <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                        <span
+                          className={`text-sm text-muted-foreground group-hover:hidden ${
+                            song.id === musicId ? "hidden" : ""
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSongClick(song);
+                          }}
+                          className={`w-8 h-8 flex items-center justify-center transition-all duration-200 ${
+                            song.id === musicId ? "block" : "hidden group-hover:block"
+                          }`}
+                        >
+                          {isPlaying && song.id === musicId ? (
+                            <Pause
+                              className="w-5 h-5 text-primary cursor-pointer hover:scale-110 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsPlaying(false);
+                              }}
+                            />
+                          ) : (
+                            <Play className="w-5 h-5 text-primary cursor-pointer hover:scale-110 transition-transform" />
+                          )}
+                        </button>
+                      </div>
 
-                    {/* Song Image */}
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                      <img
-                        src={song.image?.[1]?.url || song.image?.[0]?.url}
-                        alt={song.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                      {/* Song Image */}
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
+                        <img
+                          src={song.image?.[1]?.url || song.image?.[0]?.url}
+                          alt={song.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
 
-                    {/* Song Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3
-                        className={`font-medium truncate ${
-                          song.id === musicId ? "text-primary" : "text-foreground"
-                        }`}
-                      >
-                        {song.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {song.artists?.primary?.[0]?.name}
-                      </p>
-                    </div>
+                      {/* Song Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={`font-medium truncate ${
+                            song.id === musicId ? "text-primary" : "text-foreground"
+                          }`}
+                        >
+                          {song.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {song.artists?.primary?.[0]?.name}
+                        </p>
+                      </div>
 
-                    {/* Duration */}
-                    <div className="text-sm text-muted-foreground font-mono">
-                      {Math.floor(song.duration / 60)}:
-                      {(song.duration % 60).toString().padStart(2, "0")}
-                    </div>
+                      {/* Duration */}
+                      <div className="text-sm text-muted-foreground font-mono">
+                        {Math.floor(song.duration / 60)}:
+                        {(song.duration % 60).toString().padStart(2, "0")}
+                      </div>
 
-                    {/* Like Button */}
-                    <div className="flex-shrink-0">
-                      <Like songId={song.id} />
-                    </div>
+                      {/* Like Button */}
+                      <div className="flex-shrink-0">
+                        <Like songId={song.id} />
+                      </div>
 
-                    {/* Menu Button */}
-                    <div className="flex-shrink-0">
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <Menu song={song} />
-                      </button>
+                      {/* Menu Button */}
+                      <div className="flex-shrink-0">
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Menu song={song} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
