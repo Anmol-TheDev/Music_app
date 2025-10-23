@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "sonner";
 
 const Api = axios.create({
-  baseURL: "https://saavn.dev",
+  baseURL: "https://saavn.sumit.co",
 });
 
 Api.interceptors.response.use(
