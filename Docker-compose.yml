@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  music-app-frontend:
+    # Build the Docker image from the Dockerfile in the current directory (.)
+    build: .
+    # A friendly name for the container
+    container_name: music_app_container
+    ports:
+      # Map port 8080 on the host machine to port 80 in the container
+      - "8080:80"
+    # Restart the container automatically unless it is manually stopped
+    restart: unless-stopped
