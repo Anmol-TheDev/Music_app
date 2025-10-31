@@ -1,9 +1,16 @@
-import { indexedDBUtils, PlaybackData } from "../lib/IndexedDBUtils";
+import { indexedDBUtils, PlaybackData } from "../lib/IndexedDBUtils.ts";
 
 const STORE_NAME = "playback";
 const STATE_KEY = "state";
 
-export async function persistMusicState(currentSong: any | null): Promise<void> {
+// Define a basic type for a Song object
+interface Song {
+  id: string;
+  [key: string]: unknown;
+}
+
+// FIX: Replaced 'any' with the specific 'Song' type for the function parameter
+export async function persistMusicState(currentSong: Song | null): Promise<void> {
   const data: PlaybackData = {
     id: STATE_KEY,
     currentSong,
