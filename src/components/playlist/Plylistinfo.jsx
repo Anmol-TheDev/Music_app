@@ -3,7 +3,7 @@ import { app, db } from "../../Auth/firebase";
 import { getAuth } from "firebase/auth";
 import { fetchSongsByIds } from "../../Api";
 import { doc, getDoc } from "firebase/firestore";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
@@ -137,52 +137,50 @@ export default function Plylistinfo() {
 
           <ul className="space-y-2">
             {playlistData.map((song, index) => (
-              <li
-                key={song.id}
-                onClick={() => handleSongClick(song)}
-                className="rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-              >
-                <div className="flex items-center justify-between p-3">
-                  <div className="flex items-center space-x-4">
-                    <p className="text-sm w-6">{index + 1}.</p>
-                    <img
-                      className="w-12 h-12 rounded-md"
-                      loading="lazy"
-                      src={song.image?.[1]?.url || "/api/placeholder/48/48"}
-                      alt={song.name}
-                    />
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-medium truncate">{song.name}</span>
-                      <span className="text-sm text-gray-400 truncate">
-                        {song.artists?.primary?.[0]?.name}
+              <Link to={`/song/${song.id}`} state={{ song }} key={song.id}>
+                <li className="rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+                  <div className="flex items-center justify-between p-3">
+                    <div className="flex items-center space-x-4">
+                      <p className="text-sm w-6">{index + 1}.</p>
+                      <img
+                        className="w-12 h-12 rounded-md"
+                        loading="lazy"
+                        src={song.image?.[1]?.url || "/api/placeholder/48/48"}
+                        alt={song.name}
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-medium truncate">{song.name}</span>
+                        <span className="text-sm text-gray-400 truncate">
+                          {song.artists?.primary?.[0]?.name}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 items-center">
+                      {isPlaying && song.id === musicId ? (
+                        <Pause
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsPlaying(false);
+                          }}
+                        />
+                      ) : (
+                        <Play
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSongClick(song);
+                          }}
+                        />
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {Math.floor(song.duration / 60)}:
+                        {(song.duration % 60).toString().padStart(2, "0")}
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-4 items-center">
-                    {isPlaying && song.id === musicId ? (
-                      <Pause
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsPlaying(false);
-                        }}
-                      />
-                    ) : (
-                      <Play
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSongClick(song);
-                        }}
-                      />
-                    )}
-                    <span className="text-sm text-gray-500">
-                      {Math.floor(song.duration / 60)}:
-                      {(song.duration % 60).toString().padStart(2, "0")}
-                    </span>
-                  </div>
-                </div>
-              </li>
+                </li>
+              </Link>
             ))}
           </ul>
         </div>
