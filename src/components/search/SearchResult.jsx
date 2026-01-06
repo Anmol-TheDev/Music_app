@@ -9,6 +9,7 @@ import Menu from "../Menu";
 import Like from "../ui/Like";
 import Albums from "../Album/Albums";
 import { useSongHandlers, useIsMobile } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "../../lib/utils";
 
 export default function SearchComponent() {
   const { fetchSongs, songs, fetchAlbums, Topresult } = useFetch();
@@ -38,7 +39,7 @@ export default function SearchComponent() {
     return views.toString();
   };
 
-  function handlePlayPause(status,musicId) {
+  function handlePlayPause(status, musicId) {
     setMusicId(musicId);
     setIsPlaying(status);
   }
@@ -63,18 +64,19 @@ export default function SearchComponent() {
                           currentSong?.image?.[1]?.url ||
                           currentSong?.image?.[0]?.url
                         }
-                        alt={currentSong?.name}
+                        alt={decodeHtml(currentSong?.name)}
                         loading="lazy"
                         className="object-contain w-full  mx-auto mb-4 rounded border-red-500 brder-2"
                       />
                       <div className="space-y-2">
                         <h3 className="text-lg sm:text-xl font-semibold text-center mb-2">
-                          {currentSong?.name}
+                          {decodeHtml(currentSong?.name)}
                         </h3>
                         <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
                           <div className="flex items-center">
                             <span className="bg-gray-200 px-2 py-1 rounded-full text-xs">
-                              {currentSong?.artists?.primary?.[0]?.name || currentSong?.label}
+                              {decodeHtml(currentSong?.artists?.primary?.[0]?.name) ||
+                                currentSong?.label}
                             </span>
                           </div>
                           {currentSong?.playCount && (
@@ -90,14 +92,14 @@ export default function SearchComponent() {
                   <div className="absolute bottom-10 right-4 sm:bottom-4 lg:opacity-0 lg:translate-y-8 lg:scale-75 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100 transition-all duration-300 ease-out">
                     {isPlaying ? (
                       <button
-                        onClick={() => handlePlayPause(false,currentSong.id)}
+                        onClick={() => handlePlayPause(false, currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Pause size={24} />
                       </button>
                     ) : (
                       <button
-                        onClick={() => handlePlayPause(true,currentSong.id)}
+                        onClick={() => handlePlayPause(true, currentSong.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
                       >
                         <Play size={24} />
@@ -117,13 +119,13 @@ export default function SearchComponent() {
                       <CardContent className="p-4 sm:p-6 shadow-lg">
                         <img
                           src={Topresult?.image[2].url}
-                          alt={Topresult?.name}
+                          alt={decodeHtml(Topresult?.name)}
                           loading="lazy"
                           className="object-contain w-full  mx-auto mb-4 rounded border-red-500 brder-2"
                         />
                         <div className="space-y-2">
                           <h3 className="text-lg sm:text-xl font-semibold text-center mb-2">
-                            {Topresult?.name}
+                            {decodeHtml(Topresult?.name)}
                           </h3>
                           <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
                             <div className="flex items-center">
@@ -156,7 +158,7 @@ export default function SearchComponent() {
               )
             )}
             {songs && (
-              <div className="w-[95vw] sm:w-full lg:w-2/3 border rounded-xl p-4 shadow-lg">
+              <div className="w-[95vw] sm:w-full lg:w-2/3 border rounded-xl p-4 shadow-lg md:mt-6">
                 <h2 className="text-xl sm:text-2xl font-bold mb-4">Songs</h2>
                 <ScrollArea className="h-[40vh]   sm:h-[50vh]">
                   <ul className="space-y-2 ">
@@ -173,15 +175,17 @@ export default function SearchComponent() {
                           </span>
                           <img
                             src={song.image ? song.image[0].url : "/api/placeholder/40/40"}
-                            alt={song.name}
+                            alt={decodeHtml(song.name)}
                             loading="lazy"
                             className="w-8 h-8 sm:w-10 sm:h-10 rounded "
                           />
                           <div>
                             <p className="font-medium text-sm sm:text-base truncate w-24">
-                              {song.name ? song.name : "Iss Duniya ka Papa"}
+                              {song.name ? decodeHtml(song.name) : "Iss Duniya ka Papa"}
                             </p>
-                            <p className="text-xs sm:text-sm">{song.artists?.primary[0]?.name}</p>
+                            <p className="text-xs sm:text-sm">
+                              {decodeHtml(song.artists?.primary[0]?.name)}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2 sm:space-x-4">
