@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
 import { useIsMobile } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "../../lib/utils";
 
 function RandomArtists({ search }) {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ function RandomArtists({ search }) {
                 {artist?.image?.[2] ? (
                   <img
                     src={artist?.image[2].url}
-                    alt={artist?.name}
+                    alt={decodeHtml(artist?.name)}
                     loading="lazy"
                     className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg mb-2"
                   />
@@ -51,7 +52,7 @@ function RandomArtists({ search }) {
                   </div>
                 )}
                 <h3 className="text-center w-32 sm:w-32 text-xs sm:text-sm truncate">
-                  {artist?.name}
+                  {decodeHtml(artist?.name)}
                 </h3>
               </div>
             ))}

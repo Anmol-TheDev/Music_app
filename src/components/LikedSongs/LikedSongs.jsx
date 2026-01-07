@@ -6,6 +6,7 @@ import Api from "../../Api";
 import Like from "../ui/Like";
 import Menu from "../Menu";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "../../lib/utils";
 
 export default function LikedSongs() {
   const { likedSongs, musicId, isPlaying, setIsPlaying, isUser } = useStore();
@@ -145,7 +146,7 @@ export default function LikedSongs() {
                     <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                       <img
                         src={song.image?.[1]?.url || song.image?.[0]?.url}
-                        alt={song.name}
+                        alt={decodeHtml(song.name)}
                         loading="lazy"
                         className="w-full h-full object-cover"
                       />
@@ -158,10 +159,10 @@ export default function LikedSongs() {
                           song.id === musicId ? "text-primary" : "text-foreground"
                         }`}
                       >
-                        {song.name}
+                        {decodeHtml(song.name)}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">
-                        {song.artists?.primary?.[0]?.name}
+                        {decodeHtml(song.artists?.primary?.[0]?.name)}
                       </p>
                     </div>
 

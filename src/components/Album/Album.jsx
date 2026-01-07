@@ -26,6 +26,7 @@ import {
   formatArtist,
   useIsMobile,
 } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "@/lib/utils";
 
 export default function Album() {
   const [albumData, setAlbumData] = useState(null);
@@ -66,13 +67,12 @@ export default function Album() {
         setCurrentList(res.data.data.songs);
         getImageColors(res.data.data.image[2].url).then(({ averageColor, dominantColor }) => {
           setBgColor({ bg1: averageColor, bg2: dominantColor });
-          // Determine text color based on background brightness
           setTextColor(getTextColor(dominantColor));
         });
       } catch (error) {
         toast.error("Failed to load album data.");
         console.error("Album API fetch error:", error);
-        setAlbumData(null); // Ensure albumData is null on error to trigger "Album not found" UI
+        setAlbumData(null);
       } finally {
         setIsLoading(false);
       }
@@ -196,7 +196,7 @@ export default function Album() {
                 >
                   <img
                     src={albumData.image[2].url || "/placeholder.svg"}
-                    alt={`${albumData.name} album cover`}
+                    alt={`${decodeHtml(albumData.name)} album cover`}
                     loading="lazy"
                     className="w-full h-full object-cover"
                     onLoad={() => setImageLoaded(true)}
@@ -232,7 +232,7 @@ export default function Album() {
                           : "hsl(var(--contrast-foreground-light))",
                     }}
                   >
-                    {albumData.name}
+                    {decodeHtml(albumData.name)}
                   </h1>
                 </div>
 
@@ -390,7 +390,7 @@ export default function Album() {
                             wordBreak: "break-word",
                           }}
                         >
-                          {song.name}
+                          {decodeHtml(song.name)}
                         </h3>
                         <p
                           className="text-xs text-muted-foreground truncate mt-0.5"
@@ -459,9 +459,9 @@ export default function Album() {
                       <div className="min-w-0">
                         <h3
                           className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
-                          title={song.name}
+                          title={decodeHtml(song.name)}
                         >
-                          {song.name}
+                          {decodeHtml(song.name)}
                         </h3>
                         <p
                           className="text-sm text-muted-foreground truncate mt-0.5"
@@ -523,7 +523,7 @@ export default function Album() {
                     <img
                       className="h-16 w-16 rounded-md object-cover"
                       src={albumData?.image?.[1]?.url || "/placeholder.svg"}
-                      alt={`${albumData?.name || "Album"} cover`}
+                      alt={`${decodeHtml(albumData?.name) || "Album"} cover`}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = "/image.png";
@@ -536,7 +536,7 @@ export default function Album() {
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="text-base font-semibold line-clamp-2 break-words">
-                      {albumData?.name || "Album"}
+                      {decodeHtml(albumData?.name) || "Album"}
                     </h3>
                     <p className="text-sm text-white/70">Add all songs to</p>
                   </div>
@@ -562,7 +562,7 @@ export default function Album() {
                       className="w-full rounded-md bg-black/20 border border-white/20 px-3 py-2 outline-none placeholder-white/50"
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
-                      placeholder={albumData.name}
+                      placeholder={decodeHtml(albumData.name)}
                       autoFocus
                     />
                     <div className="flex gap-2 justify-end">
@@ -601,7 +601,7 @@ export default function Album() {
                             }}
                             className="w-full text-left px-3 py-3 hover:bg-white/10 transition-colors"
                           >
-                            {pl.data?.name || "Untitled"}
+                            {decodeHtml(pl.data?.name) || "Untitled"}
                           </button>
                         </li>
                       ))}
@@ -640,7 +640,7 @@ export default function Album() {
                 <img
                   className="h-16 w-16 rounded-md object-cover"
                   src={albumData?.image?.[1]?.url || "/placeholder.svg"}
-                  alt={`${albumData?.name} cover`}
+                  alt={`${decodeHtml(albumData?.name)} cover`}
                   loading="lazy"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
@@ -654,7 +654,7 @@ export default function Album() {
               )}
               <div className="min-w-0 flex-1">
                 <h3 className="text-base font-semibold line-clamp-2 break-words">
-                  {albumData?.name || "Album"}
+                  {decodeHtml(albumData?.name) || "Album"}
                 </h3>
                 <p className="text-sm text-white/70">Add all songs to</p>
               </div>
@@ -671,9 +671,9 @@ export default function Album() {
                         <button
                           onClick={() => handleAddAllToPlaylist(pl.id)}
                           className="w-full text-left px-3 py-2 hover:bg-white/10 transition-colors"
-                          title={`Add all songs to ${pl.data?.name || "playlist"}`}
+                          title={`Add all songs to ${decodeHtml(pl.data?.name) || "playlist"}`}
                         >
-                          {pl.data?.name || "Untitled"}
+                          {decodeHtml(pl.data?.name) || "Untitled"}
                         </button>
                       </li>
                     ))}
@@ -699,7 +699,7 @@ export default function Album() {
                     className="w-full rounded-md bg-black/20 border border-white/20 px-3 py-2 outline-none placeholder-white/50 text-white"
                     value={newPlaylistName}
                     onChange={(e) => setNewPlaylistName(e.target.value)}
-                    placeholder={albumData.name}
+                    placeholder={decodeHtml(albumData.name)}
                     autoFocus
                   />
                   <div className="flex gap-2 justify-end">

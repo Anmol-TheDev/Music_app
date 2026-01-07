@@ -16,6 +16,7 @@ import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
 import { useMusicPersistence } from "../../hooks/useMusicPersistence";
+import { decodeHtml } from "../../lib/utils";
 
 function MusicPlayer() {
   const playerRef = useRef(null);
@@ -187,9 +188,9 @@ function MusicPlayer() {
                     )}
                     <div>
                       <h3 className="text-sm font-semibold bg-gray-200/20 px-2 rounded-md">
-                        {song?.name}
+                        {decodeHtml(song?.name)}
                       </h3>
-                      <p className="text-xs text-gray-400">{song?.artist}</p>
+                      <p className="text-xs text-gray-400">{decodeHtml(song?.artist)}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -215,7 +216,7 @@ function MusicPlayer() {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <span className="text-xs">{formatTime(duration * played)}</span>
+                  <span className="text-xs mt-2">{formatTime(duration * played)}</span>
                   <div className="flex-grow">
                     <input
                       type="range"
@@ -232,8 +233,8 @@ function MusicPlayer() {
                       }}
                     />
                   </div>
-                  <span className="text-xs">{formatTime(duration)}</span>
-                  <div className="flex items-center space-x-2">
+                  <span className="text-xs mt-2">{formatTime(duration)}</span>
+                  <div className="flex items-center space-x-2 mt-2">
                     <button onClick={handleToggleMute} className="focus:outline-none">
                       <VolumeIcon />
                     </button>
