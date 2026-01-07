@@ -23,16 +23,17 @@ export default function Home() {
 
     // Default search
     const DEFAULT_SEARCH = "top hits";
-    const searchText = localStorage.getItem("search")
-    if(!searchText) {
-      localStorage.setItem("search", DEFAULT_SEARCH)
+    const searchText = localStorage.getItem("search");
+    if (!searchText) {
+      localStorage.setItem("search", DEFAULT_SEARCH);
     }
     const pathName = `/search?searchTxt=${localStorage.getItem("search")}`;
     const currentSearch = new URLSearchParams(window.location.search).get("searchTxt");
-    if (!currentSearch) {
+
+    if (window.location.pathname === "/" && !currentSearch) {
       navigate(pathName);
     }
-}, []);
+  }, []);
   return (
     <>
       <div className="flex items-start">

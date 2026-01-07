@@ -10,6 +10,7 @@ import { useStore } from "../../zustand/store";
 import { Play, Heart, Clock, Pause, Music } from "lucide-react";
 import { toast } from "sonner";
 import { useSongHandlers } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "@/lib/utils";
 
 export default function Plylistinfo() {
   const url = useLocation();
@@ -112,7 +113,7 @@ export default function Plylistinfo() {
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-400 mb-2">PLAYLIST</p>
-                <h1 className="text-3xl font-bold mb-4 truncate">{playlistName}</h1>
+                <h1 className="text-3xl font-bold mb-4 truncate">{decodeHtml(playlistName)}</h1>
                 <div className="flex items-center gap-4">
                   <button className="bg-primary text-primary-foreground rounded-full p-3 hover:opacity-90">
                     <Play size={24} fill="currentColor" />
@@ -149,12 +150,12 @@ export default function Plylistinfo() {
                       className="w-12 h-12 rounded-md"
                       loading="lazy"
                       src={song.image?.[1]?.url || "/api/placeholder/48/48"}
-                      alt={song.name}
+                      alt={decodeHtml(song.name)}
                     />
                     <div className="flex flex-col min-w-0">
-                      <span className="font-medium truncate">{song.name}</span>
+                      <span className="font-medium truncate">{decodeHtml(song.name)}</span>
                       <span className="text-sm text-gray-400 truncate">
-                        {song.artists?.primary?.[0]?.name}
+                        {decodeHtml(song.artists?.primary?.[0]?.name)}
                       </span>
                     </div>
                   </div>

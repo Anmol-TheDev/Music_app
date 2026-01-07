@@ -4,6 +4,7 @@ import { Label } from "../ui/label";
 import { useFetch } from "../../zustand/store";
 // import { ScrollArea } from "../ui/scroll-area";
 import PropTypes from "prop-types";
+import { decodeHtml } from "../../lib/utils";
 
 function Albums({ search }) {
   const { albums, fetchAlbums } = useFetch();
@@ -36,12 +37,12 @@ function Albums({ search }) {
               >
                 <img
                   src={album.image?.[2]?.url}
-                  alt={album.name}
+                  alt={decodeHtml(album.name)}
                   loading="lazy"
                   className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg mb-2"
                 />
                 <Label className="text-center w-32 sm:w-32 text-xs sm:text-sm truncate">
-                  {album.name}
+                  {decodeHtml(album.name)}
                 </Label>
               </div>
             ))}

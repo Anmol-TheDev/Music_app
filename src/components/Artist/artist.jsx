@@ -9,6 +9,7 @@ import Menu from "../Menu";
 import Like from "../ui/Like";
 import { toast } from "sonner";
 import { useSongHandlers, getTextColor, usePlayAll, useShuffle } from "@/hooks/SongCustomHooks";
+import { decodeHtml } from "@/lib/utils";
 
 function Artist() {
   const [data, setData] = useState();
@@ -17,8 +18,12 @@ function Artist() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [textColor, setTextColor] = useState("white");
   const url = useLocation();
-  const { musicId, isPlaying, setIsPlaying, setCurrentList, currentArtistId } = useStore();
-  const artistId = url.search.split("=")[1];
+  const musicId = useStore((state) => state.musicId);
+  const isPlaying = useStore((state) => state.isPlaying);
+  const setIsPlaying = useStore((state) => state.setIsPlaying);
+  const setCurrentList = useStore((state) => state.setCurrentList);
+  const currentArtistId = useStore((state) => state.currentArtistId);
+  const artistId = new URLSearchParams(url.search).get("Id");
   const { handleSongClick } = useSongHandlers();
   const handlePlayAll = usePlayAll(artistId, data?.topSongs, "artist");
   const handleShuffle = useShuffle(artistId, data?.topSongs, "artist");
@@ -45,7 +50,9 @@ function Artist() {
         setIsLoading(false);
       }
     };
-    fetching();
+    if (artistId) {
+      fetching();
+    }
   }, [artistId, setCurrentList]);
 
   if (isLoading) {
@@ -75,7 +82,7 @@ function Artist() {
       <div className="min-h-screen pb-32">
         {/* Hero Section */}
         <div
-          className="relative w-full pb-8"
+          className="relative w-full pb-8 md:px-4"
           style={{
             background: bgColor
               ? `linear-gradient(180deg, ${bgColor.bg1} 0%, ${bgColor.bg2} 60%, transparent 100%)`
@@ -100,7 +107,7 @@ function Artist() {
                 >
                   <img
                     src={data.image[2].url || "/placeholder.svg"}
-                    alt={data.name}
+                    alt={decodeHtml(data.name)}
                     loading="lazy"
                     className="w-full h-full object-cover"
                     onLoad={() => setImageLoaded(true)}
@@ -134,7 +141,7 @@ function Artist() {
                           : "hsl(var(--contrast-foreground-light))",
                     }}
                   >
-                    {data.name}
+                    {decodeHtml(data.name)}
                   </h1>
                 </div>
 
@@ -175,7 +182,7 @@ function Artist() {
         {/* Top Songs Section */}
         <div className="container mx-auto px-3 sm:px-4 py-8">
           <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
+            <div className="flex items-center justify-between px-4">
               <h2 className="text-2xl lg:text-3xl font-bold">Popular</h2>
             </div>
 
@@ -228,7 +235,7 @@ function Artist() {
                       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                         <img
                           src={song.image[1].url || "/placeholder.svg"}
-                          alt={song.name}
+                          alt={decodeHtml(song.name)}
                           loading="lazy"
                           className="w-full h-full object-cover"
                         />
@@ -248,7 +255,7 @@ function Artist() {
                             wordBreak: "break-word",
                           }}
                         >
-                          {song.name}
+                          {decodeHtml(song?.name)}
                         </h3>
                       </div>
 
@@ -308,7 +315,7 @@ function Artist() {
                       <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                         <img
                           src={song.image[1].url || "/placeholder.svg"}
-                          alt={song.name}
+                          alt={decodeHtml(song.name)}
                           loading="lazy"
                           className="w-full h-full object-cover"
                         />
@@ -319,9 +326,11 @@ function Artist() {
                         <h3
                           className={`font-medium truncate ${song.id === musicId ? "text-primary" : "text-foreground"}`}
                         >
-                          {song.name}
+                          {decodeHtml(song.name)}
                         </h3>
-                        <p className="text-sm text-muted-foreground truncate">{data.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {decodeHtml(data.name)}
+                        </p>
                       </div>
 
                       {/* Duration */}

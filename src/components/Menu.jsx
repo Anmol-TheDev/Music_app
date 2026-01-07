@@ -28,6 +28,7 @@ import {
   DrawerClose,
 } from "./ui/drawer";
 import PropTypes from "prop-types";
+import { decodeHtml } from "../lib/utils";
 
 export default function Menu({ song, onOpenChange }) {
   const { playlist, isUser, addToQueue, addToQueueNext } = useStore();
@@ -244,7 +245,7 @@ export default function Menu({ song, onOpenChange }) {
                     <img
                       className="h-14 w-14 rounded object-cover"
                       src={song?.image?.[1]?.url || "/placeholder.svg"}
-                      alt={song?.name || "Song artwork"}
+                      alt={decodeHtml(song?.name) || "Song artwork"}
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
@@ -257,9 +258,9 @@ export default function Menu({ song, onOpenChange }) {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-xl font-medium truncate">{song?.name}</div>
+                    <div className="text-xl font-medium truncate">{decodeHtml(song?.name)}</div>
                     <p className="text-sm text-white/70 truncate">
-                      {song?.artists?.primary?.[0]?.name || "Unknown artist"}
+                      {decodeHtml(song?.artists?.primary?.[0]?.name) || "Unknown artist"}
                     </p>
                   </div>
                 </div>
@@ -305,13 +306,13 @@ export default function Menu({ song, onOpenChange }) {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 pushInDb(list.id, song.id);
-                                toast.success(`Added to ${list.data.name}`);
+                                toast.success(`Added to ${decodeHtml(list.data.name)}`);
                                 handleOpenChange(false);
                               }}
-                              title={`Add to ${list.data.name}`}
+                              title={`Add to ${decodeHtml(list.data.name)}`}
                             >
                               <ListPlus className="h-5 w-5 text-muted-foreground" />
-                              <span className="text-sm">{list.data.name}</span>
+                              <span className="text-sm">{decodeHtml(list.data.name)}</span>
                             </button>
                           ))
                         ) : (
@@ -348,10 +349,10 @@ export default function Menu({ song, onOpenChange }) {
                               navigate(`/artist?Id=${artist.id}`);
                               handleOpenChange(false);
                             }}
-                            title={`Go to ${artist.name}`}
+                            title={`Go to ${decodeHtml(artist.name)}`}
                           >
                             <User className="w-5 h-5 text-muted-foreground" />
-                            <span className="text-sm">Go to {artist.name}</span>
+                            <span className="text-sm">Go to {decodeHtml(artist.name)}</span>
                           </button>
                         ))}
 
@@ -478,11 +479,11 @@ export default function Menu({ song, onOpenChange }) {
                           onClick={(e) => {
                             e.stopPropagation();
                             pushInDb(list.id, song.id);
-                            toast.success(`Added to ${list.data.name}`);
+                            toast.success(`Added to ${decodeHtml(list.data.name)}`);
                           }}
-                          title={`Add to ${list.data.name}`}
+                          title={`Add to ${decodeHtml(list.data.name)}`}
                         >
-                          {list.data.name}
+                          {decodeHtml(list.data.name)}
                         </MenubarItem>
                       ))
                     ) : (
@@ -525,9 +526,9 @@ export default function Menu({ song, onOpenChange }) {
                           e.stopPropagation();
                           navigate(`/artist?Id=${artist.id}`);
                         }}
-                        title={`Go to ${artist.name}`}
+                        title={`Go to ${decodeHtml(artist.name)}`}
                       >
-                        {artist.name}
+                        {decodeHtml(artist.name)}
                       </MenubarItem>
                     ))}
 
