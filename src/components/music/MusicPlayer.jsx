@@ -34,20 +34,19 @@ function MusicPlayer() {
     isPlaying,
     volume,
     muted,
-    played,
-    duration,
     shuffle,
     setIsPlaying,
     setCurrentList,
     setVolume,
     setMuted,
-    setPlayed,
-    setDuration,
     setShuffle,
     playNext,
     playPrevious,
     currentSong,
   } = useStore();
+  
+  const [played, setPlayed] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
