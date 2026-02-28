@@ -14,6 +14,7 @@ import { getImageColors } from "../color/ColorGenrator";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer";
 import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
+import  usePlayerProgressStore from "../../zustand/playerprogressstore";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
 import { useMusicPersistence } from "../../hooks/useMusicPersistence";
 import { decodeHtml } from "../../lib/utils";
@@ -44,9 +45,7 @@ function MusicPlayer() {
     playPrevious,
     currentSong,
   } = useStore();
-  
-  const [played, setPlayed] = React.useState(0);
-  const [duration, setDuration] = React.useState(0);
+  const { played, setPlayed, duration, setDuration } = usePlayerProgressStore();
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
