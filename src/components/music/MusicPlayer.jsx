@@ -43,6 +43,7 @@ function MusicPlayer() {
     setShuffle,
     playNext,
     playPrevious,
+    handleSongEnd,
     currentSong,
   } = useStore();
   const { played, setPlayed, duration, setDuration } = usePlayerProgressStore();
@@ -265,7 +266,7 @@ function MusicPlayer() {
           onDuration={handleDuration}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onEnded={playNext} // Use centralized next function
+          onEnded={handleSongEnd} // Use centralized next function
           width="0"
           height="0"
           onError={(e) => console.error("ReactPlayer error", e)}
