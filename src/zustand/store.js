@@ -94,8 +94,6 @@ export const useStore = create((set, get) => ({
   muted: false,
   shuffle: false,
   repeat: "none",
-  played: 0,
-  duration: 0,
   shuffleHistory: [],
   shuffledQueue: [],
   autoPlay: false,
@@ -125,7 +123,6 @@ export const useStore = create((set, get) => ({
       songList: currentList,
       currentAlbumId: null,
       currentArtistId: null,
-      played: 0,
       isPlaying: false,
       autoPlay: false,
       shuffleHistory: shuffle ? [currentSong] : [],
@@ -214,8 +211,6 @@ export const useStore = create((set, get) => ({
     }
   },
   setRepeat: (repeat) => set({ repeat }),
-  setPlayed: (played) => set({ played }),
-  setDuration: (duration) => set({ duration }),
 
   addToQueue: (song) => {
     const { autoPlay, shuffle } = get();
@@ -270,7 +265,6 @@ export const useStore = create((set, get) => ({
     } = get();
 
     if (repeat === "one") {
-      set({ played: 0 });
       return;
     }
 
@@ -281,7 +275,6 @@ export const useStore = create((set, get) => ({
           musicId: songList[0].id,
           currentSong: songList[0],
           queue: songList.slice(1),
-          played: 0,
           isPlaying: false,
           previous: [...previous, currentSong],
           playedSongIds: new Set([...state.playedSongIds, songList[0].id]),
@@ -314,7 +307,6 @@ export const useStore = create((set, get) => ({
                       : state.shuffleHistory,
                   musicId: first.id,
                   currentSong: first,
-                  played: 0,
                   isPlaying: true,
                   autoPlay: true,
                   previous: state.currentSong
@@ -336,7 +328,6 @@ export const useStore = create((set, get) => ({
                       : state.shuffleHistory,
                   musicId: first.id,
                   currentSong: first,
-                  played: 0,
                   isPlaying: true,
                   autoPlay: true,
                   previous: state.currentSong
@@ -366,7 +357,6 @@ export const useStore = create((set, get) => ({
             shuffleHistory: [...shuffleHistory, firstSong],
             musicId: firstSong.id,
             currentSong: firstSong,
-            played: 0,
             isPlaying: false,
             playedSongIds: new Set([...state.playedSongIds, firstSong.id]),
           }));
@@ -381,7 +371,6 @@ export const useStore = create((set, get) => ({
         shuffledQueue: shuffledQueue.slice(1),
         musicId: nextSong.id,
         currentSong: nextSong,
-        played: 0,
         isPlaying: false,
         playedSongIds: new Set([...state.playedSongIds, nextSong.id]),
       }));
@@ -390,7 +379,6 @@ export const useStore = create((set, get) => ({
       set((state) => ({
         musicId: nextSong?.id,
         currentSong: nextSong,
-        played: 0,
         isPlaying: false,
         queue: queue.slice(1),
         previous: [...previous, currentSong],
@@ -409,7 +397,6 @@ export const useStore = create((set, get) => ({
       if (shuffleHistory.length === 0) {
         set({
           shuffledQueue: newShuffledQueue,
-          played: 0,
         });
         return;
       }
@@ -418,7 +405,6 @@ export const useStore = create((set, get) => ({
       set({
         musicId: prevSong?.id,
         currentSong: prevSong,
-        played: 0,
         isPlaying: false,
         shuffledQueue: newShuffledQueue,
         shuffleHistory: newHistory,
@@ -427,7 +413,6 @@ export const useStore = create((set, get) => ({
       const newPrevious = [...previous];
       const newQueue = [...queue];
       if (newPrevious.length === 0) {
-        set({ played: 0 });
         return;
       }
       const prevSong = newPrevious.pop();
@@ -436,7 +421,6 @@ export const useStore = create((set, get) => ({
       set({
         musicId: prevSong.id,
         currentSong: prevSong,
-        played: 0,
         isPlaying: false,
         queue: newQueue,
         previous: newPrevious,
@@ -446,7 +430,7 @@ export const useStore = create((set, get) => ({
 
   handleSongEnd: () => {
     const { repeat, playNext } = get();
-    if (repeat === "one") set({ played: 0 });
+    if (repeat === "one") return;
     else playNext();
   },
 

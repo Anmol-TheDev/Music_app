@@ -14,6 +14,7 @@ import { getImageColors } from "../color/ColorGenrator";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from "../ui/drawer";
 import { Button } from "../ui/button";
 import { useStore, useFetch } from "../../zustand/store";
+import  usePlayerProgressStore from "../../zustand/playerprogressstore";
 import useKeyboardShortcuts from "../../lib/useKeyboardShortcuts";
 import { useMusicPersistence } from "../../hooks/useMusicPersistence";
 import { decodeHtml } from "../../lib/utils";
@@ -34,20 +35,18 @@ function MusicPlayer() {
     isPlaying,
     volume,
     muted,
-    played,
-    duration,
     shuffle,
     setIsPlaying,
     setCurrentList,
     setVolume,
     setMuted,
-    setPlayed,
-    setDuration,
     setShuffle,
     playNext,
     playPrevious,
+    handleSongEnd,
     currentSong,
   } = useStore();
+  const { played, setPlayed, duration, setDuration } = usePlayerProgressStore();
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -267,7 +266,7 @@ function MusicPlayer() {
           onDuration={handleDuration}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onEnded={playNext} // Use centralized next function
+          onEnded={handleSongEnd} // Use centralized next function
           width="0"
           height="0"
           onError={(e) => console.error("ReactPlayer error", e)}
