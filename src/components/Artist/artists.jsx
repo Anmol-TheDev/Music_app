@@ -4,6 +4,7 @@ import { useNavigate, createSearchParams } from "react-router-dom";
 import { useFetch } from "../../zustand/store";
 import { useIsMobile } from "@/hooks/SongCustomHooks";
 import { decodeHtml } from "../../lib/utils";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 function RandomArtists({ search }) {
   const navigate = useNavigate();
@@ -32,31 +33,34 @@ function RandomArtists({ search }) {
           }`}
         >
           <h2 className="text-2xl font-bold mb-4">Artists</h2>
-          <div className="flex space-x-4 overflow-x-scroll overflow-y-hidden custom-scrollbar">
-            {artists?.map((artist, i) => (
-              <div
-                key={i}
-                className="bg-secondary rounded-2xl p-3 sm:p-4 flex flex-col items-center flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => handleClick(artist.id)}
-              >
-                {artist?.image?.[2] ? (
-                  <img
-                    src={artist?.image[2].url}
-                    alt={decodeHtml(artist?.name)}
-                    loading="lazy"
-                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg mb-2"
-                  />
-                ) : (
-                  <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg">
-                    <span>No Image</span>
-                  </div>
-                )}
-                <h3 className="text-center w-32 sm:w-32 text-xs sm:text-sm truncate">
-                  {decodeHtml(artist?.name)}
-                </h3>
-              </div>
-            ))}
-          </div>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex space-x-4 pb-4">
+              {artists?.map((artist, i) => (
+                <div
+                  key={i}
+                  className="bg-secondary rounded-2xl p-3 sm:p-4 flex flex-col items-center flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => handleClick(artist.id)}
+                >
+                  {artist?.image?.[2] ? (
+                    <img
+                      src={artist?.image[2].url}
+                      alt={decodeHtml(artist?.name)}
+                      loading="lazy"
+                      className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg mb-2"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                      <span>No Image</span>
+                    </div>
+                  )}
+                  <h3 className="text-center w-32 sm:w-32 text-xs sm:text-sm truncate">
+                    {decodeHtml(artist?.name)}
+                  </h3>
+                </div>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </div>
       )}
     </>

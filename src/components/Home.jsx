@@ -41,7 +41,7 @@ export default function Home() {
         <InputBar />
       </div>
       <Suspense fallback={<div>...Loading</div>}>
-        <Outlet />
+        <Outlet className="mt-16" />
       </Suspense>
       <MusicPlayer />
     </>

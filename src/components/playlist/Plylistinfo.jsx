@@ -7,10 +7,10 @@ import { useLocation } from "react-router-dom";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { useStore } from "../../zustand/store";
-import { Play, Heart, Clock, Pause, Music } from "lucide-react";
+import { Play, Heart, Clock, Music } from "lucide-react";
 import { toast } from "sonner";
-import { useSongHandlers } from "@/hooks/SongCustomHooks";
 import { decodeHtml } from "@/lib/utils";
+import SongCard from "../common/SongCard";
 
 export default function Plylistinfo() {
   const url = useLocation();
@@ -19,8 +19,7 @@ export default function Plylistinfo() {
   const [playlistData, setPlaylistData] = useState([]);
   const [playlistName, setPlaylistName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { isPlaying, setIsPlaying, musicId, setCurrentList } = useStore();
-  const { handleSongClick } = useSongHandlers();
+  const { setCurrentList } = useStore();
   let count = playlistData.slice(0, 4).length;
 
   useEffect(() => {
@@ -136,56 +135,11 @@ export default function Plylistinfo() {
             </div>
           </div>
 
-          <ul className="space-y-2">
+          <div className="space-y-1">
             {playlistData.map((song, index) => (
-              <li
-                key={song.id}
-                onClick={() => handleSongClick(song)}
-                className="rounded-lg hover:bg-secondary hover:scale-[1.02] transition-all duration-300 cursor-pointer"
-              >
-                <div className="flex items-center justify-between p-3">
-                  <div className="flex items-center space-x-4">
-                    <p className="text-sm w-6">{index + 1}.</p>
-                    <img
-                      className="w-12 h-12 rounded-md"
-                      loading="lazy"
-                      src={song.image?.[1]?.url || "/api/placeholder/48/48"}
-                      alt={decodeHtml(song.name)}
-                    />
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-medium truncate">{decodeHtml(song.name)}</span>
-                      <span className="text-sm text-gray-400 truncate">
-                        {decodeHtml(song.artists?.primary?.[0]?.name)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 items-center">
-                    {isPlaying && song.id === musicId ? (
-                      <Pause
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsPlaying(false);
-                        }}
-                      />
-                    ) : (
-                      <Play
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSongClick(song);
-                        }}
-                      />
-                    )}
-                    <span className="text-sm text-gray-500">
-                      {Math.floor(song.duration / 60)}:
-                      {(song.duration % 60).toString().padStart(2, "0")}
-                    </span>
-                  </div>
-                </div>
-              </li>
+              <SongCard key={song.id || index} song={song} index={index} />
             ))}
-          </ul>
+          </div>
         </div>
       </div>
     </ScrollArea>
