@@ -119,7 +119,7 @@ export default function InputBar() {
         <div className="relative ml-12 sm:ml-0">
           <Input
             placeholder="Search for music..."
-            className="text-sm sm:text-base md:text-lg p-4 py-6 flex-grow rounded-xl lg:w-[36rem] inputBar"
+            className="text-sm sm:text-base md:text-lg p-4 py-6 flex-grow rounded-xl lg:w-[36rem] inputBar focus:!bg-background"
             required
             onChange={(e) => setSearchInput(e.target.value)}
             value={searchInput}
