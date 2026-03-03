@@ -4,7 +4,7 @@ import { persistMusicState, restoreMusicState } from "./persistHelpers";
 
 const INITIAL_SONGS_LIMIT = 1;
 const SUGGESTIONS_LIMIT = 9;
-const BASE_JIOSAAVAN_URL = "https://jiosaavan-api-2-harsh-patel.vercel.app";
+const BASE_JIOSAAVAN_URL = "https://saavn.sumit.co";
 export const useFetch = create((set) => ({
   songs: null,
   albums: null,
