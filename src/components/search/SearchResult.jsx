@@ -21,7 +21,7 @@ export default function SearchComponent() {
   }, [search]);
 
   return (
-    <ScrollArea className="h-[90vh] w-[dvw] flex">
+    <ScrollArea className="h-[90vh] w-[dvw] flex mt-16">
       <div className="flex flex-col w-full">
         <div className="max-w-7xl mx-auto sm:p-6 flex-grow">
           <div className="flex flex-col items-center lg:flex-row gap-4 lg:gap-8">

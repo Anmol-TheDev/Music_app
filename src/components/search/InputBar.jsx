@@ -11,8 +11,25 @@ export default function InputBar() {
   const [, setSearchQuery] = useSearchParams();
   const [isSearchBarFocused, setIsSearchBarFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const CurrPath = useLocation();
   const router = useNavigate();
+
+  // Track scroll from any scrollable container using capture phase
+  useEffect(() => {
+    const onScroll = (e) => {
+      const scrollTop = e.target?.scrollTop ?? 0;
+      setScrolled(scrollTop > 50);
+    };
+    // capture: true intercepts scroll events from ALL child elements (including Radix ScrollArea)
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => document.removeEventListener("scroll", onScroll, { capture: true });
+  }, []);
+
+  // Reset on route change
+  useEffect(() => {
+    setScrolled(false);
+  }, [CurrPath.pathname]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -90,9 +107,12 @@ export default function InputBar() {
     return () => clearTimeout(timeout);
   }, [searchInput, isSearchBarFocused]);
 
+  console.log(scrolled);
   return (
     <form
-      className="sticky  top-0 z-40 p-3 sm:p-4 shadow-lg bg-background w-screen "
+      className={`fixed top-0 z-40 p-3 sm:p-4 w-screen transition-all duration-300 ${
+        scrolled ? "bg-background/95 backdrop-blur-md shadow-lg" : "bg-transparent shadow-none"
+      }`}
       onSubmit={handleSubmit}
     >
       <div className="max-w-3xl mx-auto flex justify-center items-center gap-2 sm:gap-3">

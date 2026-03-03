@@ -79,11 +79,19 @@ export default function SongCard({ song, index, context, onMenuOpenChange }) {
           {songName}
         </p>
         <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground truncate">
-          <p className="">{artistName}</p>{" "}
-          <div className="w-1 h-1 bg-white rounded-full bg-muted-foreground "></div>
-          <p>{formatViews(song.playCount)}</p>
-          <div className="w-1 h-1 bg-white rounded-full bg-muted-foreground "></div>
-          <p>{song.label}</p>
+          {artistName && <p>{artistName}</p>}
+          {song.playCount && (
+            <>
+              <div className="w-1 h-1 rounded-full bg-muted-foreground shrink-0"></div>
+              <p>{formatViews(song.playCount)}</p>
+            </>
+          )}
+          {song.label && (
+            <>
+              <div className="w-1 h-1 rounded-full bg-muted-foreground shrink-0"></div>
+              <p>{song.label}</p>
+            </>
+          )}
         </div>
       </div>
 
