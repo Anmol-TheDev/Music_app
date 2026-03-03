@@ -21,8 +21,6 @@ export default function SongCard({ song, index, context, onMenuOpenChange }) {
   const artistName = decodeHtml(song.artists?.primary?.[0]?.name) || "Unknown Artist";
   const imageUrl = song.image?.[1]?.url || song.image?.[0]?.url || "/api/placeholder/80/80";
 
-  console.log(song);
-
   const handlePlayPause = (e) => {
     e.stopPropagation();
     if (isCurrentlyPlaying) {

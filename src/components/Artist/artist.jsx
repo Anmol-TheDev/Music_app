@@ -73,6 +73,8 @@ function Artist() {
     );
   }
 
+  console.log(data);
+
   return (
     <ScrollArea className="h-[100dvh]">
       <div className="min-h-screen pb-32">
